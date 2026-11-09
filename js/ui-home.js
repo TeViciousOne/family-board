@@ -179,7 +179,7 @@
     }
 
     var open = FB.state.shopping.filter(function (s) { return !s.done; }).length;
-    inner.appendChild(h('button', { type: 'button', class: 'shop-tile', onclick: function () { FB.app.go('lists'); } },
+    inner.appendChild(h('button', { type: 'button', class: 'shop-tile', onclick: function () { FB.actions.openShopping(); } },
       ui.icon('cart', 26),
       h('span', null, open ? t('home.shoppingCount', { n: open }) : t('home.shoppingEmpty'))));
     return rail;

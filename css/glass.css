@@ -280,3 +280,7 @@ input[type=text], input[type=email], input[type=password], input[type=number], i
 .tpl-rep { bottom: 4px; right: 4px; color: #0A84FF; }
 .tpl-rep.on { background: #0A84FF; color: #fff; }
 .tplwin .sheet-actions .btn { min-height: 42px; padding: 0 14px; }
+
+.shop-pop .pane { background: transparent; border: 0; box-shadow: none; padding: 0; }
+.shop-pop .pane-head:empty { display: none; }
+.shop-pop .list { max-height: 52vh; overflow: auto; }
