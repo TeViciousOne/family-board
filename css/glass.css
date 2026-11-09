@@ -126,3 +126,63 @@ input[type=text], input[type=email], input[type=password], input[type=number], i
 }
 @media (max-width: 420px) { .wx-hours { grid-template-columns: repeat(4, 1fr); } .wx-hours .wx-h:nth-child(n+5) { display: none; } }
 .board, .view, .page, .cal, .cal-main, .home, .lists, .list-body, .col { background: transparent; }
+
+/* ---------- fit-to-screen layouts: the home board never scrolls the page ----------
+   Landscape (tablet on the wall, phone on its side): three columns. Portrait: header / chores / bottom strip. */
+.home { overflow: hidden; }
+.rail-in { display: block; }
+.board, .col { min-height: 0; }
+.col { display: flex; flex-direction: column; height: 100%; }
+.list-body { overflow: auto; }
+
+@media (orientation: landscape) and (min-width: 640px) {
+  .home { display: grid; grid-template-columns: 200px minmax(0, 1fr) 200px; grid-template-rows: minmax(0, 1fr); height: 100%; overflow: hidden; }
+  .rail { display: block; overflow: auto; min-height: 0; max-height: none; padding: 14px 14px; }
+  .rail-left .clock-row { grid-row: auto; }
+  .board { height: 100%; min-height: 0; flex: none; }
+  .rail-right .rail-in { display: block; }
+  .cal { grid-template-columns: minmax(0, 1fr) 300px; grid-template-rows: none; }
+  .day-panel { max-height: none; padding: 14px 16px; overflow: auto; }
+}
+@media (orientation: landscape) and (min-width: 900px) { .home { grid-template-columns: 250px minmax(0, 1fr) 250px; } .rail { padding: 18px 20px; } }
+@media (orientation: landscape) and (min-width: 1500px) { .home { grid-template-columns: 320px minmax(0, 1fr) 320px; } .cal { grid-template-columns: minmax(0, 1fr) 380px; } }
+@media (orientation: landscape) and (max-height: 520px) {
+  .rail-left .clock { font-size: 44px; }
+  .rail-left .wx-strip, .rail-left .wx-meta { display: none; }
+  .rail-right .rr-notes { display: none; }
+  .wx-hours { grid-template-columns: repeat(4, 1fr); }
+  .wx-hours .wx-h:nth-child(n+5) { display: none; }
+  #nav { height: 52px; margin-bottom: 6px; }
+}
+
+/* portrait tablet and phone */
+@media (orientation: portrait), (max-width: 639px) {
+  .home { display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr) auto; height: 100%; overflow: hidden; }
+  .rail-left { display: block; max-height: 38vh; overflow: hidden; padding: 12px 18px 4px; }
+  .rail-left .clock-row { grid-row: auto; }
+  .rail-left .dateline { margin: 2px 0 8px; }
+  .board { height: auto; min-height: 0; flex: none; }
+  .rail-right { max-height: 28vh; overflow: hidden; padding: 4px 18px 10px; flex: none; }
+  .rail-right .rail-in { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 14px; align-items: start; }
+  .rail-right h3 { margin: 6px 0 4px; }
+  .rail-right .shop-tile { margin-top: 8px; min-height: 52px; }
+  .rail-right .note-mini { margin-bottom: 6px; }
+  .rail-right .link-btn { padding: 4px 0; }
+  .cal { grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 1fr) auto; }
+  .day-panel { max-height: 40%; overflow: auto; }
+}
+@media (max-width: 699px) and (orientation: portrait) {
+  .rail-left { max-height: 34vh; }
+  .clock { font-size: 54px; }
+  .wx-hours { margin-top: 8px; padding: 6px 2px; }
+  .wx-desc { margin-top: 0; }
+  .rail-right .rr-cd, .rail-right .rr-notes, .rail-right .rr-ups .link-btn, .rail-right .rr-ups .ev-group:nth-of-type(n+3) { display: none; }
+  .rail-right .rail-in { grid-auto-columns: minmax(0, 1fr) auto; align-items: end; }
+  .rail-right { max-height: 20vh; padding-bottom: 6px; }
+  .list-title, .list-head .col-count { font-size: 24px; }
+  .list-head { padding: 8px 16px 6px; }
+  .list-body { padding: 8px 12px 10px; }
+  .chore { min-height: 60px; padding: 8px 12px; }
+}
+@media (orientation: portrait), (max-width: 639px) { .day-panel { max-height: 46%; } }
+@media (max-width: 699px) and (orientation: portrait) and (max-height: 720px) { .wx-hours { display: none; } .rail-left { max-height: 30vh; } }

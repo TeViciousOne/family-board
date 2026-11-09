@@ -47,7 +47,7 @@
   function dayPanel(today) {
     var date = cal.sel;
     var evs = L.eventsOn(date);
-    var panel = h('aside', { class: 'day-panel', 'data-scroll': 'day-panel' },
+    var panel = h('div', { 'data-fit': '1', 'data-fit-min': '0.6' },
       h('div', { class: 'day-panel-head' },
         h('h2', null, FB.i18n.dateLong(date)),
         h('button', { class: 'btn', onclick: function () { FB.actions.openEvent(null, { on_date: date }); } }, ui.icon('plus', 20), ' ', t('event.add'))));
@@ -72,7 +72,7 @@
           m ? h('span', { class: 'muted' }, m.name) : null));
       });
     }
-    return panel;
+    return h('aside', { class: 'day-panel', 'data-scroll': 'day-panel' }, panel);
   }
 
   FB.views.calendar = function (ctx) {

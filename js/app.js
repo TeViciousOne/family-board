@@ -63,7 +63,19 @@
       if (on) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current');
     });
     document.documentElement.setAttribute('data-route', name);
+    app.fit(view);
   }
+
+  /* Shrink content (CSS zoom) just enough that it fits its box, so the board never needs scrolling.
+     Each [data-fit] element is measured against its parent, which has a fixed height. */
+  app.fit = function (view) {
+    [].forEach.call((view || document).querySelectorAll('[data-fit]'), function (el) {
+      var box = el.parentElement, min = parseFloat(el.getAttribute('data-fit-min')) || 0.6, max = parseFloat(el.getAttribute('data-fit-max')) || 1, z = max;
+      el.style.zoom = max === 1 ? '' : String(max);
+      while (box.scrollHeight > box.clientHeight + 1 && z > min + 0.001) { z = Math.max(min, z - 0.04); el.style.zoom = String(z); }
+    });
+  };
+
 
   /* ================================================================ */
   /*  Data operations (optimistic, with rollback)                       */
@@ -327,6 +339,7 @@
       }
     }, 1000);
     document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'visible') { requestWake(); app.render(); night.update(); } });
+    root.addEventListener('resize', U.debounce(function () { app.render(); }, 150));
     root.addEventListener('online', function () { app.refreshAll(); app.loadWeather(true); });
     document.addEventListener('pointerdown', function () {
       FB.sound.unlock();

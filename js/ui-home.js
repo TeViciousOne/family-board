@@ -119,7 +119,7 @@
     if (!items.length) body.appendChild(h('p', { class: 'col-empty' }, t('board.nothingToday')));
     else {
       if (doneN === items.length) body.appendChild(h('p', { class: 'col-allDone' }, t('board.allDone')));
-      body.appendChild(h('div', { class: 'list-grid' }, sorted.map(function (x) { return choreRow(x); })));
+      body.appendChild(h('div', { class: 'list-grid', 'data-fit': '1', 'data-fit-min': '0.62', 'data-fit-max': '1.3' }, sorted.map(function (x) { return choreRow(x); })));
     }
     return h('section', { class: 'col' }, head, bar, body);
   }
@@ -138,42 +138,48 @@
 
   function rightRail(today) {
     var rail = h('aside', { class: 'rail rail-right', 'data-scroll': 'rail-right' });
+    var inner = h('div', { class: 'rail-in', 'data-fit': '1', 'data-fit-min': '0.6' });
+    rail.appendChild(inner);
+
     var ups = L.upcoming(today, 8);
     var shown = ups.slice(0, 7);
-    rail.appendChild(h('h3', null, t('home.comingUp')));
-    if (!shown.length) rail.appendChild(h('p', { class: 'muted' }, t('home.noEvents')));
+    var secUps = h('section', { class: 'rr rr-ups' }, h('h3', null, t('home.comingUp')));
+    if (!shown.length) secUps.appendChild(h('p', { class: 'muted' }, t('home.noEvents')));
     var lastDate = null, group = null;
     shown.forEach(function (x) {
       if (x.date !== lastDate) {
         lastDate = x.date;
         group = h('div', { class: 'ev-group' }, h('div', { class: 'ev-day' }, FB.i18n.relDay(x.date)));
-        rail.appendChild(group);
+        secUps.appendChild(group);
       }
       group.appendChild(eventLine(x));
     });
-    rail.appendChild(h('button', { type: 'button', class: 'link-btn', onclick: function () { FB.app.go('calendar'); } }, t('home.openCalendar')));
+    secUps.appendChild(h('button', { type: 'button', class: 'link-btn', onclick: function () { FB.app.go('calendar'); } }, t('home.openCalendar')));
+    inner.appendChild(secUps);
 
     var cds = L.countdowns(today).slice(0, 3);
     if (cds.length) {
-      rail.appendChild(h('h3', null, t('home.countdowns')));
+      var secCd = h('section', { class: 'rr rr-cd' }, h('h3', null, t('home.countdowns')));
       cds.forEach(function (c) {
-        rail.appendChild(h('button', { type: 'button', class: 'cd', onclick: function () { FB.actions.openEvent(c.event); } },
+        secCd.appendChild(h('button', { type: 'button', class: 'cd', onclick: function () { FB.actions.openEvent(c.event); } },
           h('b', null, String(c.days)), h('span', null, (c.days === 1 ? t('unit.day') : t('unit.days')) + ' · ' + c.event.title)));
       });
+      inner.appendChild(secCd);
     }
 
     var notes = L.notesSorted().slice(0, 2);
     if (notes.length) {
-      rail.appendChild(h('h3', null, t('home.notes')));
+      var secN = h('section', { class: 'rr rr-notes' }, h('h3', null, t('home.notes')));
       notes.forEach(function (n) {
         var m = L.member(n.author);
-        rail.appendChild(h('button', { type: 'button', class: 'note-mini', style: { borderColor: m ? m.color : 'var(--ink-3)' }, onclick: function () { FB.app.go('lists'); } },
+        secN.appendChild(h('button', { type: 'button', class: 'note-mini', style: { borderColor: m ? m.color : 'var(--ink-3)' }, onclick: function () { FB.app.go('lists'); } },
           h('span', null, n.body), m ? h('small', null, m.name) : null));
       });
+      inner.appendChild(secN);
     }
 
     var open = FB.state.shopping.filter(function (s) { return !s.done; }).length;
-    rail.appendChild(h('button', { type: 'button', class: 'shop-tile', onclick: function () { FB.app.go('lists'); } },
+    inner.appendChild(h('button', { type: 'button', class: 'shop-tile', onclick: function () { FB.app.go('lists'); } },
       ui.icon('cart', 26),
       h('span', null, open ? t('home.shoppingCount', { n: open }) : t('home.shoppingEmpty'))));
     return rail;
@@ -185,11 +191,12 @@
     var due = L.choresDue(today, ctx.nowHHMM);
 
     var left = h('aside', { class: 'rail rail-left', 'data-scroll': 'rail-left' },
-      h('div', { class: 'clock-row' },
-        h('div', { class: 'clock' }, U.hhmm(ctx.now)),
-        h('button', { type: 'button', class: 'icon-btn sleep-btn', 'aria-label': t('home.sleep'), onclick: function () { FB.night.sleepNow(); } }, ui.icon('moon'))),
-      h('div', { class: 'dateline' }, FB.i18n.dateLong(today)),
-      weatherBlock());
+      h('div', { class: 'rail-in', 'data-fit': '1', 'data-fit-min': '0.6' },
+        h('div', { class: 'clock-row' },
+          h('div', { class: 'clock' }, U.hhmm(ctx.now)),
+          h('button', { type: 'button', class: 'icon-btn sleep-btn', 'aria-label': t('home.sleep'), onclick: function () { FB.night.sleepNow(); } }, ui.icon('moon'))),
+        h('div', { class: 'dateline' }, FB.i18n.dateLong(today)),
+        weatherBlock()));
 
     var board = h('main', { class: 'board' });
     if (!FB.state.chores.length) {
