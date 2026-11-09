@@ -128,6 +128,9 @@ function ok(cond, msg) { console.log((cond ? 'PASS ' : 'FAIL ') + msg); if (!con
   await p.locator('#nav button[data-route=chores]').click();
   await p.waitForSelector('.page .row');
   await p.screenshot({ path: OUT + '/06-chores.png' });
+  { const n0 = await p.evaluate(() => FB.state.chores.length);
+    await p.locator('.row .row-del').first().click(); await p.locator('.btn.danger').last().click(); await p.waitForTimeout(400);
+    ok((await p.evaluate(() => FB.state.chores.length)) === n0 - 1, 'a chore can be deleted straight from the list'); }
   await p.locator('.page-head .btn:not(.ghost)').click();
   await p.locator('.sheet-actions .btn.ghost', { hasText: 'Custom chore' }).click();
   await p.waitForSelector('.sheet form');
@@ -163,6 +166,8 @@ function ok(cond, msg) { console.log((cond ? 'PASS ' : 'FAIL ') + msg); if (!con
   await p.locator('#nav button[data-route=settings]').click();
   await p.waitForSelector('.settings');
   await p.screenshot({ path: OUT + '/10-settings.png', fullPage: false });
+  ok((await p.locator('.set-menu .row').count()) >= 6, 'settings shows a menu of topics');
+  await p.locator('.set-menu .row', { hasText: 'Family' }).click(); await p.waitForSelector('.set-one .set');
   await p.locator('.set .btn', { hasText: 'Add family member' }).click();
   await p.fill('.sheet input[type=text]', 'Dritan');
   await p.locator('.sheet-actions .btn', { hasText: 'Save' }).click();
@@ -170,6 +175,8 @@ function ok(cond, msg) { console.log((cond ? 'PASS ' : 'FAIL ') + msg); if (!con
   ok((await p.locator('.set .row', { hasText: 'Dritan' }).count()) === 1, 'family member added in settings');
 
   /* ---------------- language ---------------- */
+  await p.locator('.set-page .page-head .btn.ghost').click(); await p.waitForSelector('.set-menu');
+  await p.locator('.set-menu .row', { hasText: 'This device' }).click(); await p.waitForSelector('.set-one .set');
   await p.locator('.seg-b', { hasText: 'Shqip' }).click();
   await p.waitForTimeout(200);
   await p.locator('#nav button[data-route=home]').click();

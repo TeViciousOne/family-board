@@ -29,11 +29,16 @@
       any = true;
       wrap.appendChild(h('h3', { class: 'grp' }, g.m ? ui.avatar(g.m, 26) : null, ' ', g.m ? g.m.name : t('board.everyone')));
       g.items.forEach(function (c) {
-        wrap.appendChild(h('button', { type: 'button', class: 'row' + (c.active ? '' : ' paused'), onclick: function () { FB.actions.openChore(c); } },
+        wrap.appendChild(h('div', { role: 'button', tabindex: '0', class: 'row' + (c.active ? '' : ' paused'), onclick: function () { FB.actions.openChore(c); },
+          onkeydown: function (e) { if (e.target === e.currentTarget && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); FB.actions.openChore(c); } } },
           h('span', { class: 'row-emoji' }, c.emoji || '•'),
           h('span', { class: 'row-main' },
             h('span', { class: 'row-title' }, c.title + (c.active ? '' : ' · ' + t('chores.paused'))),
             h('span', { class: 'row-sub' }, FB.recur.describe(c.rule, FB.i18n.L) + (c.due_time ? ' · ' + t('chore.by', { time: c.due_time }) : ''))),
+          h('button', { type: 'button', class: 'icon-btn faint row-del', 'aria-label': t('common.delete') + ': ' + c.title, onclick: function (e) {
+            e.stopPropagation();
+            ui.confirm({ title: t('chore.deleteQ', { name: c.title }), text: t('chore.deleteHint'), yes: t('common.delete'), danger: true }).then(function (ok) { if (ok) FB.data.del('chores', c.id); });
+          } }, ui.icon('trash', 22)),
           ui.icon('right', 20)));
       });
     });

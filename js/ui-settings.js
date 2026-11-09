@@ -179,11 +179,34 @@
     return s;
   }
 
+  /* settings: a menu of topics; each opens on its own page */
+  var page = null;
+  function topics() {
+    var out = [
+      ['family', 'home', t('set.family'), familySection],
+      ['account', 'user', t('set.account'), accountSection],
+      ['weather', 'sun', t('set.weather'), weatherSection]
+    ];
+    if (FB.push && FB.push.supported()) out.push(['push', 'bell', t('push.title'), pushSection]);
+    out.push(['sound', 'sound', t('set.sound'), soundSection], ['night', 'moon', t('set.night'), nightSection], ['device', 'phone', t('set.device'), deviceSection]);
+    return out;
+  }
   FB.views.settings = function () {
+    var list = topics(), cur = list.filter(function (x) { return x[0] === page; })[0];
+    if (cur) {
+      return h('div', { class: 'page settings set-page', 'data-scroll': 'page-settings-' + cur[0] },
+        h('div', { class: 'page-head' },
+          h('button', { type: 'button', class: 'btn ghost', onclick: function () { page = null; FB.app.render(); } }, ui.icon('left', 20), ' ', t('nav.settings')),
+          h('h1', null, cur[2])),
+        h('div', { class: 'set-one' }, cur[3]()));
+    }
     return h('div', { class: 'page settings', 'data-scroll': 'page-settings' },
       h('div', { class: 'page-head' }, h('h1', null, t('nav.settings'))),
-      h('div', { class: 'set-grid' },
-        h('div', { class: 'set-col' }, familySection(), accountSection(), deviceSection()),
-        h('div', { class: 'set-col' }, weatherSection(), FB.push && FB.push.supported() ? pushSection() : null, soundSection(), nightSection())));
+      h('div', { class: 'list set-menu' }, list.map(function (x) {
+        return h('button', { type: 'button', class: 'row', onclick: function () { page = x[0]; FB.app.render(); } },
+          h('span', { class: 'row-ico' }, ui.icon(x[1], 24)),
+          h('span', { class: 'row-main' }, h('span', { class: 'row-title' }, x[2])),
+          ui.icon('right', 20));
+      })));
   };
 })(typeof window !== 'undefined' ? window : globalThis);

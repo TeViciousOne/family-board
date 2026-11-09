@@ -284,3 +284,13 @@ input[type=text], input[type=email], input[type=password], input[type=number], i
 .shop-pop .pane { background: transparent; border: 0; box-shadow: none; padding: 0; }
 .shop-pop .pane-head:empty { display: none; }
 .shop-pop .list { max-height: 52vh; overflow: auto; }
+
+/* settings menu and pages; chore delete button */
+.set-menu { max-width: 640px; }
+.row-ico { display: grid; place-items: center; width: 40px; height: 40px; border-radius: 12px; background: rgba(10, 132, 255, .18); color: #0A84FF; flex: none; }
+.set-page .page-head { gap: 12px; }
+.set-page .page-head h1 { margin: 0; }
+.set-one { max-width: 640px; }
+.set-one .set > h2 { display: none; }
+.row-del { flex: none; color: #FF453A; }
+.row[role=button] { cursor: pointer; }
