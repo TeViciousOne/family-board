@@ -23,9 +23,22 @@
       return reg.pushManager.getSubscription().then(function (sub) {
         return sub || reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: b64(P.key()) });
       });
-    }).then(function (sub) { return FB.store.pushSave(sub, FB.device.lang || 'en'); });
+    }).then(function (sub) { return FB.store.pushSave(sub, FB.device.lang || 'en'); }).then(function () { P.wanted(true); });
+  };
+  /* remembered per device, so the switch stays on even if the browser drops the subscription */
+  P.wanted = function (v) {
+    try { if (v === undefined) return localStorage.getItem('fb.push.on') === '1'; localStorage.setItem('fb.push.on', v ? '1' : '0'); } catch (e) { return false; }
+  };
+  /* what the switch shows: re-creates a lost subscription and re-saves it on the server */
+  P.status = function () {
+    if (Notification.permission !== 'granted') return Promise.resolve(false);
+    return P.current().then(function (sub) {
+      if (sub) { if (P.wanted()) FB.store.pushSave(sub, FB.device.lang || 'en').catch(function () {}); return true; }
+      return P.wanted() ? P.enable().then(function () { return true; }, function () { return false; }) : false;
+    });
   };
   P.disable = function () {
+    P.wanted(false);
     return P.current().then(function (sub) {
       if (!sub) return;
       var ep = sub.endpoint;

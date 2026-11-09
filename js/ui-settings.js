@@ -117,7 +117,7 @@
       });
     } });
     s.appendChild(h('div', { class: 'toggle' }, h('label', { class: 'check' }, cb, h('span', null, t('push.on')))));
-    FB.push.current().then(function (sub) { cb.checked = !!sub && Notification.permission === 'granted'; cb.disabled = false; }, function () { cb.disabled = false; });
+    FB.push.status().then(function (on) { cb.checked = !!on; cb.disabled = false; }, function () { cb.disabled = false; });
     return s;
   }
 
