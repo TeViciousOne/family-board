@@ -61,4 +61,4 @@ On phones: open the site in Chrome > menu > "Install app" / "Add to Home screen"
 - **AI helpers** (Google Gemini): *Quick add* (sparkle button on the home screen, type or speak), a one-line daily summary above the chores, and *Tidy up* on the shopping list. Run `supabase/ai.sql`, store your key in `ai_config`, and deploy `supabase/functions/ai`. The key never reaches the browser. Each user is limited to 150 AI requests a day.
 
 ### Notifications
-Each phone enables them in Settings → Notifications. Types: event reminders, chore due, **chore done (who + time)**, **new chore added**, and a **"Tomorrow" list at 19:00** (Tirana time). Activity messages arrive within ~1 minute and are not sent to the account that made the change.
+Each phone enables them in Settings → Notifications. Types: event reminders, chore due, **chore done (who + time)**, **new chore added**, and a **"Tomorrow" list at 19:00** (Tirana time). Activity messages arrive within ~1 minute and go to every subscribed device, including the one that made the change.

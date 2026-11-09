@@ -95,18 +95,18 @@ Deno.serve(async (req) => {
         const { data: comps } = await sb.from("chore_completions").select("*").in("id", doneEv.map((e) => e.ref));
         const rows = (comps || []).map((c) => ({ c, e: doneEv.find((x) => x.ref === c.id)!, chore: (chores || []).find((x) => x.id === c.chore_id) })).filter((r) => r.chore);
         if (rows.length > 3) {
-          items.push({ key: `dn:${rows[0].c.id}`, title: "✅", body: (l) => tx(l, "doneMany", { n: rows.length }), skipUser: rows[0].e.actor });
+          items.push({ key: `dn:${rows[0].c.id}`, title: "✅", body: (l) => tx(l, "doneMany", { n: rows.length }) });
         } else rows.forEach((r) => {
           const t = localNow(tz, new Date(r.c.done_at)).hhmm;
           items.push({ key: `dn:${r.c.id}`, title: "✅ " + (r.chore.emoji ? r.chore.emoji + " " : "") + r.chore.title,
-            body: (l) => tx(l, "doneBy", { who: nameOf(r.c.done_by) || tx(l, "someone"), time: t }), skipUser: r.e.actor });
+            body: (l) => tx(l, "doneBy", { who: nameOf(r.c.done_by) || tx(l, "someone"), time: t }) });
         });
       }
       const addEv = mine.filter((e) => e.kind === "added");
       if (addEv.length) {
         const added = (chores || []).filter((c) => addEv.some((e) => e.ref === c.id));
-        if (added.length === 1) items.push({ key: `ad:${added[0].id}`, title: "🆕 " + (added[0].emoji ? added[0].emoji + " " : "") + added[0].title, body: (l) => tx(l, "newChore"), skipUser: addEv[0].actor });
-        else if (added.length > 1) items.push({ key: `ad:${added[0].id}`, title: "", body: () => "", skipUser: addEv[0].actor, many: added });
+        if (added.length === 1) items.push({ key: `ad:${added[0].id}`, title: "🆕 " + (added[0].emoji ? added[0].emoji + " " : "") + added[0].title, body: (l) => tx(l, "newChore") });
+        else if (added.length > 1) items.push({ key: `ad:${added[0].id}`, title: "", body: () => "", many: added });
       }
     }
 
@@ -115,7 +115,7 @@ Deno.serve(async (req) => {
       if (error) continue; // already sent
       sent.push(it.key);
       if (dry) continue;
-      await Promise.all(list.filter((s) => !it.skipUser || s.user_id !== it.skipUser).map(async (s) => {
+      await Promise.all(list.map(async (s) => {
         try {
           const l = TXT[s.lang] ? s.lang : "en";
           let title = it.title, body = it.body(l);
