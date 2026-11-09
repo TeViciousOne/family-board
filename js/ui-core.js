@@ -156,7 +156,7 @@
 
   /* segmented control: options = [{v, label}] */
   ui.seg = function (options, value, onChange) {
-    var el = h('div', { class: 'seg', role: 'group' });
+    var el = h('div', { class: 'seg' + (options.reduce(function (n, o) { return n + String(o.label).length; }, 0) > 24 ? ' stack' : ''), role: 'group' });
     var btns = options.map(function (o) {
       var b = h('button', {
         type: 'button', class: 'seg-b' + (o.v === value ? ' on' : ''), 'aria-pressed': o.v === value ? 'true' : 'false',

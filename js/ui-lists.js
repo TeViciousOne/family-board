@@ -22,20 +22,19 @@
     input.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); add(); } });
     var items = L.shoppingSorted();
     var doneN = items.filter(function (x) { return x.done; }).length;
-    var list = h('div', { class: 'list tight' }, items.map(function (s) {
+    var list = h('div', { class: 'shop-grid' }, items.map(function (s) {
       var m = L.member(s.added_by);
-      return h('div', { class: 'shop' + (s.done ? ' done' : '') },
-        h('button', {
-          type: 'button', class: 'shop-tick', 'aria-label': (s.done ? t('shop.untick') : t('shop.tick')) + ': ' + s.title,
-          onclick: function () { FB.data.edit('shopping_items', s.id, { done: !s.done, done_at: s.done ? null : new Date().toISOString() }).then(after); }
-        }, s.done ? ui.icon('check', 22) : null),
+      function toggle() { FB.data.edit('shopping_items', s.id, { done: !s.done, done_at: s.done ? null : new Date().toISOString() }).then(after); }
+      return h('div', { class: 'shop shop-sq' + (s.done ? ' done' : ''), role: 'button', tabindex: '0', 'aria-pressed': s.done ? 'true' : 'false', onclick: toggle,
+        onkeydown: function (e) { if (e.target === e.currentTarget && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); toggle(); } } },
+        h('span', { class: 'shop-tick', 'aria-hidden': 'true' }, s.done ? ui.icon('check', 22) : null),
         h('span', { class: 'shop-title' }, s.title),
-        m ? h('i', { class: 'ev-dot', style: { background: m.color }, title: m.name }) : null,
-        h('button', { type: 'button', class: 'icon-btn faint', 'aria-label': t('common.delete'), onclick: function () { FB.data.del('shopping_items', s.id).then(after); } }, ui.icon('x', 20)));
+        m ? h('i', { class: 'ev-dot shop-by', style: { background: m.color }, title: m.name }) : null,
+        h('button', { type: 'button', class: 'shop-x', 'aria-label': t('common.delete') + ': ' + s.title, onclick: function (e) { e.stopPropagation(); FB.data.del('shopping_items', s.id).then(after); } }, ui.icon('x', 16)));
     }));
-    if (!items.length) list.appendChild(h('p', { class: 'muted pad' }, t('shop.empty')));
-    return h('section', { class: 'pane' },
-      h('div', { class: 'pane-head' }, h('h2', null, t('shop.title')),
+    if (!items.length) list = h('p', { class: 'muted pad' }, t('shop.empty'));
+    return h('section', { class: 'pane pane-shop' },
+      h('div', { class: 'pane-head' }, h('span', { class: 'pane-ico' }, ui.icon('cart', 22)), h('h2', null, t('shop.title')),
         doneN ? h('button', { class: 'link-btn', onclick: function () {
           Promise.all(items.filter(function (x) { return x.done; }).map(function (x) { return FB.data.del('shopping_items', x.id); })).then(after);
         } }, t('shop.clearDone', { n: doneN })) : null),
@@ -50,20 +49,21 @@
       ta.value = '';
       FB.data.add('notes', { body: v, author: me(), pinned: false, created_at: new Date().toISOString() });
     }
-    var list = h('div', { class: 'list tight' }, L.notesSorted().map(function (n) {
+    var list = h('div', { class: 'note-grid' }, L.notesSorted().map(function (n, i) {
       var m = L.member(n.author);
-      return h('article', { class: 'note' + (n.pinned ? ' pinned' : ''), style: { borderColor: m ? m.color : 'var(--ink-3)' } },
+      return h('article', { class: 'note note-sq' + (n.pinned ? ' pinned' : ''), style: { '--paper': m ? U.tint(m.color, .16) : 'transparent', '--tilt': ((i % 3) - 1) * 1.2 + 'deg' } },
+        n.pinned ? h('span', { class: 'note-pin', 'aria-hidden': 'true' }, ui.icon('pin', 16)) : null,
         h('p', null, n.body),
         h('footer', null,
-          h('span', { class: 'muted' }, (m ? m.name + ' · ' : '') + FB.i18n.relDay(U.ymd(new Date(n.created_at))) + ' ' + FB.i18n.timeOf(n.created_at)),
+          h('span', { class: 'note-by' }, (m ? m.name + ' · ' : '') + FB.i18n.relDay(U.ymd(new Date(n.created_at))) + ' ' + FB.i18n.timeOf(n.created_at)),
           h('span', { class: 'grow' }),
-          h('button', { type: 'button', class: 'icon-btn faint' + (n.pinned ? ' on' : ''), 'aria-label': n.pinned ? t('notes.unpin') : t('notes.pin'), 'aria-pressed': n.pinned ? 'true' : 'false',
-            onclick: function () { FB.data.edit('notes', n.id, { pinned: !n.pinned }); } }, ui.icon('pin', 20)),
-          h('button', { type: 'button', class: 'icon-btn faint', 'aria-label': t('common.delete'), onclick: function () { FB.data.del('notes', n.id); } }, ui.icon('trash', 20))));
+          h('button', { type: 'button', class: 'note-btn' + (n.pinned ? ' on' : ''), 'aria-label': n.pinned ? t('notes.unpin') : t('notes.pin'), 'aria-pressed': n.pinned ? 'true' : 'false',
+            onclick: function () { FB.data.edit('notes', n.id, { pinned: !n.pinned }); } }, ui.icon('pin', 16)),
+          h('button', { type: 'button', class: 'note-btn', 'aria-label': t('common.delete'), onclick: function () { FB.data.del('notes', n.id); } }, ui.icon('trash', 16))));
     }));
-    if (!FB.state.notes.length) list.appendChild(h('p', { class: 'muted pad' }, t('notes.empty')));
-    return h('section', { class: 'pane' },
-      h('div', { class: 'pane-head' }, h('h2', null, t('notes.title'))),
+    if (!FB.state.notes.length) list = h('p', { class: 'muted pad' }, t('notes.empty'));
+    return h('section', { class: 'pane pane-notes' },
+      h('div', { class: 'pane-head' }, h('span', { class: 'pane-ico' }, ui.icon('edit', 22)), h('h2', null, t('notes.title'))),
       h('div', { class: 'add-col' }, ta, h('button', { class: 'btn', onclick: add }, ui.icon('plus', 20), ' ', t('notes.post'))),
       list);
   }
