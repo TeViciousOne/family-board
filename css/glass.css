@@ -80,7 +80,26 @@ input[type=text], input[type=email], input[type=password], input[type=number], i
   box-shadow: 0 12px 34px rgba(30, 50, 110, .22), var(--g-shine);
 }
 #nav button { border-radius: 999px; padding-top: 0; justify-content: center; }
-#nav button.on { background: var(--g-fill); box-shadow: var(--g-shine), 0 2px 10px rgba(0, 0, 0, .1); color: var(--brand); }
+#nav { position: relative; }
+#nav button { position: relative; z-index: 1; transition: color .25s ease, transform .2s cubic-bezier(.3, 1.4, .5, 1); -webkit-tap-highlight-color: transparent; }
+#nav button.on { background: none; box-shadow: none; color: var(--brand); }
+#nav button:active { transform: scale(.92); }
+#nav button svg { transition: transform .45s cubic-bezier(.3, 1.6, .5, 1); }
+#nav button.on svg { transform: translateY(-1px) scale(1.08); }
+/* the glass highlight that glides between tabs */
+.nav-pill {
+  position: absolute; left: 0; top: 0; z-index: 0; border-radius: 999px; pointer-events: none;
+  background: var(--g-fill); box-shadow: var(--g-shine), 0 2px 12px rgba(0, 0, 0, .12);
+  transition: transform .5s cubic-bezier(.34, 1.36, .5, 1), width .5s cubic-bezier(.34, 1.36, .5, 1);
+  will-change: transform, width;
+}
+/* page change */
+.page-in { animation-duration: .42s; animation-timing-function: cubic-bezier(.22, 1, .36, 1); animation-fill-mode: both; }
+.page-in-fwd { animation-name: pageFwd; }
+.page-in-back { animation-name: pageBack; }
+@keyframes pageFwd { from { opacity: 0; transform: translateX(28px) scale(.985); } to { opacity: 1; transform: none; } }
+@keyframes pageBack { from { opacity: 0; transform: translateX(-28px) scale(.985); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .nav-pill, #nav button, #nav button svg { transition: none; } }
 #toast { bottom: calc(66px + env(safe-area-inset-bottom) + 24px); }
 
 /* sheets and toasts */

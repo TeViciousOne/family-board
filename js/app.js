@@ -56,6 +56,13 @@
       var el = view.querySelector('[data-fid="' + focus.id + '"]');
       if (el) { el.value = focus.value; el.focus(); try { el.setSelectionRange(focus.s, focus.e); } catch (e) { /* not a text field */ } }
     }
+    /* page change: slide in from the side the tab lies on */
+    if (lastRoute && lastRoute !== name && !(root.matchMedia && root.matchMedia('(prefers-reduced-motion: reduce)').matches)) {
+      var dir = routeIndex(name) > routeIndex(lastRoute) ? 'fwd' : 'back';
+      node.classList.add('page-in', 'page-in-' + dir);
+      setTimeout(function () { node.classList.remove('page-in', 'page-in-fwd', 'page-in-back'); }, 460);
+    }
+    lastRoute = name;
     [].forEach.call(document.querySelectorAll('#nav button'), function (b) {
       var on = b.getAttribute('data-route') === name;
       b.lastChild.textContent = t(b.getAttribute('data-label'));
@@ -64,7 +71,26 @@
     });
     document.documentElement.setAttribute('data-route', name);
     app.fit(view);
+    movePill(true);
   }
+
+  var lastRoute = null;
+  function routeIndex(n) { for (var i = 0; i < NAV.length; i++) if (NAV[i][0] === n) return i; return 0; }
+
+  /* the sliding highlight behind the active tab */
+  function movePill(animate) {
+    var nav = document.getElementById('nav'); if (!nav) return;
+    var pill = nav.querySelector('.nav-pill'), on = nav.querySelector('button.on');
+    if (!pill || !on) return;
+    var first = !pill.getAttribute('data-ready');
+    if (first || !animate) pill.style.transition = 'none';
+    pill.style.width = on.offsetWidth + 'px';
+    pill.style.height = on.offsetHeight + 'px';
+    pill.style.transform = 'translate(' + on.offsetLeft + 'px,' + on.offsetTop + 'px)';
+    pill.setAttribute('data-ready', '1');
+    if (first || !animate) { void pill.offsetWidth; pill.style.transition = ''; }
+  }
+  root.addEventListener('resize', function () { movePill(false); });
 
   /* Shrink content (CSS zoom) just enough that it fits its box, so the board never needs scrolling.
      Each [data-fit] element is measured against its parent, which has a fixed height. */
@@ -422,7 +448,7 @@
       if (FB.store.saveSnapshot) FB.store.saveSnapshot(st);
 
       U.clear(a); a.className = '';
-      var nav = h('nav', { id: 'nav', 'aria-label': 'Main' }, NAV.map(function (n) {
+      var nav = h('nav', { id: 'nav', 'aria-label': 'Main' }, h('span', { class: 'nav-pill', 'aria-hidden': 'true' }), NAV.map(function (n) {
         return h('button', { type: 'button', 'data-route': n[0], 'data-label': n[2], onclick: function () { app.go(n[0]); } }, ui.icon(n[1], 28), h('span', null, t(n[2])));
       }));
       a.appendChild(h('div', { id: 'view', class: 'view' }));
