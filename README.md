@@ -62,3 +62,4 @@ On phones: open the site in Chrome > menu > "Install app" / "Add to Home screen"
 
 ### Notifications
 Each phone enables them in Settings → Notifications. Types: event reminders, chore due, **chore done (who + time)**, **new chore added**, and a **"Tomorrow" list at 19:00** (Tirana time). Activity messages arrive within ~1 minute and go to every subscribed device, including the one that made the change.
+- **Air conditioner** (Tuya / Smart Life): a card on the home screen opens power, temperature, mode, fan speed and sleep. Run `supabase/ac.sql`, add your Tuya cloud credentials to `ac_config`, and deploy `supabase/functions/ac`. The Tuya developer trial must be renewed in the Tuya console every few months.

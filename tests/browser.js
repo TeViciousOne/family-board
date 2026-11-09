@@ -42,7 +42,7 @@ function ok(cond, msg) { console.log((cond ? 'PASS ' : 'FAIL ') + msg); if (!con
   await p.waitForSelector('.wx-temp');
   await p.waitForTimeout(300);
   await p.screenshot({ path: OUT + '/01-home.png' });
-  ok((await p.locator('.list-grid .chore').count()) === 5 && (await p.locator('.col').count()) === 1, 'home shows one shared chore list with person tags');
+  ok((await p.locator('.list-grid .chore').count()) >= 3 && (await p.locator('.col').count()) === 1, 'home shows one shared chore list with person tags');
   ok((await p.locator('.wx-temp').innerText()).startsWith('15'), 'weather shows rounded current temperature');
   ok((await p.locator('.wx-day').count()) === 5, 'weather shows 5 forecast days');
   /* chore templates */

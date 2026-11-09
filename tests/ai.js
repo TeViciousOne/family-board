@@ -43,7 +43,14 @@ const stub = () => {
   window.supabase = { createClient: () => ({
     auth: { getSession: async () => window.__net === false ? { data: { session: null }, error: { name: 'AuthRetryableFetchError', message: 'Failed to fetch' } } : { data: { session: { user } }, error: null }, signOut: async () => ({}) },
     from, rpc: async () => ({ data: null, error: null }),
-    functions: { invoke: async (name, o) => { window.__calls.push(o.body); const a = o.body.action; if (a === 'summary') return { data: { ok: true, data: { text: 'Dentist at 16:30 and two chores left.' } }, error: null }; if (a === 'tidy') return { data: { ok: true, data: window.__tidy(o.body.items) }, error: null }; return { data: null, error: { message: 'x' } }; } },
+    functions: { invoke: async (name, o) => {
+      if (name === 'ac') {
+        window.__ac = window.__ac || { switch: false, temp_set: 24, temp_current: 21, mode: 'hot', fan_speed_enum: 'auto', sleep: false }; window.__acCalls = window.__acCalls || [];
+        window.__acCalls.push(o.body);
+        if (o.body.action === 'status') return { data: { ok: true, data: { online: true, status: Object.keys(window.__ac).map(k => ({ code: k, value: window.__ac[k] })) } }, error: null };
+        if (o.body.action === 'set') { o.body.commands.forEach(c => { window.__ac[c.code] = c.value; }); return { data: { ok: true }, error: null }; }
+      }
+      window.__calls.push(o.body); const a = o.body.action; if (a === 'summary') return { data: { ok: true, data: { text: 'Dentist at 16:30 and two chores left.' } }, error: null }; if (a === 'tidy') return { data: { ok: true, data: window.__tidy(o.body.items) }, error: null }; return { data: null, error: { message: 'x' } }; } },
     channel: () => ({ on() { return this; }, subscribe() { return this; } }), removeChannel() {}
   }) };
 };
@@ -62,6 +69,19 @@ const stub = () => {
   ok(await p.locator('.ai-pill').count() === 0, 'no quick-add button on the home screen');
   await p.waitForSelector('.ai-sum', { timeout: 8000 });
   ok((await p.locator('.ai-sum').innerText()).includes('Dentist at 16:30'), 'daily summary line shows');
+  /* air conditioner */
+  await p.waitForSelector('.ac-tile', { state: 'visible', timeout: 8000 });
+  ok((await p.locator('.ac-tile .ac-sub').innerText()).includes('Off') && (await p.locator('.ac-tile .ac-sub').innerText()).includes('21'), 'AC tile shows off and the room temperature');
+  if (process.env.SHOTS) await p.screenshot({ path: process.env.SHOTS + '/ac-home.png' });
+  await p.click('.ac-tile'); await p.waitForSelector('.ac-pop .ac-power');
+  await p.click('.ac-pop .ac-power'); await p.click('.ac-pop .ac-step >> nth=1'); await p.click('.ac-pop .ac-step >> nth=1'); await p.waitForTimeout(900);
+  const ac1 = await p.evaluate(() => window.__ac);
+  ok(ac1.switch === true && ac1.temp_set === 26, 'AC power on and temperature raised to 26 (' + JSON.stringify(ac1) + ')');
+  await p.locator('.ac-pop .seg-b', { hasText: 'Cool' }).click(); await p.waitForTimeout(900);
+  ok((await p.evaluate(() => window.__ac.mode)) === 'cold', 'AC mode set to cool');
+  ok((await p.evaluate(() => window.__acCalls.filter(c => c.action === 'set').length)) === 2, 'quick taps were sent as one request');
+  if (process.env.SHOTS) await p.screenshot({ path: process.env.SHOTS + '/ac-pop.png' });
+  await p.keyboard.press('Escape'); await p.waitForTimeout(300);
   /* tidy */
   await p.evaluate(async () => { for (const t of ['milk', 'Milk 1L', 'eggs']) await FB.data.add('shopping_items', { title: t, done: false, added_by: null, created_at: new Date().toISOString(), done_at: null }); });
   await p.evaluate(() => location.hash = '#/lists'); await p.waitForSelector('.ai-tidy');

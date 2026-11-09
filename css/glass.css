@@ -412,3 +412,28 @@ input[type=text], input[type=email], input[type=password], input[type=number], i
   .rail-right .rr-shop { display: none; }
   .rail-right.has-shop .shop-tile { display: flex; }
 }
+
+/* air conditioner */
+.ac-tile { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 54px; margin-bottom: 8px; padding: 8px 14px; border: 0; border-radius: 16px; text-align: left; color: var(--ink); background: var(--g-fill); box-shadow: var(--g-shine); }
+.ac-tile .ac-ico { display: grid; place-items: center; width: 36px; height: 36px; border-radius: 50%; background: rgba(120, 120, 128, .24); flex: none; }
+.ac-tile.on .ac-ico { background: #0A84FF; color: #fff; box-shadow: 0 4px 14px rgba(10, 132, 255, .45); }
+.ac-tile .ac-txt { display: flex; flex-direction: column; min-width: 0; line-height: 1.2; }
+.ac-tile .ac-txt b { font-size: 15px; }
+.ac-tile .ac-sub { font-size: 13px; color: var(--ink-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ac-pop { display: grid; gap: 14px; }
+.ac-top { display: flex; align-items: center; gap: 16px; }
+.ac-power { display: grid; place-items: center; width: 76px; height: 76px; border: 0; border-radius: 50%; color: var(--ink-3); background: rgba(120, 120, 128, .24); transition: background .25s, color .25s, box-shadow .25s, transform .15s; }
+.ac-power:active { transform: scale(.94); }
+.ac-power.on { color: #fff; background: #0A84FF; box-shadow: 0 8px 26px rgba(10, 132, 255, .5); }
+.ac-state { display: flex; flex-direction: column; }
+.ac-state b { font-size: 22px; }
+.ac-state span { color: var(--ink-3); }
+.ac-temp { display: flex; align-items: center; justify-content: center; gap: 22px; }
+.ac-big { min-width: 120px; text-align: center; font-size: 64px; font-weight: 700; line-height: 1; font-variant-numeric: tabular-nums; }
+.ac-big small { font-size: 22px; font-weight: 600; margin-left: 2px; color: var(--ink-3); }
+.ac-step { display: grid; place-items: center; width: 60px; height: 60px; border: 0; border-radius: 50%; color: var(--ink); background: var(--g-fill); box-shadow: var(--g-shine); }
+.ac-step:active { transform: scale(.92); }
+@media (max-width: 699px) and (orientation: portrait) { .rail-right .ac-tile { grid-column: 1 / -1; } }
+.ac-pop .seg.stack { display: grid; grid-template-columns: repeat(3, 1fr); border-radius: 18px; }
+.ac-pop .seg.stack .seg-b { text-align: center; padding-left: 6px; padding-right: 6px; }
+.ac-pop { gap: 10px; }

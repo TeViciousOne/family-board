@@ -180,6 +180,7 @@
       inner.appendChild(secN);
     }
 
+    var acTile = FB.ac && FB.ac.tile(); if (acTile) inner.appendChild(acTile);
     var openItems = L.shoppingSorted().filter(function (s) { return !s.done; });
     var open = openItems.length;
     if (open) {
