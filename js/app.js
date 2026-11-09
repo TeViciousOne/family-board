@@ -82,7 +82,11 @@
   /* ================================================================ */
   var TABLES = FB.storeLib.TABLES;
   function arr(table) { return FB.state[TABLES[table]]; }
-  function touch() { L.touch(); app.render(); }
+  var snapTimer = null;
+  function touch() {
+    L.touch(); app.render();
+    if (FB.store && FB.store.saveSnapshot) { clearTimeout(snapTimer); snapTimer = setTimeout(function () { FB.store.saveSnapshot(FB.state); }, 800); }
+  }
   function fail(table, err) {
     if (root.console) console.error(err);
     ui.toast(t(FB.storeLib.errorKey(err) === 'err.generic' ? 'err.save' : FB.storeLib.errorKey(err)), { kind: 'error' });
@@ -95,6 +99,7 @@
       if (table === 'members' && !row.created_at) row.created_at = new Date().toISOString();
       arr(table).push(row); touch();
       return FB.store.insert(table, row).then(function (srv) {
+        if (srv && srv.__queued) { touch(); return row; }
         var a = arr(table);
         for (var i = 0; i < a.length; i++) if (a[i].id === row.id) { a[i] = srv; break; }
         touch(); return srv;
@@ -104,6 +109,7 @@
       var a = arr(table), row = a.filter(function (x) { return x.id === id; })[0];
       if (row) { Object.assign(row, patch); touch(); }
       return FB.store.update(table, id, patch).then(function (srv) {
+        if (srv && srv.__queued) { touch(); return row || {}; }
         var b = arr(table);
         for (var i = 0; i < b.length; i++) if (b[i].id === id) { b[i] = srv; break; }
         touch(); return srv;
@@ -296,6 +302,7 @@
         }
         if (!TABLES[tb]) return;
         var before = tb === 'notes' ? FB.state.notes.map(function (n) { return n.id; }) : null;
+        if (FB.store.sync && FB.store.sync().pending) return;
         FB.store.loadTable(tb).then(function (rows) {
           FB.state[TABLES[tb]] = rows; touch();
           if (before) {
@@ -341,6 +348,11 @@
     document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'visible') { requestWake(); app.render(); night.update(); } });
     root.addEventListener('resize', U.debounce(function () { app.render(); }, 150));
     root.addEventListener('online', function () { app.refreshAll(); app.loadWeather(true); });
+    root.addEventListener('offline', function () { if (FB.store.flush) FB.store.flush(); });
+    setInterval(function () {
+      var st = FB.store.sync && FB.store.sync();
+      if (st && (st.offline || st.pending) && !st.flushing) app.refreshAll();
+    }, 20000);
     document.addEventListener('pointerdown', function () {
       FB.sound.unlock();
       if (night.isNight(new Date()) && !night.el.classList.contains('on')) night.awakeUntil = Math.max(night.awakeUntil, Date.now() + 60000);
@@ -349,13 +361,37 @@
   }
 
   app.refreshAll = function () {
-    return FB.store.loadAll().then(function (d) {
-      var st = FB.state;
-      st.household = d.household;
-      Object.keys(TABLES).forEach(function (tb) { st[TABLES[tb]] = d[TABLES[tb]]; });
-      touch();
-    }, function () { /* offline */ });
+    var flush = FB.store.flush ? FB.store.flush() : Promise.resolve();
+    return flush.then(function () {
+      if (FB.store.sync && FB.store.sync().pending) return null; /* keep local changes until they are uploaded */
+      return FB.store.loadAll().then(function (d) {
+        var st = FB.state;
+        st.household = d.household;
+        Object.keys(TABLES).forEach(function (tb) { st[TABLES[tb]] = d[TABLES[tb]]; });
+        touch();
+      });
+    }).catch(function () { /* offline */ });
   };
+
+  /* ---------- sync banner ---------- */
+  var syncEl = null, syncHide = null;
+  function setupSync() {
+    if (!FB.store.onSync || syncEl) return;
+    syncEl = h('div', { id: 'sync', role: 'status', 'aria-live': 'polite' });
+    document.body.appendChild(syncEl);
+    FB.store.onSync(function (st) {
+      var msg = null, kind = '';
+      if (st.dropped) { msg = t('sync.dropped'); kind = 'bad'; }
+      else if (st.flushing) { msg = t('sync.syncing'); }
+      else if (st.offline) { msg = st.pending ? t('sync.pending', { n: st.pending }) : t('sync.offline'); kind = 'off'; }
+      else if (st.pending) { msg = t('sync.syncing'); }
+      else if (st.justSynced) { msg = t('sync.done'); kind = 'ok'; }
+      clearTimeout(syncHide);
+      syncEl.textContent = msg || '';
+      syncEl.className = msg ? 'on ' + kind : '';
+      if (msg && (kind === 'ok' || kind === 'bad')) syncHide = setTimeout(function () { syncEl.className = ''; }, 3500);
+    });
+  }
 
   /* enter the app once the store is signed in and has a household */
   app.enter = function () {
@@ -366,6 +402,7 @@
       Object.keys(TABLES).forEach(function (tb) { st[TABLES[tb]] = d[TABLES[tb]]; });
       st.me = FB.store.me();
       st.ready = true; L.touch();
+      if (FB.store.saveSnapshot) FB.store.saveSnapshot(st);
 
       U.clear(a); a.className = '';
       var nav = h('nav', { id: 'nav', 'aria-label': 'Main' }, NAV.map(function (n) {
@@ -375,6 +412,8 @@
       a.appendChild(nav);
 
       FB.store.subscribe(onRemote);
+      setupSync();
+      if (FB.store.sync) { var s0 = FB.store.sync(); if (s0.offline || s0.pending) FB.store.onSync && FB.store.flush && FB.store.flush(); }
       app.applyDevice();
       app.render();
       app.loadWeather(false);

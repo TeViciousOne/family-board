@@ -50,3 +50,11 @@ On phones: open the site in Chrome > menu > "Install app" / "Add to Home screen"
 
 - Free Supabase projects pause after a week of no activity; a tablet that is always on keeps it awake.
 - Fonts load from Google Fonts; offline the app falls back to system fonts.
+
+
+## Extras added later
+
+- **Accounts**: username + password (no email). Settings → Account has *Change password* and *Recovery code*; adults can set a new password for another member. Run `supabase/password_tools.sql` once.
+- **Offline mode**: the last data is saved on the device; changes made offline are queued and uploaded when the connection returns (banner at the top shows the state).
+- **Chore templates**: Chores → Templates adds ready-made chores in one tap.
+- **Phone notifications**: run `supabase/push.sql`, insert your VAPID keys into `push_config`, deploy `supabase/functions/reminders`, and schedule it every minute (commands are in the SQL file). Each phone turns it on in Settings. On iPhone, add the app to the Home Screen first. The household timezone is `households.tz` (default `Europe/Tirane`).

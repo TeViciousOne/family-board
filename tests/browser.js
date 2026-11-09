@@ -45,6 +45,14 @@ function ok(cond, msg) { console.log((cond ? 'PASS ' : 'FAIL ') + msg); if (!con
   ok((await p.locator('.list-grid .chore').count()) === 5 && (await p.locator('.col').count()) === 1, 'home shows one shared chore list with person tags');
   ok((await p.locator('.wx-temp').innerText()).startsWith('15'), 'weather shows rounded current temperature');
   ok((await p.locator('.wx-day').count()) === 5, 'weather shows 5 forecast days');
+  /* chore templates */
+  await p.evaluate(() => location.hash = '#/chores'); await p.waitForSelector('.page-head');
+  await p.click('text=Templates'); await p.waitForSelector('.tpl-row');
+  const tplBefore = await p.evaluate(() => FB.state.chores.length);
+  await p.locator('.tpl-row input:not([disabled])').nth(0).check(); await p.locator('.tpl-row input:not([disabled])').nth(1).check();
+  await p.click('.sheet-actions .btn:not(.ghost)'); await p.waitForTimeout(500);
+  ok((await p.evaluate(() => FB.state.chores.length)) === tplBefore + 2 && (await p.locator('.sheet').count()) === 0, 'templates add the ticked chores');
+  await p.evaluate(() => location.hash = '#/home'); await p.waitForSelector('.home .col');
   ok((await p.locator('.wx-hours .wx-h').count()) >= 4 && (await p.locator('.wx-hours .wx-hn').first().innerText()) === 'Now', 'hourly weather strip starts with Now');
   await p.click('.wx'); await p.waitForSelector('.wx-hscroll');
   ok((await p.locator('.wx-hscroll .wx-h').count()) === 24 && (await p.locator('.wx-drow').count()) === 7, 'weather sheet shows 24 hours and 7 days');
@@ -92,7 +100,7 @@ function ok(cond, msg) { console.log((cond ? 'PASS ' : 'FAIL ') + msg); if (!con
   await p.locator('#nav button[data-route=chores]').click();
   await p.waitForSelector('.page .row');
   await p.screenshot({ path: OUT + '/06-chores.png' });
-  await p.locator('.page-head .btn').click();
+  await p.locator('.page-head .btn:not(.ghost)').click();
   await p.waitForSelector('.sheet form');
   await p.fill('.sheet input[type=text]', 'Mop the kitchen');
   await p.locator('.sheet .seg-b', { hasText: 'Monthly' }).click();
@@ -169,7 +177,7 @@ function ok(cond, msg) { console.log((cond ? 'PASS ' : 'FAIL ') + msg); if (!con
   ok(await q.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1), 'phone: no horizontal overflow on calendar');
   await q.locator('#nav button[data-route=chores]').tap();
   await q.waitForTimeout(200);
-  await q.locator('.page-head .btn').tap();
+  await q.locator('.page-head .btn:not(.ghost)').tap();
   await q.waitForSelector('.sheet form');
   await q.screenshot({ path: OUT + '/22-phone-chore-form.png' });
   await q.keyboard.press('Escape');

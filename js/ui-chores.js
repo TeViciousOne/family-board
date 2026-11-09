@@ -37,7 +37,8 @@
           ui.icon('right', 20)));
       });
     });
-    if (!any) wrap.appendChild(h('p', { class: 'muted pad' }, t('chores.empty')));
+    if (!any) wrap.appendChild(h('div', { class: 'pad' }, h('p', { class: 'muted' }, t('chores.empty')),
+      h('button', { class: 'btn', onclick: function () { FB.actions.openTemplates(); } }, ui.icon('list', 20), ' ', t('tpl.open'))));
     return wrap;
   }
 
@@ -72,6 +73,7 @@
       h('h1', null, t('nav.chores')),
       tabs(),
       h('span', { class: 'grow' }),
+      tab === 'chores' ? h('button', { class: 'btn ghost', onclick: function () { FB.actions.openTemplates(); } }, ui.icon('list', 20), ' ', t('tpl.open')) : null,
       tab === 'chores' ? h('button', { class: 'btn', onclick: function () { FB.actions.openChore(null); } }, ui.icon('plus', 20), ' ', t('chores.add')) : null);
     return h('div', { class: 'page', 'data-scroll': 'page-chores' }, head, tab === 'chores' ? choreList() : historyList());
   };
@@ -127,5 +129,50 @@
       h('label', { class: 'check' }, active, h('span', null, t('chore.active'))),
       err);
     modal = ui.modal({ title: isNew ? t('chore.new') : t('chore.edit'), body: body, actions: actions, size: 'wide' });
+  };
+
+  /* ---------------------------------------------------------------- */
+  /*  Templates: tick the usual chores and add them in one go           */
+  /* ---------------------------------------------------------------- */
+  FB.actions.openTemplates = function () {
+    var modal, picked = {}, have = {};
+    FB.state.chores.forEach(function (c) { have[c.title.trim().toLowerCase()] = true; });
+    var who = h('select', null,
+      h('option', { value: '' }, t('chore.anyone')),
+      L.membersSorted().map(function (m) { return h('option', { value: m.id }, m.name); }));
+    var addBtn = h('button', { class: 'btn', onclick: add }, '');
+    var body = h('div', { class: 'tpl' });
+    function refresh() {
+      var n = Object.keys(picked).length;
+      addBtn.textContent = t('tpl.add', { n: n }); addBtn.disabled = !n;
+    }
+    FB.templates.groups().forEach(function (g) {
+      body.appendChild(h('h3', { class: 'grp' }, t(g.key)));
+      g.items.forEach(function (it) {
+        var name = FB.templates.name(it);
+        var exists = have[it.en.toLowerCase()] || have[it.sq.toLowerCase()] || have[name.toLowerCase()];
+        var cb = h('input', { type: 'checkbox', disabled: !!exists, onchange: function () { if (cb.checked) picked[it.en] = it; else delete picked[it.en]; refresh(); } });
+        body.appendChild(h('label', { class: 'row tpl-row' + (exists ? ' paused' : '') },
+          h('span', { class: 'row-emoji' }, it.emoji),
+          h('span', { class: 'row-main' },
+            h('span', { class: 'row-title' }, name),
+            h('span', { class: 'row-sub' }, exists ? t('tpl.have') : FB.recur.describe(it.rule, FB.i18n.L) + (it.time ? ' · ' + t('chore.by', { time: it.time }) : ''))),
+          cb));
+      });
+    });
+    function add() {
+      var items = Object.keys(picked).map(function (k) { return picked[k]; });
+      if (!items.length) return;
+      addBtn.disabled = true;
+      Promise.all(items.map(function (it) {
+        return FB.data.add('chores', { title: FB.templates.name(it), emoji: it.emoji, member_id: who.value || null, rule: it.rule, due_time: it.time || null, active: true });
+      })).then(function () { modal.close(); ui.toast(t('tpl.added', { n: items.length })); });
+    }
+    refresh();
+    modal = ui.modal({
+      title: t('tpl.title'), size: 'wide', focus: false,
+      body: h('div', null, h('p', { class: 'lead' }, t('tpl.hint')), ui.field(t('tpl.assign'), who), body),
+      actions: [h('span', { class: 'grow' }), h('button', { class: 'btn ghost', onclick: function () { modal.close(); } }, t('common.cancel')), addBtn]
+    });
   };
 })(typeof window !== 'undefined' ? window : globalThis);

@@ -48,6 +48,7 @@
       ui.field(t('member.color'), ui.swatches(ui.COLORS, color, function (c) { color = c; })),
       ui.field(t('member.emoji'), ui.emojiGrid(ui.MEMBER_EMOJI, emoji, function (e) { emoji = e; }, true)),
       !isNew && existing.user_id ? h('p', { class: 'hint' }, t('member.hasLogin')) : null,
+      !isNew && existing.user_id && existing.id !== FB.state.me ? h('button', { type: 'button', class: 'btn ghost', onclick: function () { FB.auth.openMemberPassword(existing); } }, ui.icon('edit', 20), ' ', t('mp.set')) : null,
       err);
     modal = ui.modal({ title: isNew ? t('member.new') : t('member.edit'), body: body, actions: actions });
   };
@@ -105,6 +106,21 @@
     return s;
   }
 
+  /* ---------- phone notifications ---------- */
+  function pushSection() {
+    var s = section(t('push.title'), t('push.hint'));
+    var cb = h('input', { type: 'checkbox', disabled: true, onchange: function () {
+      cb.disabled = true;
+      (cb.checked ? FB.push.enable() : FB.push.disable()).then(function () { cb.disabled = false; }, function (e) {
+        cb.checked = !cb.checked; cb.disabled = false;
+        ui.toast(t(e && e.message === 'denied' ? 'push.denied' : 'push.failed'), { kind: 'error' });
+      });
+    } });
+    s.appendChild(h('div', { class: 'toggle' }, h('label', { class: 'check' }, cb, h('span', null, t('push.on')))));
+    FB.push.current().then(function (sub) { cb.checked = !!sub && Notification.permission === 'granted'; cb.disabled = false; }, function () { cb.disabled = false; });
+    return s;
+  }
+
   /* ---------- night ---------- */
   function nightSection() {
     var s = section(t('set.night'), t('set.nightHint'));
@@ -155,6 +171,10 @@
       } }, ui.icon('copy', 20), ' ', t('set.copy'))));
     s.appendChild(h('p', { class: 'hint' }, t('set.inviteHint')));
     s.appendChild(h('p', { class: 'lead' }, t('set.signedInAs', { email: FB.store.userEmail() })));
+    s.appendChild(h('div', { class: 'btn-row' },
+      h('button', { class: 'btn ghost', onclick: function () { FB.auth.openChangePassword(); } }, t('pw.change')),
+      h('button', { class: 'btn ghost', onclick: function () { FB.auth.makeRecovery(true); } }, t('rc.open'))));
+    s.appendChild(h('p', { class: 'hint' }, t('rc.settingsHint')));
     s.appendChild(h('button', { class: 'btn ghost', onclick: function () { FB.app.signOut(); } }, ui.icon('logout', 20), ' ', t('set.signOut')));
     return s;
   }
@@ -164,6 +184,6 @@
       h('div', { class: 'page-head' }, h('h1', null, t('nav.settings'))),
       h('div', { class: 'set-grid' },
         h('div', { class: 'set-col' }, familySection(), accountSection(), deviceSection()),
-        h('div', { class: 'set-col' }, weatherSection(), soundSection(), nightSection())));
+        h('div', { class: 'set-col' }, weatherSection(), FB.push && FB.push.supported() ? pushSection() : null, soundSection(), nightSection())));
   };
 })(typeof window !== 'undefined' ? window : globalThis);

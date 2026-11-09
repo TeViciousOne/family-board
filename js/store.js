@@ -34,6 +34,8 @@
     if (m.indexOf('invalid login') !== -1) return 'err.login';
     if (m.indexOf('already registered') !== -1 || m.indexOf('already been registered') !== -1) return 'err.exists';
     if (m.indexOf('invalid_code') !== -1) return 'err.code';
+    if (m.indexOf('locked') !== -1) return 'err.locked';
+    if (m.indexOf('weak_password') !== -1) return 'err.password';
     if (m.indexOf('not confirmed') !== -1) return 'err.confirm';
     if (m.indexOf('password') !== -1 && (m.indexOf('least') !== -1 || m.indexOf('short') !== -1 || m.indexOf('weak') !== -1)) return 'err.password';
     if (m.indexOf('failed to fetch') !== -1 || m.indexOf('network') !== -1 || m.indexOf('load failed') !== -1) return 'err.network';
@@ -132,27 +134,19 @@
       },
       loadTable: function (t) { return Promise.resolve(JSON.parse(JSON.stringify(db[t] || []))); },
       insert: function (t, row) {
-        var r = Object.assign({ household_id: 'demo' }, row);
-        if (t === 'chore_completions') {
-          var dup = db[t].some(function (c) { return c.chore_id === r.chore_id && c.on_date === r.on_date; });
-          if (dup) return Promise.reject(new Error('duplicate key'));
-        }
-        db[t].push(r); save(); return Promise.resolve(r);
+        var r = Object.assign({ id: U.uid(), household_id: 'demo', created_at: new Date().toISOString() }, row);
+        (db[t] = db[t] || []).push(r); save(); emit(t);
+        return Promise.resolve(JSON.parse(JSON.stringify(r)));
       },
       update: function (t, id, patch) {
-        var row = db[t].filter(function (x) { return x.id === id; })[0];
-        if (!row) return Promise.reject(new Error('not found'));
-        Object.assign(row, patch); save(); return Promise.resolve(row);
+        var r = (db[t] || []).filter(function (x) { return x.id === id; })[0];
+        if (!r) return Promise.reject(new Error('not found'));
+        Object.assign(r, patch); save(); emit(t);
+        return Promise.resolve(JSON.parse(JSON.stringify(r)));
       },
       remove: function (t, id) {
-        db[t] = db[t].filter(function (x) { return x.id !== id; });
-        if (t === 'chores') db.chore_completions = db.chore_completions.filter(function (c) { return c.chore_id !== id; });
-        if (t === 'members') {
-          ['chores'].forEach(function (k) { db[k].forEach(function (x) { if (x.member_id === id) x.member_id = null; }); });
-          db.chore_completions.forEach(function (x) { if (x.done_by === id) x.done_by = null; });
-          db.events.forEach(function (x) { if (x.member_id === id) x.member_id = null; });
-        }
-        save(); return Promise.resolve();
+        db[t] = (db[t] || []).filter(function (x) { return x.id !== id; }); save(); emit(t);
+        return Promise.resolve();
       },
       updateHousehold: function (patch) { Object.assign(db.household, patch); save(); return Promise.resolve(db.household); },
       subscribe: function (fn) { listeners.push(fn); return function () { listeners = listeners.filter(function (f) { return f !== fn; }); }; },
@@ -194,18 +188,66 @@
         .subscribe();
     }
 
-    return {
+
+    /* ---------- offline support: saved snapshot + queue of changes made while offline ---------- */
+    var SNAP_KEY = 'fb.cache.v1', OUT_KEY = 'fb.outbox.v1';
+    var outbox = [], offline = false, flushing = false, justSynced = 0, dropped = 0, syncFns = [], flushTimer = null;
+    try { outbox = JSON.parse(localStorage.getItem(OUT_KEY) || '[]') || []; } catch (e) { outbox = []; }
+    function readSnap() { try { return JSON.parse(localStorage.getItem(SNAP_KEY) || 'null'); } catch (e) { return null; } }
+    function isNet(e) {
+      return (typeof navigator !== 'undefined' && navigator.onLine === false) || (e && e.name === 'AuthRetryableFetchError') || S.errorKey(e) === 'err.network';
+    }
+    function status() { return { pending: outbox.length, offline: offline, flushing: flushing, justSynced: justSynced, dropped: dropped }; }
+    function emitSync() { var st = status(); syncFns.forEach(function (fn) { fn(st); }); }
+    function setOffline(v) { if (offline !== v) { offline = v; emitSync(); } }
+    function persistOut() { try { localStorage.setItem(OUT_KEY, JSON.stringify(outbox)); } catch (e) { /* storage full */ } emitSync(); }
+    function queue(op) {
+      outbox.push(op); persistOut();
+      if (!offline && (typeof navigator === 'undefined' || navigator.onLine !== false)) { clearTimeout(flushTimer); flushTimer = setTimeout(function () { api.flush(); }, 300); }
+      return Promise.resolve({ __queued: true });
+    }
+    /* run now if online and nothing is waiting; otherwise (or on a network error) queue it, in order */
+    function write(op, run) {
+      if (typeof navigator !== 'undefined' && navigator.onLine === false) setOffline(true);
+      if (outbox.length || !sb || offline) return queue(op);
+      return run().then(function (r) { setOffline(false); return r; }, function (e) {
+        if (isNet(e)) { setOffline(true); return queue(op); }
+        throw e;
+      });
+    }
+    function ignoreDup(res) { if (res.error && res.error.code === '23505') return null; return check(res); }
+    function exec(op) {
+      if (op.k === 'ins') return sb.from(op.t).insert(op.row).then(ignoreDup);
+      if (op.k === 'upd') return sb.from(op.t).update(op.patch).eq('id', op.id).then(check);
+      return sb.from(op.t).delete().eq('id', op.id).then(check);
+    }
+    function snapData() {
+      var snap = readSnap(); if (!snap) return null;
+      var out = { household: snap.household };
+      Object.keys(S.TABLES).forEach(function (t) { out[S.TABLES[t]] = snap[S.TABLES[t]] || []; });
+      return out;
+    }
+    var api;
+    return (api = {
       mode: 'cloud',
       init: function () {
+        function offlineBoot(err) {
+          var snap = readSnap();
+          if (snap && snap.user && snap.hid && isNet(err)) {
+            user = snap.user; hid = snap.hid; meId = snap.meId; offline = true; return 'ready';
+          }
+          throw err;
+        }
         return loadLib().then(function () {
           sb = root.supabase.createClient(cfg.SUPABASE_URL, cfg.SUPABASE_ANON_KEY, { auth: { persistSession: true, autoRefreshToken: true } });
           return sb.auth.getSession();
         }).then(function (res) {
           var session = res.data && res.data.session;
+          if (!session && res.error && isNet(res.error)) return offlineBoot(res.error);
           if (!session) return 'auth';
           user = session.user;
-          return findMe().then(function (st) { if (st === 'ready') startRealtime(); return st; });
-        });
+          return api.flush().then(function () { return findMe(); }).then(function (st) { if (st === 'ready') startRealtime(); return st; });
+        }).catch(offlineBoot);
       },
       me: function () { return meId; },
       userEmail: function () { return user ? S.fromEmail(user.email) : ''; },
@@ -222,6 +264,7 @@
       signOut: function () {
         if (channel) { sb.removeChannel(channel); channel = null; }
         user = null; hid = null; meId = null;
+        try { localStorage.removeItem(SNAP_KEY); localStorage.removeItem(OUT_KEY); } catch (e) { /* ignore */ }
         return sb.auth.signOut();
       },
       /* after sign-in: returns 'ready' or 'onboard' */
@@ -262,16 +305,55 @@
         return b.then(check);
       },
       insert: function (t, row) {
-        return sb.from(t).insert(Object.assign({}, row, { household_id: hid })).select().single().then(check);
+        var full = Object.assign({}, row, { household_id: hid });
+        return write({ k: 'ins', t: t, row: full }, function () { return sb.from(t).insert(full).select().single().then(check); });
       },
       update: function (t, id, patch) {
-        return sb.from(t).update(patch).eq('id', id).select().single().then(check);
+        return write({ k: 'upd', t: t, id: id, patch: patch }, function () { return sb.from(t).update(patch).eq('id', id).select().single().then(check); });
       },
-      remove: function (t, id) { return sb.from(t).delete().eq('id', id).then(check); },
+      remove: function (t, id) {
+        return write({ k: 'del', t: t, id: id }, function () { return sb.from(t).delete().eq('id', id).then(check); });
+      },
       updateHousehold: function (patch) { return sb.from('households').update(patch).eq('id', hid).select().single().then(check); },
       subscribe: function (fn) { listeners.push(fn); return function () { listeners = listeners.filter(function (f) { return f !== fn; }); }; },
+      /* sync status for the banner */
+      sync: status,
+      onSync: function (fn) { syncFns.push(fn); },
+      flush: function () {
+        if (flushing || !outbox.length || !sb || (typeof navigator !== 'undefined' && navigator.onLine === false)) return Promise.resolve(0);
+        flushing = true; justSynced = 0; dropped = 0; emitSync();
+        var done = 0;
+        function step() {
+          if (!outbox.length) return Promise.resolve();
+          return exec(outbox[0]).then(function () { outbox.shift(); done++; persistOut(); return step(); }, function (e) {
+            if (isNet(e)) { setOffline(true); throw e; }
+            if (root.console) console.error('dropped change', outbox[0], e);
+            outbox.shift(); dropped++; persistOut(); return step();
+          });
+        }
+        return step().then(function () { setOffline(false); }, function () { /* still offline: keep the rest */ })
+          .then(function () { flushing = false; justSynced = done; emitSync(); return done; });
+      },
+      pushSave: function (sub, lang) {
+        var j = sub.toJSON();
+        return sb.from('push_subscriptions').upsert({ endpoint: j.endpoint, household_id: hid, user_id: user.id, p256dh: j.keys.p256dh, auth: j.keys.auth, lang: lang }).then(check);
+      },
+      pushRemove: function (endpoint) { return sb.from('push_subscriptions').delete().eq('endpoint', endpoint).then(check); },
+      saveSnapshot: function (state) {
+        if (!user || !hid) return;
+        var snap = { v: 1, at: Date.now(), user: { id: user.id, email: user.email }, hid: hid, meId: meId, household: state.household };
+        Object.keys(S.TABLES).forEach(function (t) { snap[S.TABLES[t]] = state[S.TABLES[t]]; });
+        try { localStorage.setItem(SNAP_KEY, JSON.stringify(snap)); } catch (e) { /* storage full */ }
+      },
+      changePassword: function (current, next) {
+        return sb.auth.signInWithPassword({ email: user.email, password: current }).then(check)
+          .then(function () { return sb.auth.updateUser({ password: next }); }).then(check);
+      },
+      resetWithCode: function (username, code, next) { return sb.rpc('reset_with_code', { p_username: username, p_code: code, p_new: next }).then(check); },
+      resetMemberPassword: function (memberId, pw) { return sb.rpc('reset_member_password', { m_id: memberId, new_pw: pw }).then(check); },
+      makeRecoveryCode: function () { return sb.rpc('make_recovery_code').then(check); },
       reset: function () { return Promise.resolve(); }
-    };
+    });
   }
 
   S.create = function (cfg) {

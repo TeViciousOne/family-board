@@ -4,5 +4,7 @@
  */
 window.FB_CONFIG = {
   SUPABASE_URL: 'https://xmmhojvlzmteygxbspki.supabase.co',
-  SUPABASE_ANON_KEY: 'sb_publishable_SXCJoFEZ047KMx2GApkE2A_YPmZFh-6'
+  SUPABASE_ANON_KEY: 'sb_publishable_SXCJoFEZ047KMx2GApkE2A_YPmZFh-6',
+  /* public key for phone notifications (the private half lives in the database, see supabase/push.sql) */
+  VAPID_PUBLIC_KEY: 'BFtk8icNFrIWCY3iPY9leIi0nNOFkhHDYWJ4P1xZYrlZhDIMk6Mo-LgSoqgHhkXoTT0yF5y_XeQ4ZOUGaBwWLwE'
 };

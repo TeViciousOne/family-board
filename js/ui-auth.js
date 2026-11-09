@@ -34,7 +34,7 @@
   };
 
   /* password box with a show/hide eye */
-  function pwField(placeholder, autocomplete) {
+  var pwField = A.pwField = function (placeholder, autocomplete) {
     var input = h('input', { type: 'password', autocomplete: autocomplete, placeholder: placeholder, autocapitalize: 'none', autocorrect: 'off', spellcheck: 'false' });
     var eye = h('button', { type: 'button', class: 'pw-eye', 'aria-label': t('auth.show') }, ui.icon('eye', 22));
     eye.addEventListener('click', function () {
@@ -44,7 +44,7 @@
       eye.setAttribute('aria-label', show ? t('auth.hide') : t('auth.show'));
     });
     return { input: input, el: h('div', { class: 'pw-wrap' }, input, eye) };
-  }
+  };
 
   function signIn() {
     var mode = 'in';
@@ -76,8 +76,82 @@
       busy(go, op).then(function () { return FB.app.afterAuth(); })
         .catch(function (x) { err.textContent = t(FB.storeLib.errorKey(x)); });
     } }, seg, user, pw.el, pw2.el, info, err, go);
-    shell([form, langSwitch()]);
+    var forgot = h('button', { type: 'button', class: 'link-btn', onclick: forgotView }, t('pw.forgot'));
+    shell([form, forgot, langSwitch()]);
   }
+
+  /* forgot password: username + recovery code -> new password */
+  function forgotView() {
+    var user = h('input', { type: 'text', autocomplete: 'username', placeholder: t('auth.username'), autocapitalize: 'none', autocorrect: 'off', spellcheck: 'false', maxlength: '20' });
+    var code = h('input', { type: 'text', placeholder: t('pw.code'), autocapitalize: 'characters', autocorrect: 'off', spellcheck: 'false', maxlength: '24', style: { textTransform: 'uppercase', letterSpacing: '.08em' } });
+    var pw = pwField(t('pw.new'), 'new-password');
+    var pw2 = pwField(t('auth.repeat'), 'new-password');
+    var err = h('p', { class: 'form-err', role: 'alert' });
+    var go = h('button', { type: 'submit', class: 'btn big' }, t('pw.reset'));
+    var form = h('form', { class: 'form', onsubmit: function (ev) {
+      ev.preventDefault(); err.textContent = '';
+      var u = FB.storeLib.cleanUsername(user.value), c = code.value.trim(), p = pw.input.value;
+      if (!u || !c || !p) { err.textContent = t('pw.needAll'); return; }
+      if (p.length < 6) { err.textContent = t('err.password'); return; }
+      if (p !== pw2.input.value) { err.textContent = t('auth.mismatch'); return; }
+      busy(go, FB.store.resetWithCode(u, c, p).then(function (ok) {
+        if (!ok) throw new Error('bad_code');
+        return FB.store.signIn(u, p);
+      })).then(function () { return FB.app.afterAuth(); })
+        .then(function () { ui.toast(t('pw.resetDone')); })
+        .catch(function (x) { err.textContent = String(x && x.message).indexOf('bad_code') !== -1 ? t('pw.badCode') : t(FB.storeLib.errorKey(x)); });
+    } }, h('h2', null, t('pw.resetTitle')), h('p', { class: 'lead' }, t('pw.resetHint')), user, code, pw.el, pw2.el, err, go);
+    shell([form, h('button', { type: 'button', class: 'link-btn', onclick: signIn }, t('pw.back')), langSwitch()]);
+  }
+
+  /* ---------- password tools used from Settings ---------- */
+  function pwForm(o) {
+    var cur = o.current ? pwField(t('pw.current'), 'current-password') : null;
+    var pw = pwField(t('pw.new'), 'new-password');
+    var pw2 = pwField(t('auth.repeat'), 'new-password');
+    var err = h('p', { class: 'form-err', role: 'alert' });
+    var modal;
+    function save() {
+      err.textContent = '';
+      var p = pw.input.value;
+      if ((cur && !cur.input.value) || !p) { err.textContent = t('pw.needAll'); return; }
+      if (p.length < 6) { err.textContent = t('err.password'); return; }
+      if (p !== pw2.input.value) { err.textContent = t('auth.mismatch'); return; }
+      o.run(cur && cur.input.value, p).then(function () { modal.close(); ui.toast(o.done); })
+        .catch(function (x) { var k = FB.storeLib.errorKey(x); err.textContent = k === 'err.login' ? t('pw.wrongCurrent') : t(k); });
+    }
+    modal = ui.modal({
+      title: o.title, focus: false,
+      body: h('form', { class: 'form', onsubmit: function (ev) { ev.preventDefault(); save(); } },
+        o.hint ? h('p', { class: 'lead' }, o.hint) : null,
+        cur ? ui.field(t('pw.current'), cur.el) : null, ui.field(t('pw.new'), pw.el), ui.field(t('auth.repeat'), pw2.el), err),
+      actions: [h('span', { class: 'grow' }), h('button', { class: 'btn ghost', onclick: function () { modal.close(); } }, t('common.cancel')), h('button', { class: 'btn', onclick: save }, t('common.save'))]
+    });
+  }
+  A.openChangePassword = function () {
+    pwForm({ title: t('pw.change'), current: true, done: t('pw.changed'), run: function (c, n) { return FB.store.changePassword(c, n); } });
+  };
+  A.openMemberPassword = function (m) {
+    pwForm({ title: t('mp.set'), hint: t('mp.hint', { name: m.name }), current: false, done: t('mp.done', { name: m.name }), run: function (c, n) { return FB.store.resetMemberPassword(m.id, n); } });
+  };
+
+  /* recovery code: shown once */
+  A.showRecovery = function (code) {
+    var modal = ui.modal({
+      title: t('rc.title'), focus: false,
+      body: h('div', null, h('p', { class: 'lead' }, t('rc.hint')), h('div', { class: 'invite' }, h('div', { class: 'code rc-code' }, code),
+        h('button', { class: 'btn ghost', onclick: function () {
+          var done = function () { ui.toast(t('set.copied')); };
+          if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(code).then(done, done); else done();
+        } }, ui.icon('copy', 20), ' ', t('set.copy')))),
+      actions: [h('span', { class: 'grow' }), h('button', { class: 'btn', onclick: function () { modal.close(); } }, t('rc.saved'))]
+    });
+  };
+  A.makeRecovery = function (ask) {
+    var go = function () { return FB.store.makeRecoveryCode().then(A.showRecovery).catch(function () { ui.toast(t('err.generic'), { kind: 'error' }); }); };
+    if (!ask) return go();
+    return ui.confirm({ title: t('rc.regenQ'), text: t('rc.regenHint'), yes: t('rc.regen') }).then(function (ok) { if (ok) go(); });
+  };
 
   function onboard() {
     var mode = 'create', color = ui.COLORS[0];
@@ -99,7 +173,7 @@
       var op;
       if (mode === 'create') op = FB.store.createHousehold({ householdName: hname.value.trim() || t('auth.householdDefault'), name: n, color: color, emoji: '' });
       else { if (!code.value.trim()) { err.textContent = t('err.code'); return; } op = FB.store.joinHousehold({ code: code.value, name: n, color: color, emoji: '' }); }
-      busy(go, op).then(function () { FB.app.enter(); }).catch(function (x) { err.textContent = t(FB.storeLib.errorKey(x)); });
+      busy(go, op).then(function () { FB.app.enter(); return A.makeRecovery(false); }).catch(function (x) { err.textContent = t(FB.storeLib.errorKey(x)); });
     } }, h('p', { class: 'lead' }, t('auth.welcome')), seg,
       ui.field(t('auth.yourName'), name), ui.field(t('member.color'), ui.swatches(ui.COLORS, color, function (c) { color = c; })),
       createBox, joinBox, err, go);
