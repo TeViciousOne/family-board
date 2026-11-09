@@ -114,7 +114,9 @@
     var head = h('div', { class: 'list-head' },
       h('div', { class: 'list-title' }, t('nav.chores')),
       h('div', { class: 'col-count' }, items.length ? doneN + '/' + items.length : ''),
-      FB.ai && FB.ai.enabled() ? h('button', { type: 'button', class: 'ai-pill', 'aria-label': t('ai.title'), onclick: function () { FB.actions.openQuick(); } }, ui.icon('sparkle', 18), h('span', null, t('ai.short'))) : null);
+      h('div', { class: 'list-actions' },
+        h('button', { type: 'button', class: 'btn add-pill', onclick: function () { FB.actions.openTemplates(); } }, ui.icon('plus', 18), h('span', null, t('board.addChores'))),
+        FB.ai && FB.ai.enabled() ? h('button', { type: 'button', class: 'ai-pill', 'aria-label': t('ai.title'), onclick: function () { FB.actions.openQuick(); } }, ui.icon('sparkle', 18), h('span', null, t('ai.short'))) : null));
     var bar = h('div', { class: 'list-bar' }, h('i', { style: { width: pct + '%' } }));
     var body = h('div', { class: 'list-body', 'data-scroll': 'chores-list' });
     if (!items.length) body.appendChild(h('p', { class: 'col-empty' }, t('board.nothingToday')));

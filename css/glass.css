@@ -403,3 +403,14 @@ input[type=text], input[type=email], input[type=password], input[type=number], i
   .rail-right .shop-tile span:last-child { overflow: visible; text-overflow: clip; }
   .rail-right .rr-ups .muted { font-size: 15px; }
 }
+
+/* chores header: "add chores" and "quick add" side by side */
+.list-actions { display: flex; align-items: center; gap: 8px; margin-left: auto; }
+.list-actions .ai-pill { margin-left: 0; }
+.list-actions .add-pill { min-height: 36px; padding: 0 14px; font-size: 14px; border-radius: 999px; gap: 6px; flex: none; }
+@media (max-width: 699px) and (orientation: portrait) {
+  .list-head { flex-wrap: wrap; }
+  .list-head .col-count { margin-left: auto; }
+  .list-actions { flex: 1 0 100%; margin: 4px 0 0; }
+  .list-actions > * { flex: 1; justify-content: center; min-height: 40px; }
+}
