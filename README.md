@@ -58,7 +58,7 @@ On phones: open the site in Chrome > menu > "Install app" / "Add to Home screen"
 - **Offline mode**: the last data is saved on the device; changes made offline are queued and uploaded when the connection returns (banner at the top shows the state).
 - **Chore templates**: Chores → Templates adds ready-made chores in one tap.
 - **Phone notifications**: run `supabase/push.sql`, insert your VAPID keys into `push_config`, deploy `supabase/functions/reminders`, and schedule it every minute (commands are in the SQL file). Each phone turns it on in Settings. On iPhone, add the app to the Home Screen first. The household timezone is `households.tz` (default `Europe/Tirane`).
-- **AI helpers** (Google Gemini): *Quick add* (sparkle button on the home screen, type or speak), a one-line daily summary above the chores, and *Tidy up* on the shopping list. Run `supabase/ai.sql`, store your key in `ai_config`, and deploy `supabase/functions/ai`. The key never reaches the browser. Each user is limited to 150 AI requests a day.
+- **AI helpers** (Google Gemini): a one-line daily summary above the chores, and *Tidy up* on the shopping list. Run `supabase/ai.sql`, store your key in `ai_config`, and deploy `supabase/functions/ai`. The key never reaches the browser. Each user is limited to 150 AI requests a day.
 
 ### Notifications
 Each phone enables them in Settings → Notifications. Types: event reminders, chore due, **chore done (who + time)**, **new chore added**, and a **"Tomorrow" list at 19:00** (Tirana time). Activity messages arrive within ~1 minute and go to every subscribed device, including the one that made the change.

@@ -43,7 +43,7 @@ const stub = () => {
   window.supabase = { createClient: () => ({
     auth: { getSession: async () => window.__net === false ? { data: { session: null }, error: { name: 'AuthRetryableFetchError', message: 'Failed to fetch' } } : { data: { session: { user } }, error: null }, signOut: async () => ({}) },
     from, rpc: async () => ({ data: null, error: null }),
-    functions: { invoke: async (name, o) => { window.__calls.push(o.body); const a = o.body.action; if (a === 'quick') return { data: { ok: true, data: window.__quick }, error: null }; if (a === 'summary') return { data: { ok: true, data: { text: 'Dentist at 16:30 and two chores left.' } }, error: null }; if (a === 'tidy') return { data: { ok: true, data: window.__tidy(o.body.items) }, error: null }; return { data: null, error: { message: 'x' } }; } },
+    functions: { invoke: async (name, o) => { window.__calls.push(o.body); const a = o.body.action; if (a === 'summary') return { data: { ok: true, data: { text: 'Dentist at 16:30 and two chores left.' } }, error: null }; if (a === 'tidy') return { data: { ok: true, data: window.__tidy(o.body.items) }, error: null }; return { data: null, error: { message: 'x' } }; } },
     channel: () => ({ on() { return this; }, subscribe() { return this; } }), removeChannel() {}
   }) };
 };
@@ -56,8 +56,6 @@ const stub = () => {
   await p.route('**/config.js', r => r.fulfill({ contentType: 'text/javascript', body: 'window.FB_CONFIG={SUPABASE_URL:"https://x.supabase.co",SUPABASE_ANON_KEY:"k"};' }));
   await p.addInitScript(stub);
   await p.addInitScript(() => {
-    window.__quick = { events: [{ title: 'Dentisti', kind: 'event', date: '2026-11-12', start_time: '16:30', end_time: null, remind_minutes: 60, person: 'Andi', repeat: 'none', weekdays: null }],
-      shopping: [{ title: 'Qumësht', category: 'dairy' }, { title: 'Bukë', category: 'bakery' }], chores: [], notes: [], reply: '' };
     window.__tidy = (items) => ({ items: items.map(i => ({ id: i.id, title: i.title.charAt(0).toUpperCase() + i.title.slice(1), category: /milk|qum/i.test(i.title) ? 'dairy' : 'other' })), merge: [[items[0].id, items[1].id]] });
   });
   await p.goto('http://localhost:8123/'); await p.waitForSelector('.list-grid .chore');

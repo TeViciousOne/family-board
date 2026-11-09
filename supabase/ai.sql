@@ -1,4 +1,4 @@
--- AI features (quick add, daily summary, shopping tidy-up). Run once, then deploy supabase/functions/ai (verify_jwt off: it checks the user itself).
+-- AI features (daily summary, shopping tidy-up). Run once, then deploy supabase/functions/ai (verify_jwt off: it checks the user itself).
 create table if not exists public.ai_config (
   id int primary key default 1 check (id = 1),
   gemini_key text not null,
