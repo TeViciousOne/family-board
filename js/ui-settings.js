@@ -112,12 +112,19 @@
     var cb = h('input', { type: 'checkbox', disabled: true, onchange: function () {
       cb.disabled = true;
       (cb.checked ? FB.push.enable() : FB.push.disable()).then(function () { cb.disabled = false; }, function (e) {
-        cb.checked = !cb.checked; cb.disabled = false;
+        cb.checked = !cb.checked; cb.disabled = false; report('error: ' + (e && (e.name + ' ' + e.message)));
         ui.toast(t(e && e.message === 'denied' ? 'push.denied' : 'push.failed'), { kind: 'error' });
       });
     } });
     s.appendChild(h('div', { class: 'toggle' }, h('label', { class: 'check' }, cb, h('span', null, t('push.on')))));
-    FB.push.status().then(function (on) { cb.checked = !!on; cb.disabled = false; }, function () { cb.disabled = false; });
+    var dbg = h('p', { class: 'muted', style: { fontSize: '12px' } }, '…');
+    s.appendChild(dbg);
+    function report(extra) {
+      FB.push.current().then(function (sub) {
+        dbg.textContent = 'permission: ' + Notification.permission + ' · subscription: ' + (sub ? 'yes' : 'no') + ' · remembered: ' + (FB.push.wanted() ? 'yes' : 'no') + (extra ? ' · ' + extra : '');
+      }, function (e) { dbg.textContent = 'subscription check failed: ' + (e && e.message); });
+    }
+    FB.push.status().then(function (on) { cb.checked = !!on; cb.disabled = false; report(); }, function (e) { cb.disabled = false; report('error: ' + (e && e.message)); });
     return s;
   }
 
