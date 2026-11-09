@@ -77,8 +77,8 @@ function ok(cond, msg) { console.log((cond ? 'PASS ' : 'FAIL ') + msg); if (!con
   await p.keyboard.press('Escape'); await p.waitForTimeout(300);
   await p.evaluate(() => location.hash = '#/home'); await p.waitForSelector('.home .col');
   ok((await p.locator('.wx-hours .wx-h').count()) >= 4 && (await p.locator('.wx-hours .wx-hn').first().innerText()) === 'Now', 'hourly weather strip starts with Now');
-  await p.locator('.shop-tile').first().click(); await p.waitForSelector('.shop-pop .shop');
-  ok((await p.locator('.shop-pop .shop').count()) >= 1 && (await p.evaluate(() => location.hash)).indexOf('lists') === -1, 'shopping tile opens a popup with the list, not the Lists page');
+  await p.locator('.shop-mini, .shop-tile').locator('visible=true').first().click(); await p.waitForSelector('.shop-pop .shop');
+  ok((await p.locator('.shop-pop .shop').count()) >= 1 && (await p.evaluate(() => location.hash)).indexOf('lists') === -1, 'shopping card or tile opens a popup with the list, not the Lists page');
   await p.locator('.shop-pop input[type=text]').fill('Milk popup'); await p.keyboard.press('Enter'); await p.waitForTimeout(500);
   ok((await p.locator('.shop-pop .shop-title', { hasText: 'Milk popup' }).count()) === 1, 'items can be added inside the popup');
   await p.keyboard.press('Escape'); await p.waitForTimeout(300);
