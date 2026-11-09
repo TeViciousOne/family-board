@@ -60,3 +60,16 @@ grant select, insert, update, delete on public.chore_templates to authenticated;
 alter table public.chore_templates replica identity full;
 alter publication supabase_realtime add table public.chore_templates;
 alter table public.chore_templates add column if not exists title_sq text;
+
+-- Activity notifications ("chore done by X", "new chore"): triggers queue rows, the reminders function sends them.
+create table if not exists public.push_events (
+  id bigserial primary key,
+  household_id uuid not null,
+  kind text not null check (kind in ('done','added')),
+  ref uuid not null,
+  actor uuid default auth.uid(),
+  created_at timestamptz not null default now(),
+  sent boolean not null default false
+);
+alter table public.push_events enable row level security;
+-- (see the push_activity_events migration for queue_push_event() and the triggers on chore_completions / chores)
