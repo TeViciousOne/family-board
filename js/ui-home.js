@@ -115,8 +115,7 @@
       h('div', { class: 'list-title' }, t('nav.chores')),
       h('div', { class: 'col-count' }, items.length ? doneN + '/' + items.length : ''),
       h('div', { class: 'list-actions' },
-        h('button', { type: 'button', class: 'btn add-pill', onclick: function () { FB.actions.openTemplates(); } }, ui.icon('plus', 18), h('span', null, t('board.addChores'))),
-        FB.ai && FB.ai.enabled() ? h('button', { type: 'button', class: 'ai-pill', 'aria-label': t('ai.title'), onclick: function () { FB.actions.openQuick(); } }, ui.icon('sparkle', 18), h('span', null, t('ai.short'))) : null));
+        h('button', { type: 'button', class: 'btn add-pill', onclick: function () { FB.actions.openTemplates(); } }, ui.icon('plus', 18), h('span', null, t('board.addChores')))));
     var bar = h('div', { class: 'list-bar' }, h('i', { style: { width: pct + '%' } }));
     var body = h('div', { class: 'list-body', 'data-scroll': 'chores-list' });
     if (!items.length) body.appendChild(h('p', { class: 'col-empty' }, t('board.nothingToday')));
@@ -216,8 +215,7 @@
     var board = h('main', { class: 'board' });
     if (!FB.state.chores.length) {
       board.appendChild(h('div', { class: 'board-hint' }, h('p', null, t('board.noChores')),
-        h('button', { class: 'btn', onclick: function () { FB.actions.openTemplates(); } }, t('board.addChores')),
-        FB.ai && FB.ai.enabled() ? h('button', { type: 'button', class: 'ai-pill', onclick: function () { FB.actions.openQuick(); } }, ui.icon('sparkle', 18), h('span', null, t('ai.short'))) : null));
+        h('button', { class: 'btn', onclick: function () { FB.actions.openTemplates(); } }, t('board.addChores'))));
     } else board.appendChild(list(due));
     var sum = FB.ai && FB.ai.enabled() ? FB.ai.summary() : '';
     if (sum) { board.classList.add('has-sum'); board.insertBefore(h('div', { class: 'ai-sum', 'data-fit-skip': '1' }, h('span', { class: 'ai-sum-ico' }, ui.icon('sparkle', 18)), h('p', null, sum)), board.firstChild); }

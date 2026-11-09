@@ -4,6 +4,7 @@ let fails = 0; const ok = (c, m) => { console.log((c ? 'PASS ' : 'FAIL ') + m); 
 (async () => {
   const b = await chromium.launch({ executablePath: '/usr/bin/google-chrome', args: ['--no-sandbox'] });
   const p = await (await b.newContext({ viewport: { width: 420, height: 800 } })).newPage();
+  await p.addInitScript(() => { try { const k = 'fb.device.v1'; const d = JSON.parse(localStorage.getItem(k) || '{}'); d.nightOn = false; d.homeIdle = false; localStorage.setItem(k, JSON.stringify(d)); } catch (e) {} });
   const errs = []; p.on('pageerror', e => errs.push(e.message));
   await p.route(/fonts\.g/, r => r.abort());
   await p.route('**/config.js', r => r.fulfill({ contentType: 'text/javascript', body: 'window.FB_CONFIG={SUPABASE_URL:"https://x.supabase.co",SUPABASE_ANON_KEY:"k"};' }));

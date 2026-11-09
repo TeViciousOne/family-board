@@ -50,6 +50,7 @@ const stub = () => {
   const b = await chromium.launch({ executablePath: '/usr/bin/google-chrome', args: ['--no-sandbox'] });
   const ctx = await b.newContext({ viewport: { width: 1280, height: 800 }, serviceWorkers: 'allow' });
   const p = await ctx.newPage(); const errs = []; p.on('pageerror', e => errs.push(e.message));
+  await p.addInitScript(() => { try { const k = 'fb.device.v1'; const d = JSON.parse(localStorage.getItem(k) || '{}'); d.nightOn = false; d.homeIdle = false; localStorage.setItem(k, JSON.stringify(d)); } catch (e) {} });
   await p.route(/fonts\.g|open-meteo/, r => r.abort());
   await p.route('**/config.js', r => r.fulfill({ contentType: 'text/javascript', body: 'window.FB_CONFIG={SUPABASE_URL:"https://x.supabase.co",SUPABASE_ANON_KEY:"k"};' }));
   await p.addInitScript(stub);

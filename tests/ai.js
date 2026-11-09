@@ -51,6 +51,7 @@ const stub = () => {
   const b = await chromium.launch({ args: ['--no-sandbox'] });
   const ctx = await b.newContext({ viewport: { width: 1280, height: 800 } });
   const p = await ctx.newPage(); const errs = []; p.on('pageerror', e => errs.push(e.message));
+  await p.addInitScript(() => { try { const k = 'fb.device.v1'; const d = JSON.parse(localStorage.getItem(k) || '{}'); d.nightOn = false; d.homeIdle = false; localStorage.setItem(k, JSON.stringify(d)); } catch (e) {} });
   await p.route(/fonts\.g|open-meteo/, r => r.abort());
   await p.route('**/config.js', r => r.fulfill({ contentType: 'text/javascript', body: 'window.FB_CONFIG={SUPABASE_URL:"https://x.supabase.co",SUPABASE_ANON_KEY:"k"};' }));
   await p.addInitScript(stub);
@@ -60,27 +61,18 @@ const stub = () => {
     window.__tidy = (items) => ({ items: items.map(i => ({ id: i.id, title: i.title.charAt(0).toUpperCase() + i.title.slice(1), category: /milk|qum/i.test(i.title) ? 'dairy' : 'other' })), merge: [[items[0].id, items[1].id]] });
   });
   await p.goto('http://localhost:8123/'); await p.waitForSelector('.list-grid .chore');
-  ok(await p.locator('.ai-pill').count() === 1, 'AI button shows in cloud mode');
+  ok(await p.locator('.ai-pill').count() === 0, 'no quick-add button on the home screen');
   await p.waitForSelector('.ai-sum', { timeout: 8000 });
   ok((await p.locator('.ai-sum').innerText()).includes('Dentist at 16:30'), 'daily summary line shows');
-  await p.click('.ai-pill'); await p.waitForSelector('.ai-q textarea');
-  await p.fill('.ai-q textarea', 'dentisti të enjten në 16:30 dhe blej qumësht e bukë');
-  await p.click('.ai-q .btn:not(.ghost)'); await p.waitForSelector('.ai-prop');
-  ok(await p.locator('.ai-prop').count() === 3, 'review shows 3 proposals');
-  await p.locator('.ai-prop input').nth(1).uncheck();
-  await p.click('.ai-q .ai-row .btn:not(.ghost)'); await p.waitForTimeout(800);
-  const db = await p.evaluate(() => JSON.parse(localStorage.getItem('stubdb')));
-  ok(db.events.some(e => e.title === 'Dentisti' && e.on_date === '2026-11-12' && e.start_time === '16:30' && e.remind_minutes === 60 && e.member_id === 'm1'), 'event saved with date, time, reminder and person');
-  ok(db.shopping_items.length === 1 && db.shopping_items[0].title === 'Bukë' && db.shopping_items[0].category === 'bakery', 'only the ticked shopping item saved, with category');
   /* tidy */
   await p.evaluate(async () => { for (const t of ['milk', 'Milk 1L', 'eggs']) await FB.data.add('shopping_items', { title: t, done: false, added_by: null, created_at: new Date().toISOString(), done_at: null }); });
   await p.evaluate(() => location.hash = '#/lists'); await p.waitForSelector('.ai-tidy');
   await p.click('.ai-tidy'); await p.waitForTimeout(1200);
   const db2 = await p.evaluate(() => JSON.parse(localStorage.getItem('stubdb')));
-  ok(db2.shopping_items.length === 3 && db2.shopping_items.every(x => x.category), 'tidy merged a duplicate and sorted the rest (' + db2.shopping_items.map(x => x.title + ':' + x.category).join(', ') + ')');
+  ok(db2.shopping_items.length === 2 && db2.shopping_items.every(x => x.category), 'tidy merged a duplicate and sorted the rest (' + db2.shopping_items.map(x => x.title + ':' + x.category).join(', ') + ')');
   ok(await p.locator('.shop-cat').count() >= 2, 'shopping list shows category headings');
   const calls = await p.evaluate(() => window.__calls.map(c => c.action));
-  ok(calls.includes('quick') && calls.includes('summary') && calls.includes('tidy'), 'all three AI calls were made');
+  ok(calls.includes('summary') && calls.includes('tidy') && !calls.includes('quick'), 'summary and tidy calls were made, no quick add');
   ok(errs.length === 0, 'no JS errors ' + errs.join('|'));
   await b.close(); console.log(fails ? fails + ' FAILED' : 'ALL PASSED'); process.exit(fails ? 1 : 0);
 })();

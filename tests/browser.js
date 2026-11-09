@@ -24,7 +24,7 @@ function ok(cond, msg) { console.log((cond ? 'PASS ' : 'FAIL ') + msg); if (!con
   const browser = await chromium.launch({ executablePath: '/usr/bin/google-chrome', args: ['--no-sandbox'] });
   async function newPage(w, h, opts) {
     const ctx = await browser.newContext(Object.assign({ viewport: { width: w, height: h }, locale: 'en-GB', timezoneId: 'Europe/Tirane', hasTouch: false }, opts || {}));
-    const page = await ctx.newPage();
+    const page = await ctx.newPage(); await page.addInitScript(() => { try { const k = 'fb.device.v1'; const d = JSON.parse(localStorage.getItem(k) || '{}'); d.nightOn = false; d.homeIdle = false; localStorage.setItem(k, JSON.stringify(d)); } catch (e) {} });
     const errors = [];
     page.on('pageerror', e => errors.push('pageerror: ' + e.message));
     page.on('console', m => { if (m.type() === 'error' && !/Failed to load resource|net::ERR/.test(m.text())) errors.push('console: ' + m.text()); });
