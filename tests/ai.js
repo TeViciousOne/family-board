@@ -71,7 +71,7 @@ const stub = () => {
   ok((await p.locator('.ai-sum').innerText()).includes('Dentist at 16:30'), 'daily summary line shows');
   /* air conditioner */
   await p.waitForSelector('.ac-tile', { state: 'visible', timeout: 8000 });
-  ok((await p.locator('.ac-tile .ac-sub').innerText()).includes('Off') && (await p.locator('.ac-tile .ac-sub').innerText()).includes('21'), 'AC tile shows off and the room temperature');
+  ok((await p.locator('.ac-tile .ac-st').innerText()) === 'Off' && (await p.locator('.ac-tile .ac-deg').innerText()) === '21°', 'AC tile shows off and the room temperature');
   if (process.env.SHOTS) await p.screenshot({ path: process.env.SHOTS + '/ac-home.png' });
   await p.click('.ac-tile'); await p.waitForSelector('.ac-pop .ac-power');
   await p.click('.ac-pop .ac-power'); await p.click('.ac-pop .ac-step >> nth=1'); await p.click('.ac-pop .ac-step >> nth=1'); await p.waitForTimeout(900);

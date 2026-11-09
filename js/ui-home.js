@@ -180,7 +180,6 @@
       inner.appendChild(secN);
     }
 
-    var acTile = FB.ac && FB.ac.tile(); if (acTile) inner.appendChild(acTile);
     var openItems = L.shoppingSorted().filter(function (s) { return !s.done; });
     var open = openItems.length;
     if (open) {
@@ -211,7 +210,8 @@
           h('div', { class: 'clock' }, U.hhmm(ctx.now)),
           h('button', { type: 'button', class: 'icon-btn sleep-btn', 'aria-label': t('home.sleep'), onclick: function () { FB.night.sleepNow(); } }, ui.icon('moon'))),
         h('div', { class: 'dateline' }, FB.i18n.dateLong(today)),
-        weatherBlock()));
+        weatherBlock(),
+        FB.ac ? FB.ac.tile() : null));
 
     var board = h('main', { class: 'board' });
     if (!FB.state.chores.length) {

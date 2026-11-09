@@ -38,24 +38,23 @@
 
   var MODES = ['cold', 'hot', 'wet', 'wind', 'auto'], FANS = ['auto', 'mute', 'low', 'middle', 'high', 'strong'];
   function modeLabel(m) { return t('ac.m.' + m); }
-  function summary() {
-    var s = st.s;
-    if (!st.online) return t('ac.offline');
-    if (!s.switch) return t('ac.off') + (s.temp_current != null ? ' · ' + t('ac.room', { n: s.temp_current }) : '');
-    return t('ac.on') + ' · ' + modeLabel(s.mode) + ' · ' + s.temp_set + '°';
-  }
 
-  /* the small card on the home screen */
+  /* the card on the home screen, under the weather */
   AC.tile = function () {
     if (!AC.enabled()) return null;
-    var sub = h('span', { class: 'ac-sub' }, '');
+    var deg = h('span', { class: 'ac-deg' }, ''), state = h('b', { class: 'ac-st' }, ''), cap = h('span', { class: 'ac-cap' }, '');
     var btn = h('button', { type: 'button', class: 'ac-tile', onclick: function () { AC.open(); } },
-      h('span', { class: 'ac-ico' }, ui.icon('snow', 24)),
-      h('span', { class: 'ac-txt' }, h('b', null, t('ac.title')), sub));
+      h('span', { class: 'ac-head' }, h('span', { class: 'ac-ico' }, ui.icon('snow', 26)), h('b', { class: 'ac-name' }, t('ac.title'))),
+      h('span', { class: 'ac-body' }, deg, h('span', { class: 'ac-meta' }, state, cap)));
     function paint() {
+      var s = st.s, on = AC.on() && st.online;
       btn.style.display = st.loaded ? '' : 'none';
-      btn.classList.toggle('on', AC.on() && st.online);
-      sub.textContent = st.loaded ? summary() : '';
+      btn.classList.toggle('on', on);
+      if (!st.loaded) return;
+      if (!st.online) { deg.textContent = ''; state.textContent = t('ac.offline'); cap.textContent = ''; return; }
+      deg.textContent = (on ? s.temp_set : s.temp_current) != null ? (on ? s.temp_set : s.temp_current) + '°' : '';
+      state.textContent = on ? t('ac.on') + ' · ' + modeLabel(s.mode) : t('ac.off');
+      cap.textContent = on ? t('ac.room', { n: s.temp_current }) : t('ac.roomTemp');
     }
     var fn = function () { if (!document.body.contains(btn)) { listeners = listeners.filter(function (x) { return x !== fn; }); return; } paint(); };
     listeners.push(fn); paint(); AC.refresh();

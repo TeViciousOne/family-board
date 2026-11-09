@@ -419,7 +419,6 @@ input[type=text], input[type=email], input[type=password], input[type=number], i
 .ac-tile.on .ac-ico { background: #0A84FF; color: #fff; box-shadow: 0 4px 14px rgba(10, 132, 255, .45); }
 .ac-tile .ac-txt { display: flex; flex-direction: column; min-width: 0; line-height: 1.2; }
 .ac-tile .ac-txt b { font-size: 15px; }
-.ac-tile .ac-sub { font-size: 13px; color: var(--ink-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .ac-pop { display: grid; gap: 14px; }
 .ac-top { display: flex; align-items: center; gap: 16px; }
 .ac-power { display: grid; place-items: center; width: 76px; height: 76px; border: 0; border-radius: 50%; color: var(--ink-3); background: rgba(120, 120, 128, .24); transition: background .25s, color .25s, box-shadow .25s, transform .15s; }
@@ -437,3 +436,16 @@ input[type=text], input[type=email], input[type=password], input[type=number], i
 .ac-pop .seg.stack { display: grid; grid-template-columns: repeat(3, 1fr); border-radius: 18px; }
 .ac-pop .seg.stack .seg-b { text-align: center; padding-left: 6px; padding-right: 6px; }
 .ac-pop { gap: 10px; }
+
+/* the air conditioner card sits under the weather: large and easy to read */
+.ac-tile { display: flex; flex-direction: column; align-items: stretch; gap: 8px; min-height: 0; margin: 16px 0 0; padding: 14px 16px; border-radius: 22px; }
+.ac-tile .ac-head { display: flex; align-items: center; gap: 10px; }
+.ac-tile .ac-ico { width: 44px; height: 44px; }
+.ac-tile .ac-name { font-size: 19px; font-weight: 700; line-height: 1.15; }
+.ac-tile .ac-body { display: flex; align-items: center; gap: 12px; }
+.ac-tile .ac-deg { font-size: 52px; font-weight: 700; line-height: 1; font-variant-numeric: tabular-nums; }
+.ac-tile.on .ac-deg { color: #0A84FF; }
+.ac-tile .ac-meta { display: flex; flex-direction: column; min-width: 0; line-height: 1.2; }
+.ac-tile .ac-st { font-size: 18px; font-weight: 700; }
+.ac-tile .ac-cap { font-size: 15px; color: var(--ink-2, var(--ink-3)); }
+@media (max-width: 699px) and (orientation: portrait) { .ac-tile { flex-direction: row; align-items: center; justify-content: space-between; margin-top: 10px; } .ac-tile .ac-deg { font-size: 40px; } }
