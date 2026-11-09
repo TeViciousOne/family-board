@@ -22,7 +22,7 @@
     input.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); add(); } });
     var items = L.shoppingSorted();
     var doneN = items.filter(function (x) { return x.done; }).length;
-    var list = h('div', { class: 'shop-grid' }, items.map(function (s) {
+    function tile(s) {
       var m = L.member(s.added_by);
       function toggle() { FB.data.edit('shopping_items', s.id, { done: !s.done, done_at: s.done ? null : new Date().toISOString() }).then(after); }
       return h('div', { class: 'shop shop-sq' + (s.done ? ' done' : ''), role: 'button', tabindex: '0', 'aria-pressed': s.done ? 'true' : 'false', onclick: toggle,
@@ -31,10 +31,20 @@
         h('span', { class: 'shop-title' }, s.title),
         m ? h('i', { class: 'ev-dot shop-by', style: { background: m.color }, title: m.name }) : null,
         h('button', { type: 'button', class: 'shop-x', 'aria-label': t('common.delete') + ': ' + s.title, onclick: function (e) { e.stopPropagation(); FB.data.del('shopping_items', s.id).then(after); } }, ui.icon('x', 16)));
-    }));
+    }
+    var list;
+    if (items.some(function (x) { return x.category; })) {
+      var order = FB.ai ? FB.ai.cats : [], seen = {}, groups = [];
+      items.forEach(function (x) { var k = x.category || 'other'; (seen[k] = seen[k] || []).push(x); });
+      Object.keys(seen).sort(function (a, b) { return order.indexOf(a) - order.indexOf(b); }).forEach(function (k) {
+        groups.push(h('h3', { class: 'shop-cat' }, FB.ai ? FB.ai.catLabel(k) : k), h('div', { class: 'shop-grid' }, seen[k].map(tile)));
+      });
+      list = h('div', { class: 'shop-groups' }, groups);
+    } else list = h('div', { class: 'shop-grid' }, items.map(tile));
     if (!items.length) list = h('p', { class: 'muted pad' }, t('shop.empty'));
     return h('section', { class: 'pane pane-shop' },
       h('div', { class: 'pane-head' }, h('span', { class: 'pane-ico' }, ui.icon('cart', 22)), h('h2', null, t('shop.title')),
+        FB.ai && FB.ai.enabled() && items.length > 1 ? h('button', { class: 'link-btn ai-tidy', onclick: function () { FB.ai.tidy(); } }, ui.icon('sparkle', 16), ' ', t('ai.tidy')) : null,
         doneN ? h('button', { class: 'link-btn', onclick: function () {
           Promise.all(items.filter(function (x) { return x.done; }).map(function (x) { return FB.data.del('shopping_items', x.id); })).then(after);
         } }, t('shop.clearDone', { n: doneN })) : null),
