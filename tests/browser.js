@@ -48,20 +48,21 @@ function ok(cond, msg) { console.log((cond ? 'PASS ' : 'FAIL ') + msg); if (!con
   /* chore templates */
   await p.evaluate(() => location.hash = '#/chores'); await p.waitForSelector('.page-head');
   await p.click('.page-head .btn:not(.seg)'); await p.waitForSelector('.sheet .tpl');
-  ok((await p.locator('.tpl-row').count()) === 0, 'templates start empty');
-  await p.click('.tpl .btn'); await p.waitForSelector('.tpl-row');
-  const nTpl = await p.locator('.tpl-row').count();
+  ok((await p.locator('.tpl-tile').count()) === 0, 'templates start empty');
+  await p.click('.tpl .btn'); await p.waitForSelector('.tpl-tile');
+  const nTpl = await p.locator('.tpl-tile').count();
   ok(nTpl >= 10, 'starter set adds templates (' + nTpl + ')');
   const tplBefore = await p.evaluate(() => FB.state.chores.length);
-  await p.locator('.tpl-row input:not([disabled])').nth(0).check(); await p.locator('.tpl-row input:not([disabled])').nth(1).check();
+  await p.locator('.tpl-tile:not(.have)').nth(0).click(); await p.locator('.tpl-tile:not(.have)').nth(1).click(); await p.locator('.tpl-tile.on .tpl-rep').first().click();
   await p.click('.sheet-actions .btn:not(.ghost)'); await p.waitForTimeout(500);
   ok((await p.evaluate(() => FB.state.chores.length)) === tplBefore + 2 && (await p.locator('.sheet').count()) === 0, 'templates add the ticked chores');
+  ok((await p.evaluate(() => { const r = FB.state.chores.slice(-2).map(c => c.rule.freq); return r.filter(f => f === 'once').length === 1 && r.filter(f => f !== 'once').length === 1; })), 'chores are one-off unless repeat is switched on');
   /* edit, delete and create templates */
-  await p.click('.page-head .btn:not(.seg)'); await p.waitForSelector('.tpl-row');
-  await p.locator('.tpl-row .icon-btn').first().click(); await p.waitForSelector('.sheet input[type=text]');
+  await p.click('.page-head .btn:not(.seg)'); await p.waitForSelector('.tpl-tile');
+  await p.locator('.tpl-tile .tpl-edit').first().click(); await p.waitForSelector('.sheet input[type=text]');
   await p.locator('.sheet').last().locator('input[type=text]').first().fill('Renamed template'); await p.locator('.sheet').last().locator('.sheet-actions .btn:not(.ghost):not(.danger)').click(); await p.waitForTimeout(400);
   ok((await p.evaluate(() => FB.state.templates.some(x => x.title === 'Renamed template'))), 'a template can be renamed');
-  await p.locator('.tpl-row .icon-btn').nth(1).click(); await p.waitForSelector('.sheet .btn.danger');
+  await p.locator('.tpl-tile .tpl-edit').nth(1).click(); await p.waitForSelector('.sheet .btn.danger');
   await p.locator('.sheet').last().locator('.btn.danger').click(); await p.waitForTimeout(400);
   await p.locator('.btn.danger').last().click(); await p.waitForTimeout(500);
   ok((await p.evaluate(() => FB.state.templates.length)) === nTpl - 1, 'a template can be deleted');

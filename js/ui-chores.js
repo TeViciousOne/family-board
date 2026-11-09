@@ -134,10 +134,10 @@
   /*  Templates: tick the usual chores and add them in one go           */
   /* ---------------------------------------------------------------- */
   FB.actions.openTemplates = function () {
-    var modal, picked = {};
-    var who = h('select', null,
-      h('option', { value: '' }, t('chore.anyone')),
-      L.membersSorted().map(function (m) { return h('option', { value: m.id }, m.name); }));
+    var modal, picked = {}, repeat = {};
+    var who = h('select', { 'aria-label': t('tpl.assign') },
+      h('option', { value: '' }, t('tpl.assign') + ': ' + t('chore.anyone')),
+      L.membersSorted().map(function (m) { return h('option', { value: m.id }, t('tpl.assign') + ': ' + m.name); }));
     var addBtn = h('button', { class: 'btn', onclick: add }, '');
     var body = h('div', { class: 'tpl' });
     function have() { var o = {}; FB.state.chores.forEach(function (c) { o[c.title.trim().toLowerCase()] = true; }); return o; }
@@ -145,29 +145,34 @@
       var n = Object.keys(picked).length;
       addBtn.textContent = t('tpl.add', { n: n }); addBtn.disabled = !n;
     }
+    function suggested(it) { return it.rule && it.rule.freq !== 'once' ? it.rule : Object.assign(FB.recur.defaultRule(U.today()), { freq: 'daily' }); }
     function draw() {
       U.clear(body);
       var list = FB.state.templates.slice().sort(function (a, b) { return a.created_at < b.created_at ? -1 : 1; });
-      Object.keys(picked).forEach(function (id) { if (!list.some(function (x) { return x.id === id; })) delete picked[id]; });
+      Object.keys(picked).forEach(function (id) { if (!list.some(function (x) { return x.id === id; })) { delete picked[id]; delete repeat[id]; } });
       if (!list.length) {
         body.appendChild(h('p', { class: 'lead' }, t('tpl.empty')));
         body.appendChild(h('button', { class: 'btn', onclick: function () {
           Promise.all(FB.templates.starter().map(function (it) { return FB.data.add('chore_templates', it); })).then(draw);
         } }, t('tpl.starter')));
       }
-      var owned = have();
+      var owned = have(), grid = h('div', { class: 'tpl-grid' });
       list.forEach(function (it) {
-        var exists = owned[it.title.trim().toLowerCase()];
-        var cb = h('input', { type: 'checkbox', disabled: !!exists, checked: !!picked[it.id], onchange: function () { if (cb.checked) picked[it.id] = it; else delete picked[it.id]; refresh(); } });
-        body.appendChild(h('div', { class: 'row tpl-row' + (exists ? ' paused' : '') },
-          h('label', { class: 'tpl-pick' },
-            h('span', { class: 'row-emoji' }, it.emoji),
-            h('span', { class: 'row-main' },
-              h('span', { class: 'row-title' }, it.title),
-              h('span', { class: 'row-sub' }, exists ? t('tpl.have') : FB.recur.describe(it.rule, FB.i18n.L) + (it.due_time ? ' · ' + t('chore.by', { time: it.due_time }) : ''))),
-            cb),
-          h('button', { class: 'btn ghost icon-btn', 'aria-label': t('common.edit'), onclick: function () { FB.actions.editTemplate(it, draw); } }, ui.icon('edit', 20))));
+        var exists = owned[it.title.trim().toLowerCase()], on = !!picked[it.id];
+        var tile = h('div', { class: 'tpl-tile' + (on ? ' on' : '') + (exists ? ' have' : ''), role: 'button', tabindex: exists ? '-1' : '0',
+          'aria-pressed': on ? 'true' : 'false', title: exists ? t('tpl.have') : '',
+          onclick: function () { if (exists) return; if (picked[it.id]) { delete picked[it.id]; delete repeat[it.id]; } else picked[it.id] = it; draw(); },
+          onkeydown: function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.target.click(); } } },
+          h('span', { class: 'tpl-emoji' }, it.emoji || '•'),
+          h('span', { class: 'tpl-name' }, it.title),
+          h('span', { class: 'tpl-sub' }, exists ? t('tpl.have') : (repeat[it.id] ? FB.recur.describe(suggested(it), FB.i18n.L) : t('rule.f.once')) + (it.due_time ? ' · ' + it.due_time : '')),
+          on ? h('span', { class: 'tpl-check' }, ui.icon('check', 14)) : null,
+          on ? h('button', { type: 'button', class: 'tpl-rep' + (repeat[it.id] ? ' on' : ''), 'aria-label': t('tpl.repeat'), 'aria-pressed': repeat[it.id] ? 'true' : 'false',
+            onclick: function (e) { e.stopPropagation(); repeat[it.id] = !repeat[it.id]; draw(); } }, ui.icon('repeat', 16)) : null,
+          h('button', { type: 'button', class: 'tpl-edit', 'aria-label': t('common.edit'), onclick: function (e) { e.stopPropagation(); FB.actions.editTemplate(it, draw); } }, ui.icon('edit', 14)));
+        grid.appendChild(tile);
       });
+      if (list.length) body.appendChild(grid);
       refresh();
     }
     function add() {
@@ -175,23 +180,24 @@
       if (!items.length) return;
       addBtn.disabled = true;
       Promise.all(items.map(function (it) {
-        return FB.data.add('chores', { title: it.title, emoji: it.emoji, member_id: who.value || null, rule: it.rule, due_time: it.due_time || null, active: true });
+        var rule = repeat[it.id] ? Object.assign({}, suggested(it), { start: U.today() }) : Object.assign(FB.recur.defaultRule(U.today()), { freq: 'once' });
+        return FB.data.add('chores', { title: it.title, emoji: it.emoji, member_id: who.value || null, rule: rule, due_time: it.due_time || null, active: true });
       })).then(function () { modal.close(); ui.toast(t('tpl.added', { n: items.length })); });
     }
     draw();
     modal = ui.modal({
-      title: t('tpl.title'), size: 'wide', focus: false,
-      body: h('div', null, h('p', { class: 'lead' }, t('tpl.hint')), ui.field(t('tpl.assign'), who), body),
+      title: t('tpl.title'), size: 'wide tplwin', focus: false,
+      body: h('div', null, h('div', { class: 'tpl-top' }, who, h('p', { class: 'hint' }, t('tpl.hint'))), body),
       actions: [
-        h('button', { class: 'btn ghost', onclick: function () { modal.close(); FB.actions.openChore(null); } }, ui.icon('plus', 20), ' ', t('tpl.custom')),
-        h('button', { class: 'btn ghost', onclick: function () { FB.actions.editTemplate(null, draw); } }, ui.icon('list', 20), ' ', t('tpl.new')),
-        h('span', { class: 'grow' }), h('button', { class: 'btn ghost', onclick: function () { modal.close(); } }, t('common.cancel')), addBtn]
+        h('button', { class: 'btn ghost', onclick: function () { modal.close(); FB.actions.openChore(null); } }, ui.icon('plus', 18), ' ', t('tpl.custom')),
+        h('button', { class: 'btn ghost', onclick: function () { FB.actions.editTemplate(null, draw); } }, ui.icon('list', 18), ' ', t('tpl.new')),
+        h('span', { class: 'grow' }), addBtn]
     });
   };
 
   FB.actions.editTemplate = function (existing, done) {
     var isNew = !existing;
-    var c = existing ? Object.assign({}, existing) : { title: '', emoji: '🧹', rule: Object.assign(FB.recur.defaultRule(U.today()), { freq: 'daily' }), due_time: null };
+    var c = existing ? Object.assign({}, existing) : { title: '', emoji: '🧹', rule: Object.assign(FB.recur.defaultRule(U.today()), { freq: 'once' }), due_time: null };
     var modal, emoji = c.emoji;
     var title = h('input', { type: 'text', value: c.title, placeholder: t('chore.titlePh'), maxlength: '80' });
     var grid = ui.emojiGrid(ui.CHORE_EMOJI, emoji, function (v) { emoji = v; }, true);

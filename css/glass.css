@@ -261,3 +261,22 @@ input[type=text], input[type=email], input[type=password], input[type=number], i
 .tpl-pick input { margin-left: auto; }
 .chips.quick .chip { min-height: 40px; font-size: 15px; }
 .chips.quick .chip.ghost { background: transparent; border: 1px dashed var(--line); }
+
+/* templates popup: compact square tiles */
+.sheet.tplwin { max-width: 760px; }
+.tpl-top { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; flex-wrap: wrap; }
+.tpl-top select { flex: none; min-height: 40px; max-width: 100%; }
+.tpl-top .hint { margin: 0; flex: 1 1 220px; font-size: 13px; }
+.tpl-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); gap: 8px; }
+.tpl-tile { position: relative; aspect-ratio: 1 / 1; min-width: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; padding: 6px 4px; border-radius: 18px; background: var(--g-fill); border: 1.5px solid var(--g-edge-2); text-align: center; cursor: pointer; user-select: none; -webkit-tap-highlight-color: transparent; }
+.tpl-tile.on { border-color: #0A84FF; background: rgba(10, 132, 255, .22); }
+.tpl-tile.have { opacity: .45; cursor: default; }
+.tpl-emoji { font-size: 30px; line-height: 1; }
+.tpl-name { font-size: 12.5px; font-weight: 700; line-height: 1.15; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; max-width: 100%; }
+.tpl-sub { font-size: 10.5px; color: var(--ink-2); line-height: 1.1; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tpl-check { position: absolute; top: 5px; left: 5px; width: 20px; height: 20px; border-radius: 50%; background: #0A84FF; color: #fff; display: grid; place-items: center; }
+.tpl-edit, .tpl-rep { position: absolute; width: 26px; height: 26px; padding: 0; border: 0; border-radius: 50%; display: grid; place-items: center; background: rgba(255, 255, 255, .12); color: var(--ink-2); }
+.tpl-edit { top: 4px; right: 4px; }
+.tpl-rep { bottom: 4px; right: 4px; color: #0A84FF; }
+.tpl-rep.on { background: #0A84FF; color: #fff; }
+.tplwin .sheet-actions .btn { min-height: 42px; padding: 0 14px; }
