@@ -448,4 +448,10 @@ input[type=text], input[type=email], input[type=password], input[type=number], i
 .ac-tile .ac-meta { display: flex; flex-direction: column; min-width: 0; line-height: 1.2; }
 .ac-tile .ac-st { font-size: 18px; font-weight: 700; }
 .ac-tile .ac-cap { font-size: 15px; color: var(--ink-2, var(--ink-3)); }
-@media (max-width: 699px) and (orientation: portrait) { .ac-tile { flex-direction: row; align-items: center; justify-content: space-between; margin-top: 10px; } .ac-tile .ac-deg { font-size: 40px; } }
+@media (max-width: 699px) and (orientation: portrait) {
+  .ac-tile { box-sizing: border-box; width: 100%; grid-column: 1 / -1; flex-direction: row; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 12px; margin-top: 10px; padding: 10px 16px; }
+  .ac-tile .ac-name { font-size: 18px; }
+  .ac-tile .ac-deg { font-size: 40px; }
+  .ac-tile .ac-cap { display: none; }
+  .ac-tile .ac-body { gap: 10px; margin-left: auto; }
+}
