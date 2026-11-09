@@ -75,6 +75,8 @@ const stub = () => {
   ok((await p.locator('.ac-tile .ac-st').innerText()) === 'Off' && (await p.locator('.ac-tile .ac-deg').innerText()) === '21°', 'AC tile shows off and the room temperature');
   if (process.env.SHOTS) await p.screenshot({ path: process.env.SHOTS + '/ac-home.png' });
   await p.waitForSelector('.news-strip', { state: 'visible', timeout: 8000 });
+  const clk = await p.evaluate(() => { const c = document.querySelector('.clock'), r = document.querySelector('.rail-left').getBoundingClientRect(); const rg = document.createRange(); rg.selectNodeContents(c); return { fs: getComputedStyle(c).fontSize, textRight: rg.getBoundingClientRect().right, railRight: r.right, rail: r.width }; });
+  ok(clk.textRight <= clk.railRight - 18, 'clock fits inside its column ' + JSON.stringify(clk));
   const seen = new Set();
   for (let i = 0; i < 6; i++) { seen.add((await p.locator('.news-strip .news-src').innerText()) + ':' + (await p.locator('.news-strip .news-body').innerText()).slice(0, 12)); await p.waitForTimeout(8400); }
   const srcs = [...seen].map(x => x.split(':')[0]);

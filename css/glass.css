@@ -367,8 +367,8 @@ input[type=text], input[type=email], input[type=password], input[type=number], i
 .ai-sum { display: flex; align-items: flex-start; gap: 10px; margin: 0 0 10px; padding: 10px 14px; border-radius: 18px; background: linear-gradient(135deg, rgba(191, 90, 242, .22), rgba(10, 132, 255, .14)); border: 1px solid rgba(191, 90, 242, .35); flex: none; }
 .ai-sum p { margin: 0; font-size: 16px; line-height: 1.3; font-weight: 600; }
 .ai-sum-ico { color: #BF5AF2; flex: none; margin-top: 1px; }
-.board.has-sum { display: flex; flex-direction: column; }
-.board.has-sum > .col { flex: 1; min-height: 0; height: auto; }
+.board.has-sum, .board.has-news { display: flex; flex-direction: column; }
+.board.has-sum > .col, .board.has-news > .col { flex: 1; min-height: 0; height: auto; }
 .ai-tidy { display: inline-flex; align-items: center; gap: 4px; color: #BF5AF2; }
 .shop-cat { margin: 10px 2px 6px; font-size: 13px; font-weight: 700; letter-spacing: .03em; text-transform: uppercase; color: var(--ink-2); }
 .shop-groups { flex: 1; min-height: 0; overflow: auto; }
@@ -474,4 +474,8 @@ input[type=text], input[type=email], input[type=password], input[type=number], i
 .src-oil.news-row .news-body { display: flex; }
 
 /* iPad landscape: the clock must fit the 250px rail without being clipped */
-@media (orientation: landscape) and (min-width: 900px) { .rail-left .clock { font-size: 70px; padding-right: 8px; } }
+@media (orientation: landscape) and (min-width: 900px) {
+  .rail-left { container-type: inline-size; }
+  .rail-left .clock { font-size: min(110px, 37cqw); padding-right: .06em; }
+  .board { padding-top: 30px; }
+}
