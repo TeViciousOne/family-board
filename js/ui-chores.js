@@ -158,13 +158,13 @@
       }
       var owned = have(), grid = h('div', { class: 'tpl-grid' });
       list.forEach(function (it) {
-        var exists = owned[it.title.trim().toLowerCase()], on = !!picked[it.id];
+        var exists = owned[it.title.trim().toLowerCase()] || (it.title_sq && owned[it.title_sq.trim().toLowerCase()]) || owned[FB.templates.label(it).trim().toLowerCase()], on = !!picked[it.id];
         var tile = h('div', { class: 'tpl-tile' + (on ? ' on' : '') + (exists ? ' have' : ''), role: 'button', tabindex: exists ? '-1' : '0',
           'aria-pressed': on ? 'true' : 'false', title: exists ? t('tpl.have') : '',
           onclick: function () { if (exists) return; if (picked[it.id]) { delete picked[it.id]; delete repeat[it.id]; } else picked[it.id] = it; draw(); },
           onkeydown: function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.target.click(); } } },
           h('span', { class: 'tpl-emoji' }, it.emoji || '•'),
-          h('span', { class: 'tpl-name' }, it.title),
+          h('span', { class: 'tpl-name' }, FB.templates.label(it)),
           h('span', { class: 'tpl-sub' }, exists ? t('tpl.have') : (repeat[it.id] ? FB.recur.describe(suggested(it), FB.i18n.L) : t('rule.f.once')) + (it.due_time ? ' · ' + it.due_time : '')),
           on ? h('span', { class: 'tpl-check' }, ui.icon('check', 14)) : null,
           on ? h('button', { type: 'button', class: 'tpl-rep' + (repeat[it.id] ? ' on' : ''), 'aria-label': t('tpl.repeat'), 'aria-pressed': repeat[it.id] ? 'true' : 'false',
@@ -181,7 +181,7 @@
       addBtn.disabled = true;
       Promise.all(items.map(function (it) {
         var rule = repeat[it.id] ? Object.assign({}, suggested(it), { start: U.today() }) : Object.assign(FB.recur.defaultRule(U.today()), { freq: 'once' });
-        return FB.data.add('chores', { title: it.title, emoji: it.emoji, member_id: who.value || null, rule: rule, due_time: it.due_time || null, active: true });
+        return FB.data.add('chores', { title: FB.templates.label(it), emoji: it.emoji, member_id: who.value || null, rule: rule, due_time: it.due_time || null, active: true });
       })).then(function () { modal.close(); ui.toast(t('tpl.added', { n: items.length })); });
     }
     draw();
@@ -199,7 +199,8 @@
     var isNew = !existing;
     var c = existing ? Object.assign({}, existing) : { title: '', emoji: '🧹', rule: Object.assign(FB.recur.defaultRule(U.today()), { freq: 'once' }), due_time: null };
     var modal, emoji = c.emoji;
-    var title = h('input', { type: 'text', value: c.title, placeholder: t('chore.titlePh'), maxlength: '80' });
+    var sq = FB.i18n.lang === 'sq';
+    var title = h('input', { type: 'text', value: existing ? FB.templates.label(existing) : '', placeholder: t('chore.titlePh'), maxlength: '80' });
     var grid = ui.emojiGrid(ui.CHORE_EMOJI, emoji, function (v) { emoji = v; }, true);
     var hasTime = h('input', { type: 'checkbox', checked: !!c.due_time, onchange: function () { timeIn.style.display = hasTime.checked ? '' : 'none'; } });
     var timeIn = h('input', { type: 'time', value: c.due_time || '18:00', style: { display: c.due_time ? '' : 'none' } });
@@ -209,7 +210,8 @@
     function save() {
       var name = title.value.trim();
       if (!name) { err.textContent = t('chore.needTitle'); title.focus(); return; }
-      var row = { title: name, emoji: emoji || '', rule: rec.get(), due_time: hasTime.checked && timeIn.value ? timeIn.value : null };
+      var row = { emoji: emoji || '', rule: rec.get(), due_time: hasTime.checked && timeIn.value ? timeIn.value : null };
+      if (sq) { row.title_sq = name; if (isNew || !existing.title) row.title = name; } else { row.title = name; if (isNew) row.title_sq = name; }
       (isNew ? FB.data.add('chore_templates', row) : FB.data.edit('chore_templates', existing.id, row)).then(finish);
     }
     var actions = [];

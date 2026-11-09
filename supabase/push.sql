@@ -59,3 +59,4 @@ create policy chore_templates_all on public.chore_templates for all to authentic
 grant select, insert, update, delete on public.chore_templates to authenticated;
 alter table public.chore_templates replica identity full;
 alter publication supabase_realtime add table public.chore_templates;
+alter table public.chore_templates add column if not exists title_sq text;

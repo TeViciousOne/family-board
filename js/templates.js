@@ -42,8 +42,10 @@
   /* the starter set as rows ready to save as the family's own templates */
   T.starter = function () {
     var out = [];
-    T.groups().forEach(function (g) { g.items.forEach(function (it) { out.push({ title: T.name(it), emoji: it.emoji, rule: it.rule, due_time: it.time || null }); }); });
+    T.groups().forEach(function (g) { g.items.forEach(function (it) { out.push({ title: it.en, title_sq: it.sq, emoji: it.emoji, rule: it.rule, due_time: it.time || null }); }); });
     return out;
   };
+  /* a saved template's name in the current language (falls back to the other one) */
+  T.label = function (it) { return FB.i18n.lang === 'sq' && it.title_sq ? it.title_sq : it.title; };
   T.name = function (it) { return FB.i18n.lang === 'sq' ? it.sq : it.en; };
 })(typeof window !== 'undefined' ? window : globalThis);
