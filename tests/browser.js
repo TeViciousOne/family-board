@@ -47,7 +47,7 @@ function ok(cond, msg) { console.log((cond ? 'PASS ' : 'FAIL ') + msg); if (!con
   ok((await p.locator('.wx-day').count()) === 5, 'weather shows 5 forecast days');
   /* chore templates */
   await p.evaluate(() => location.hash = '#/chores'); await p.waitForSelector('.page-head');
-  await p.click('.page-head .btn.ghost'); await p.waitForSelector('.sheet .tpl');
+  await p.click('.page-head .btn:not(.seg)'); await p.waitForSelector('.sheet .tpl');
   ok((await p.locator('.tpl-row').count()) === 0, 'templates start empty');
   await p.click('.tpl .btn'); await p.waitForSelector('.tpl-row');
   const nTpl = await p.locator('.tpl-row').count();
@@ -57,7 +57,7 @@ function ok(cond, msg) { console.log((cond ? 'PASS ' : 'FAIL ') + msg); if (!con
   await p.click('.sheet-actions .btn:not(.ghost)'); await p.waitForTimeout(500);
   ok((await p.evaluate(() => FB.state.chores.length)) === tplBefore + 2 && (await p.locator('.sheet').count()) === 0, 'templates add the ticked chores');
   /* edit, delete and create templates */
-  await p.click('.page-head .btn.ghost'); await p.waitForSelector('.tpl-row');
+  await p.click('.page-head .btn:not(.seg)'); await p.waitForSelector('.tpl-row');
   await p.locator('.tpl-row .icon-btn').first().click(); await p.waitForSelector('.sheet input[type=text]');
   await p.locator('.sheet').last().locator('input[type=text]').first().fill('Renamed template'); await p.locator('.sheet').last().locator('.sheet-actions .btn:not(.ghost):not(.danger)').click(); await p.waitForTimeout(400);
   ok((await p.evaluate(() => FB.state.templates.some(x => x.title === 'Renamed template'))), 'a template can be renamed');
@@ -69,10 +69,10 @@ function ok(cond, msg) { console.log((cond ? 'PASS ' : 'FAIL ') + msg); if (!con
   await p.locator('.sheet').last().locator('input[type=text]').first().fill('My own chore'); await p.locator('.sheet').last().locator('.sheet-actions .btn:not(.ghost)').click(); await p.waitForTimeout(400);
   ok((await p.evaluate(() => FB.state.templates.some(x => x.title === 'My own chore'))), 'a new template can be created');
   await p.keyboard.press('Escape'); await p.waitForTimeout(300);
-  /* quick-add chips inside the Add chore popup */
-  await p.click('.page-head .btn:not(.ghost)'); await p.waitForSelector('.chips.quick .chip');
-  await p.locator('.chips.quick .chip', { hasText: 'My own chore' }).click(); await p.waitForTimeout(400);
-  ok((await p.locator('.sheet input[type=text]').first().inputValue()) === 'My own chore', 'quick-add chip fills the new chore form');
+  /* Custom chore button inside the popup opens the plain form */
+  await p.click('.page-head .btn:not(.seg)'); await p.waitForSelector('.sheet .tpl');
+  await p.locator('.sheet-actions .btn.ghost', { hasText: 'Custom chore' }).click(); await p.waitForSelector('.sheet .form');
+  ok((await p.locator('.sheet .tpl').count()) === 0, 'custom chore opens the chore form');
   await p.keyboard.press('Escape'); await p.waitForTimeout(300);
   await p.evaluate(() => location.hash = '#/home'); await p.waitForSelector('.home .col');
   ok((await p.locator('.wx-hours .wx-h').count()) >= 4 && (await p.locator('.wx-hours .wx-hn').first().innerText()) === 'Now', 'hourly weather strip starts with Now');
@@ -123,6 +123,7 @@ function ok(cond, msg) { console.log((cond ? 'PASS ' : 'FAIL ') + msg); if (!con
   await p.waitForSelector('.page .row');
   await p.screenshot({ path: OUT + '/06-chores.png' });
   await p.locator('.page-head .btn:not(.ghost)').click();
+  await p.locator('.sheet-actions .btn.ghost', { hasText: 'Custom chore' }).click();
   await p.waitForSelector('.sheet form');
   await p.fill('.sheet input[type=text]', 'Mop the kitchen');
   await p.locator('.sheet .seg-b', { hasText: 'Monthly' }).click();
@@ -200,6 +201,7 @@ function ok(cond, msg) { console.log((cond ? 'PASS ' : 'FAIL ') + msg); if (!con
   await q.locator('#nav button[data-route=chores]').tap();
   await q.waitForTimeout(200);
   await q.locator('.page-head .btn:not(.ghost)').tap();
+  await q.locator('.sheet-actions .btn.ghost', { hasText: 'Custom chore' }).tap();
   await q.waitForSelector('.sheet form');
   await q.screenshot({ path: OUT + '/22-phone-chore-form.png' });
   await q.keyboard.press('Escape');

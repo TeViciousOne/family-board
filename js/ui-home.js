@@ -201,7 +201,7 @@
     var board = h('main', { class: 'board' });
     if (!FB.state.chores.length) {
       board.appendChild(h('div', { class: 'board-hint' }, h('p', null, t('board.noChores')),
-        h('button', { class: 'btn', onclick: function () { FB.app.go('chores'); } }, t('board.addChores'))));
+        h('button', { class: 'btn', onclick: function () { FB.actions.openTemplates(); } }, t('board.addChores'))));
     } else board.appendChild(list(due));
 
     return h('div', { class: 'home' }, left, board, rightRail(today));

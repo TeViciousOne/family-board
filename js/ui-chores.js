@@ -37,8 +37,7 @@
           ui.icon('right', 20)));
       });
     });
-    if (!any) wrap.appendChild(h('div', { class: 'pad' }, h('p', { class: 'muted' }, t('chores.empty')),
-      h('button', { class: 'btn', onclick: function () { FB.actions.openTemplates(); } }, ui.icon('list', 20), ' ', t('tpl.open'))));
+    if (!any) wrap.appendChild(h('div', { class: 'pad' }, h('p', { class: 'muted' }, t('chores.empty'))));
     return wrap;
   }
 
@@ -73,8 +72,7 @@
       h('h1', null, t('nav.chores')),
       tabs(),
       h('span', { class: 'grow' }),
-      tab === 'chores' ? h('button', { class: 'btn ghost', onclick: function () { FB.actions.openTemplates(); } }, ui.icon('list', 20), ' ', t('tpl.open')) : null,
-      tab === 'chores' ? h('button', { class: 'btn', onclick: function () { FB.actions.openChore(null); } }, ui.icon('plus', 20), ' ', t('chores.add')) : null);
+      tab === 'chores' ? h('button', { class: 'btn', onclick: function () { FB.actions.openTemplates(); } }, ui.icon('plus', 20), ' ', t('chores.add')) : null);
     return h('div', { class: 'page', 'data-scroll': 'page-chores' }, head, tab === 'chores' ? choreList() : historyList());
   };
 
@@ -121,18 +119,7 @@
     actions.push(h('button', { class: 'btn ghost', onclick: function () { modal.close(); } }, t('common.cancel')));
     actions.push(h('button', { class: 'btn', onclick: save }, t('common.save')));
 
-    var quick = null;
-    if (isNew && FB.state.templates.length) {
-      var owned = {}; FB.state.chores.forEach(function (x) { owned[x.title.trim().toLowerCase()] = true; });
-      quick = ui.field(t('tpl.quick'), h('div', { class: 'chips quick' },
-        FB.state.templates.filter(function (x) { return !owned[x.title.trim().toLowerCase()]; }).map(function (x) {
-          return h('button', { type: 'button', class: 'chip' + (title.value.trim() === x.title ? ' on' : ''), onclick: function () {
-            modal.close(); FB.actions.openChore(null, { title: x.title, emoji: x.emoji, rule: x.rule, due_time: x.due_time });
-          } }, (x.emoji ? x.emoji + ' ' : '') + x.title);
-        }).concat([h('button', { type: 'button', class: 'chip ghost', onclick: function () { modal.close(); FB.actions.openTemplates(); } }, ui.icon('edit', 16), ' ', t('tpl.manage'))])));
-    }
     var body = h('form', { class: 'form', onsubmit: function (ev) { ev.preventDefault(); save(); } },
-      quick,
       ui.field(t('chore.title'), title),
       ui.field(t('chore.icon'), grid),
       ui.field(t('chore.who'), who),
@@ -196,7 +183,8 @@
       title: t('tpl.title'), size: 'wide', focus: false,
       body: h('div', null, h('p', { class: 'lead' }, t('tpl.hint')), ui.field(t('tpl.assign'), who), body),
       actions: [
-        h('button', { class: 'btn ghost', onclick: function () { FB.actions.editTemplate(null, draw); } }, ui.icon('plus', 20), ' ', t('tpl.new')),
+        h('button', { class: 'btn ghost', onclick: function () { modal.close(); FB.actions.openChore(null); } }, ui.icon('plus', 20), ' ', t('tpl.custom')),
+        h('button', { class: 'btn ghost', onclick: function () { FB.actions.editTemplate(null, draw); } }, ui.icon('list', 20), ' ', t('tpl.new')),
         h('span', { class: 'grow' }), h('button', { class: 'btn ghost', onclick: function () { modal.close(); } }, t('common.cancel')), addBtn]
     });
   };
