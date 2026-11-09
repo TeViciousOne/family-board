@@ -153,8 +153,8 @@ begin
   if auth.uid() is null then raise exception 'not signed in'; end if;
   if exists (select 1 from members where user_id = auth.uid()) then raise exception 'already in a household'; end if;
   loop
-    c := upper(substr(translate(encode(gen_random_bytes(6), 'base64'), '+/=0O1IL', ''), 1, 6));
-    exit when length(c) = 6 and not exists (select 1 from households where code = c);
+    c := upper(substr(translate(md5(random()::text || clock_timestamp()::text || auth.uid()::text), '01', 'XY'), 1, 6));
+    exit when not exists (select 1 from households where code = c);
   end loop;
   insert into households(name, code) values (coalesce(nullif(trim(h_name), ''), 'Home'), c) returning id into hid;
   insert into members(household_id, user_id, name, color, emoji) values (hid, auth.uid(), trim(m_name), m_color, coalesce(m_emoji, ''));
