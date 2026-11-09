@@ -186,3 +186,53 @@ input[type=text], input[type=email], input[type=password], input[type=number], i
 }
 @media (orientation: portrait), (max-width: 639px) { .day-panel { max-height: 46%; } }
 @media (max-width: 699px) and (orientation: portrait) and (max-height: 720px) { .wx-hours { display: none; } .rail-left { max-height: 30vh; } }
+
+/* ---------- vertical (portrait) space saver: clock and weather share the header, chores get the rest ---------- */
+@media (orientation: portrait), (max-width: 639px) {
+  .rail-left { max-height: none; padding: 10px 16px 2px; }
+  .rail-left .rail-in { display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: 12px; align-items: center; }
+  .rail-left .wx { display: contents; }
+  .rail-left .clock-row { grid-column: 1; grid-row: 1; }
+  .rail-left .dateline { grid-column: 1; grid-row: 2; margin: 0; font-size: 18px; }
+  .rail-left .wx-now { grid-column: 2; grid-row: 1; justify-self: end; gap: 6px; }
+  .rail-left .wx-desc { grid-column: 2; grid-row: 2; justify-self: end; text-align: right; font-size: 14px; margin: 0; }
+  .rail-left .wx-meta { display: none; }
+  .rail-left .wx-hours { grid-column: 1 / -1; grid-row: 3; max-width: none; margin-top: 8px; padding: 6px 2px; }
+  .rail-left .wx-strip { grid-column: 1 / -1; grid-row: 4; margin-top: 6px; }
+  .rail-left .wx-stale, .rail-left .wx-empty { grid-column: 1 / -1; }
+  .wx-temp { font-size: 44px; }
+  .wx-now .wx-icon { width: 54px; height: 54px; }
+  .clock { font-size: 58px; }
+  .sleep-btn { position: absolute; right: 8px; top: 4px; opacity: .6; }
+  .rail-left { position: relative; }
+  .rail-right { max-height: 24vh; }
+}
+/* phones: hide the 5-day strip (details are one tap away), thin bottom strip */
+@media (max-width: 699px) and (orientation: portrait) {
+  .rail-left .wx-strip { display: none; }
+  .rail-left .wx-now { margin-right: 36px; }
+  .rail-left .wx-desc { margin-right: 36px; }
+  .wx-temp { font-size: 38px; }
+  .wx-now .wx-icon { width: 44px; height: 44px; }
+  .clock { font-size: 54px; }
+  .rail-right { max-height: 15vh; padding: 0 16px 6px; }
+  .rail-right .rail-in { grid-auto-columns: minmax(0, 1fr) minmax(0, 46%); gap: 10px; align-items: center; }
+  .rail-right .rr-ups .ev-group:nth-of-type(n+2) { display: none; }
+  .rail-right .rr-ups h3 { margin-top: 0; }
+  .rail-right .rr-ups .muted { font-size: 14px; }
+  .rail-right .shop-tile { margin: 0; min-height: 46px; padding: 0 12px; font-size: 15px; gap: 8px; white-space: nowrap; overflow: hidden; }
+  .rail-right .shop-tile span:last-child { overflow: hidden; text-overflow: ellipsis; }
+  .col-empty, .board-hint p { font-size: 16px; }
+}
+/* tablet portrait: weather on the right of the clock */
+@media (min-width: 700px) and (orientation: portrait) {
+  .rail-left .rail-in { grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr); column-gap: 28px; align-items: start; }
+  .rail-left .clock-row { grid-row: 1; }
+  .rail-left .dateline { grid-row: 2; }
+  .rail-left .wx-now { grid-column: 1; grid-row: 3; justify-self: start; margin-top: 8px; }
+  .rail-left .wx-desc { grid-column: 1; grid-row: 4; justify-self: start; text-align: left; font-size: 17px; }
+  .rail-left .wx-meta { display: block; grid-column: 1; grid-row: 5; }
+  .rail-left .wx-hours { grid-column: 2; grid-row: 1 / 4; margin-top: 4px; align-self: stretch; grid-template-columns: repeat(6, 1fr); }
+  .rail-left .wx-strip { grid-column: 2; grid-row: 4 / 6; margin-top: 4px; align-self: end; }
+  .sleep-btn { position: static; opacity: 1; margin-top: 4px; }
+}
