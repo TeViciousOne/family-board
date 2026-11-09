@@ -124,7 +124,7 @@ Deno.serve(async (req) => {
             body = it.digest.slice(0, 5).map((e: any) => (e.kind === "birthday" ? "🎂 " : "") + (e.start_time && e.all_day === false ? e.start_time + " " : "") + e.title).join(" · ");
           }
           if (it.many) { title = "🆕 " + tx(l, "newMany", { n: it.many.length }); body = it.many.slice(0, 5).map((c: any) => (c.emoji ? c.emoji + " " : "") + c.title).join(" · "); }
-          const r = await webpush.sendNotification({ endpoint: s.endpoint, keys: { p256dh: s.p256dh, auth: s.auth } }, JSON.stringify({ title, body, tag: it.key }));
+          const r = await webpush.sendNotification({ endpoint: s.endpoint, keys: { p256dh: s.p256dh, auth: s.auth } }, JSON.stringify({ title, body, tag: it.key }), { urgency: "high", TTL: 3600 });
           console.log("push sent", it.key, r.statusCode);
         } catch (err: any) {
           console.error("push failed", it.key, err.statusCode, String(err.body || err.message).slice(0, 200));
