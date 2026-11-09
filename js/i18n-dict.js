@@ -209,6 +209,7 @@
       'home.notes': 'Notes',
       'home.openCalendar': 'Open calendar',
       'home.shoppingCount': '{n} to buy',
+      'home.shopMore': '+{n} more',
       'home.shoppingEmpty': 'Shopping list is empty',
       'home.sleep': 'Sleep screen',
 
@@ -302,6 +303,8 @@
       'set.nightTo': 'Until',
       'set.reload4': 'Refresh every night',
       'set.reload4Hint': 'Reloads at 04:00 so the board picks up app updates.',
+      'set.homeIdle': 'Back to home when idle',
+      'set.homeIdleHint': 'Returns to the home screen after 1 minute without touching it.',
       'set.reset': 'Reset demo data',
       'set.resetHint': 'All demo chores, events and notes are replaced with the sample data.',
       'set.resetQ': 'Reset the demo?',
@@ -589,6 +592,7 @@
       'home.notes': 'Shënime',
       'home.openCalendar': 'Hap kalendarin',
       'home.shoppingCount': '{n} për të blerë',
+      'home.shopMore': '+{n} të tjera',
       'home.shoppingEmpty': 'Lista e blerjeve është bosh',
       'home.sleep': 'Ekrani i gjumit',
 
@@ -682,6 +686,8 @@
       'set.nightTo': 'Deri',
       'set.reload4': 'Rifresko çdo natë',
       'set.reload4Hint': 'Ringarkohet në 04:00 që tabela të marrë përditësimet.',
+      'set.homeIdle': 'Kthehu te kryefaqja kur nuk përdoret',
+      'set.homeIdleHint': 'Kthehet te kryefaqja pas 1 minute pa e prekur.',
       'set.reset': 'Rivendos të dhënat demo',
       'set.resetHint': 'Të gjitha detyrat, ngjarjet dhe shënimet demo zëvendësohen me të dhënat shembull.',
       'set.resetQ': 'Të rivendoset demoja?',

@@ -365,6 +365,7 @@
     root.location.reload();
   }
 
+  var lastTouch = Date.now();
   var timersStarted = false, lastMinute = -1;
   function startTimers() {
     if (timersStarted) return; timersStarted = true;
@@ -372,6 +373,12 @@
       var now = new Date();
       night.update();
       checkAlerts(now);
+      /* back to the home screen after 1 minute without a touch */
+      if (FB.device.homeIdle && Date.now() - lastTouch >= 60000 && route() !== 'home') {
+        var ae = document.activeElement;
+        var typing = ae && ae.getAttribute && ae.getAttribute('data-fid') && ae.value;
+        if (!typing) { lastTouch = Date.now(); if (ui.closeAllModals) ui.closeAllModals(); app.go('home'); }
+      }
       var m = now.getHours() * 60 + now.getMinutes();
       if (m !== lastMinute) {
         lastMinute = m;
@@ -399,6 +406,7 @@
       var st = FB.store.sync && FB.store.sync();
       if (st && (st.offline || st.pending) && !st.flushing) app.refreshAll();
     }, 20000);
+    ['pointerdown', 'keydown', 'wheel', 'touchstart'].forEach(function (ev) { document.addEventListener(ev, function () { lastTouch = Date.now(); }, true); });
     document.addEventListener('pointerdown', function () {
       FB.sound.unlock();
       if (night.isNight(new Date()) && !night.el.classList.contains('on')) night.awakeUntil = Math.max(night.awakeUntil, Date.now() + 60000);

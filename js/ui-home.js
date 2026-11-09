@@ -181,7 +181,19 @@
       inner.appendChild(secN);
     }
 
-    var open = FB.state.shopping.filter(function (s) { return !s.done; }).length;
+    var openItems = L.shoppingSorted().filter(function (s) { return !s.done; });
+    var open = openItems.length;
+    if (open) {
+      rail.classList.add('has-shop');
+      var secS = h('section', { class: 'rr rr-shop' }, h('h3', null, t('shop.title')));
+      openItems.slice(0, 4).forEach(function (it) {
+        var m = L.member(it.added_by);
+        secS.appendChild(h('button', { type: 'button', class: 'note-mini shop-mini', style: { borderColor: m ? m.color : 'var(--ink-3)' }, onclick: function () { FB.actions.openShopping(); } },
+          h('span', null, it.title), m ? h('small', null, m.name) : null));
+      });
+      if (open > 4) secS.appendChild(h('button', { type: 'button', class: 'link-btn', onclick: function () { FB.actions.openShopping(); } }, t('home.shopMore', { n: open - 4 })));
+      inner.appendChild(secS);
+    }
     inner.appendChild(h('button', { type: 'button', class: 'shop-tile', onclick: function () { FB.actions.openShopping(); } },
       ui.icon('cart', 26),
       h('span', null, open ? t('home.shoppingCount', { n: open }) : t('home.shoppingEmpty'))));

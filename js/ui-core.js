@@ -19,7 +19,7 @@
     lang: guessLang(), wall: wallGuess, askWho: wallGuess ? 'always' : 'never',
     sound: true, volume: 0.6,
     nightOn: true, nightFrom: '22:30', nightTo: '06:30',
-    place: FB.weather.DEFAULT_PLACE, reload4: true
+    place: FB.weather.DEFAULT_PLACE, reload4: true, homeIdle: wallGuess
   }, stored);
   FB.saveDevice = function () { try { localStorage.setItem(DEV_KEY, JSON.stringify(FB.device)); } catch (e) { /* ignore */ } };
 

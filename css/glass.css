@@ -417,3 +417,11 @@ input[type=text], input[type=email], input[type=password], input[type=number], i
 
 /* tablets: chores sit in two compact columns instead of one wide, enlarged one */
 @media (orientation: landscape) and (min-width: 700px) { .list-grid { grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); } }
+
+/* home: the shopping list shows as small cards like the notes (the button remains for phones) */
+.rail-right.has-shop .shop-tile { display: none; }
+.rail-right .shop-mini { cursor: pointer; }
+@media (max-width: 699px) and (orientation: portrait) {
+  .rail-right .rr-shop { display: none; }
+  .rail-right.has-shop .shop-tile { display: flex; }
+}
