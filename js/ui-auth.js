@@ -33,27 +33,49 @@
     signIn();
   };
 
+  /* password box with a show/hide eye */
+  function pwField(placeholder, autocomplete) {
+    var input = h('input', { type: 'password', autocomplete: autocomplete, placeholder: placeholder, autocapitalize: 'none', autocorrect: 'off', spellcheck: 'false' });
+    var eye = h('button', { type: 'button', class: 'pw-eye', 'aria-label': t('auth.show') }, ui.icon('eye', 22));
+    eye.addEventListener('click', function () {
+      var show = input.type === 'password';
+      input.type = show ? 'text' : 'password';
+      U.clear(eye); eye.appendChild(ui.icon(show ? 'eyeOff' : 'eye', 22));
+      eye.setAttribute('aria-label', show ? t('auth.hide') : t('auth.show'));
+    });
+    return { input: input, el: h('div', { class: 'pw-wrap' }, input, eye) };
+  }
+
   function signIn() {
     var mode = 'in';
-    var email = h('input', { type: 'email', autocomplete: 'email', placeholder: t('auth.email'), inputmode: 'email' });
-    var pw = h('input', { type: 'password', autocomplete: 'current-password', placeholder: t('auth.password') });
+    var user = h('input', { type: 'text', autocomplete: 'username', placeholder: t('auth.username'), autocapitalize: 'none', autocorrect: 'off', spellcheck: 'false', maxlength: '20' });
+    var pw = pwField(t('auth.password'), 'current-password');
+    var pw2 = pwField(t('auth.repeat'), 'new-password');
+    pw2.el.style.display = 'none';
     var err = h('p', { class: 'form-err', role: 'alert' });
     var info = h('p', { class: 'hint' });
     var go = h('button', { type: 'submit', class: 'btn big' }, t('auth.signIn'));
     var seg = ui.seg([{ v: 'in', label: t('auth.signIn') }, { v: 'up', label: t('auth.signUp') }], mode, function (v) {
       mode = v; go.textContent = v === 'in' ? t('auth.signIn') : t('auth.signUp');
-      pw.setAttribute('autocomplete', v === 'in' ? 'current-password' : 'new-password'); err.textContent = ''; info.textContent = v === 'up' ? t('auth.pwHint') : '';
+      pw.input.setAttribute('autocomplete', v === 'in' ? 'current-password' : 'new-password');
+      pw2.el.style.display = v === 'up' ? '' : 'none'; pw2.input.value = '';
+      err.textContent = ''; info.textContent = v === 'up' ? t('auth.userHint') : '';
     });
     var form = h('form', { class: 'form', onsubmit: function (ev) {
       ev.preventDefault(); err.textContent = '';
-      var e = email.value.trim(), p = pw.value;
+      var e = FB.storeLib.cleanUsername(user.value), p = pw.input.value;
       if (!e || !p) { err.textContent = t('auth.needBoth'); return; }
-      var op = mode === 'in' ? FB.store.signIn(e, p).then(function () { return 'ok'; }) : FB.store.signUp(e, p).then(function (r) { return r.needsConfirm ? 'confirm' : 'ok'; });
-      busy(go, op).then(function (r) {
-        if (r === 'confirm') { info.textContent = t('auth.checkEmail'); return null; }
-        return FB.app.afterAuth();
-      }).catch(function (x) { err.textContent = t(FB.storeLib.errorKey(x)); });
-    } }, seg, email, pw, info, err, go);
+      if (mode === 'up') {
+        if (!FB.storeLib.validUsername(e)) { err.textContent = t('auth.badUser'); return; }
+        if (p.length < 6) { err.textContent = t('err.password'); return; }
+        if (p !== pw2.input.value) { err.textContent = t('auth.mismatch'); return; }
+      }
+      var op = mode === 'in' ? FB.store.signIn(e, p).then(function () { return 'ok'; }) : FB.store.signUp(e, p).then(function (r) {
+        return r.needsConfirm ? FB.store.signIn(e, p).then(function () { return 'ok'; }) : 'ok';
+      });
+      busy(go, op).then(function () { return FB.app.afterAuth(); })
+        .catch(function (x) { err.textContent = t(FB.storeLib.errorKey(x)); });
+    } }, seg, user, pw.el, pw2.el, info, err, go);
     shell([form, langSwitch()]);
   }
 

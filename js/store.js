@@ -22,6 +22,13 @@
   var HISTORY_DAYS = 90;
 
   /* map a technical error to a translation key the UI can show */
+  /* people sign in with a username; Supabase needs an email-shaped id, so we derive one that is never mailed */
+  S.EMAIL_DOMAIN = 'familyboard.app';
+  S.cleanUsername = function (u) { return String(u || '').trim().toLowerCase(); };
+  S.validUsername = function (u) { return /^[a-z0-9][a-z0-9._-]{2,19}$/.test(S.cleanUsername(u)); };
+  S.toEmail = function (u) { return S.cleanUsername(u) + '@' + S.EMAIL_DOMAIN; };
+  S.fromEmail = function (e) { return String(e || '').replace('@' + S.EMAIL_DOMAIN, ''); };
+
   S.errorKey = function (err) {
     var m = String((err && (err.message || err.error_description || err)) || '').toLowerCase();
     if (m.indexOf('invalid login') !== -1) return 'err.login';
@@ -201,13 +208,13 @@
         });
       },
       me: function () { return meId; },
-      userEmail: function () { return user ? user.email : ''; },
+      userEmail: function () { return user ? S.fromEmail(user.email) : ''; },
 
       signIn: function (email, password) {
-        return sb.auth.signInWithPassword({ email: email, password: password }).then(check).then(function (d) { user = d.user; });
+        return sb.auth.signInWithPassword({ email: S.toEmail(email), password: password }).then(check).then(function (d) { user = d.user; });
       },
       signUp: function (email, password) {
-        return sb.auth.signUp({ email: email, password: password }).then(check).then(function (d) {
+        return sb.auth.signUp({ email: S.toEmail(email), password: password }).then(check).then(function (d) {
           if (!d.session) return { needsConfirm: true };
           user = d.user; return { needsConfirm: false };
         });

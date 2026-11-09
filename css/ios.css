@@ -146,3 +146,9 @@ input[type=range] { accent-color: var(--brand); }
   .sheet::before { content: ''; display: block; width: 36px; height: 5px; border-radius: 3px; background: var(--fill-2); margin: -6px auto 10px; flex: none; }
   .page-head h1, .list-title { font-size: 30px; }
 }
+
+/* password field with show/hide eye */
+.pw-wrap { position: relative; }
+.pw-wrap input { padding-right: 56px; }
+.pw-eye { position: absolute; right: 4px; top: 0; bottom: 0; width: 48px; border: 0; background: none; color: var(--ink-3); display: grid; place-items: center; border-radius: 12px; }
+.auth-form .form { display: flex; flex-direction: column; gap: 12px; }
