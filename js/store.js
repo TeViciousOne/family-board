@@ -235,7 +235,7 @@
           var b = sb.from(t).select('*');
           if (t === 'chore_completions') b = b.gte('on_date', since);
           if (t === 'notes') b = b.order('created_at', { ascending: false }).limit(60);
-          else b = b.order('created_at', { ascending: true });
+          else b = b.order(t === 'chore_completions' ? 'done_at' : 'created_at', { ascending: true });
           return b.then(check);
         };
         return Promise.all([
@@ -251,7 +251,7 @@
         var b = sb.from(t).select('*');
         if (t === 'chore_completions') b = b.gte('on_date', U.addDays(U.today(), -HISTORY_DAYS));
         if (t === 'notes') b = b.order('created_at', { ascending: false }).limit(60);
-        else b = b.order('created_at', { ascending: true });
+        else b = b.order(t === 'chore_completions' ? 'done_at' : 'created_at', { ascending: true });
         return b.then(check);
       },
       insert: function (t, row) {
