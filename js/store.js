@@ -366,6 +366,16 @@
           return r.data.data;
         });
       },
+      news: function (body) {
+        return sb.functions.invoke('news', { body: body }).then(function (r) {
+          if (r.error) {
+            var ctx = r.error.context;
+            return (ctx && ctx.json ? ctx.json().catch(function () { return {}; }) : Promise.resolve({})).then(function (j) { throw new Error((j && j.error) || r.error.message || 'failed'); });
+          }
+          if (!r.data || !r.data.ok) throw new Error((r.data && r.data.error) || 'failed');
+          return r.data.data;
+        });
+      },
       pushSave: function (sub, lang) {
         var j = sub.toJSON();
         return sb.from('push_subscriptions').upsert({ endpoint: j.endpoint, household_id: hid, user_id: user.id, p256dh: j.keys.p256dh, auth: j.keys.auth, lang: lang }).then(check);

@@ -219,6 +219,8 @@
         h('button', { class: 'btn', onclick: function () { FB.actions.openTemplates(); } }, t('board.addChores'))));
     } else board.appendChild(list(due));
     var sum = FB.ai && FB.ai.enabled() ? FB.ai.summary() : '';
+    var nw = FB.news ? FB.news.strip() : null;
+    if (nw) board.insertBefore(nw, board.firstChild);
     if (sum) { board.classList.add('has-sum'); board.insertBefore(h('div', { class: 'ai-sum', 'data-fit-skip': '1' }, h('span', { class: 'ai-sum-ico' }, ui.icon('sparkle', 18)), h('p', null, sum)), board.firstChild); }
 
     return h('div', { class: 'home' }, left, board, rightRail(today));

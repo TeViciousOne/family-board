@@ -44,6 +44,7 @@ const stub = () => {
     auth: { getSession: async () => window.__net === false ? { data: { session: null }, error: { name: 'AuthRetryableFetchError', message: 'Failed to fetch' } } : { data: { session: { user } }, error: null }, signOut: async () => ({}) },
     from, rpc: async () => ({ data: null, error: null }),
     functions: { invoke: async (name, o) => {
+      if (name === 'news') return { data: { ok: true, data: { items: [{ s: 'euronews', t: 'Euronews headline one', l: 'https://euronews.al/a', ts: 1 }, { s: 'top', t: 'Top Channel headline one that is long enough', l: 'https://top-channel.tv/2026/11/09/x/', ts: 1 }], oil: { wti: { p: 61.2, c: 1.4 }, brent: { p: 65.05, c: -0.3 } } } }, error: null };
       if (name === 'ac') {
         window.__ac = window.__ac || { switch: false, temp_set: 24, temp_current: 21, mode: 'hot', fan_speed_enum: 'auto', sleep: false }; window.__acCalls = window.__acCalls || [];
         window.__acCalls.push(o.body);
@@ -73,6 +74,13 @@ const stub = () => {
   await p.waitForSelector('.ac-tile', { state: 'visible', timeout: 8000 });
   ok((await p.locator('.ac-tile .ac-st').innerText()) === 'Off' && (await p.locator('.ac-tile .ac-deg').innerText()) === '21°', 'AC tile shows off and the room temperature');
   if (process.env.SHOTS) await p.screenshot({ path: process.env.SHOTS + '/ac-home.png' });
+  await p.waitForSelector('.news-strip', { state: 'visible', timeout: 8000 });
+  const seen = new Set();
+  for (let i = 0; i < 6; i++) { seen.add((await p.locator('.news-strip .news-src').innerText()) + ':' + (await p.locator('.news-strip .news-body').innerText()).slice(0, 12)); await p.waitForTimeout(8400); }
+  const srcs = [...seen].map(x => x.split(':')[0]);
+  ok(['Euronews', 'Top Channel', 'Crude oil'].every(x => srcs.includes(x)), 'news strip rotates Euronews, Top Channel and oil: ' + [...seen].join(' | '));
+  await p.click('.news-strip'); await p.waitForSelector('.news-row'); ok((await p.locator('.news-row').count()) === 3, 'news list shows oil + 2 headlines');
+  await p.keyboard.press('Escape'); await p.waitForTimeout(300);
   await p.click('.ac-tile'); await p.waitForSelector('.ac-pop .ac-power');
   await p.click('.ac-pop .ac-power'); await p.click('.ac-pop .ac-step >> nth=1'); await p.click('.ac-pop .ac-step >> nth=1'); await p.waitForTimeout(900);
   const ac1 = await p.evaluate(() => window.__ac);

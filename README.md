@@ -63,3 +63,6 @@ On phones: open the site in Chrome > menu > "Install app" / "Add to Home screen"
 ### Notifications
 Each phone enables them in Settings → Notifications. Types: event reminders, chore due, **chore done (who + time)**, **new chore added**, and a **"Tomorrow" list at 19:00** (Tirana time). Activity messages arrive within ~1 minute and go to every subscribed device, including the one that made the change.
 - **Air conditioner** (Tuya / Smart Life): a card on the home screen opens power, temperature, mode, fan speed and sleep. Run `supabase/ac.sql`, add your Tuya cloud credentials to `ac_config`, and deploy `supabase/functions/ac`. The Tuya developer trial must be renewed in the Tuya console every few months.
+
+## News strip
+The `news` edge function (cached 10 min) returns Euronews Albania headlines (RSS), Top Channel headlines (its feeds are blocked, so the homepage is scraped; this may need a fix if the site changes) and WTI/Brent prices (Yahoo chart API). The home screen shows one item at a time, rotating every 8 s; tap it for the full list. No setup or secrets needed.
