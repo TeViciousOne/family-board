@@ -266,6 +266,10 @@
       'unit.month': 'month', 'unit.months': 'months', 'unit.year': 'year', 'unit.years': 'years',
 
       'wx.chance': 'Rain {p}%',
+      'wx.daily': 'Next days',
+      'wx.hourly': 'Next 24 hours',
+      'wx.now': 'Now',
+      'wx.today': 'Today',
       'wx.clear': 'Clear',
       'wx.cloudy': 'Cloudy',
       'wx.drizzle': 'Drizzle',
@@ -548,6 +552,10 @@
       'unit.month': 'muaj', 'unit.months': 'muaj', 'unit.year': 'vit', 'unit.years': 'vite',
 
       'wx.chance': 'Shi {p}%',
+      'wx.daily': 'Ditët në vijim',
+      'wx.hourly': '24 orët e ardhshme',
+      'wx.now': 'Tani',
+      'wx.today': 'Sot',
       'wx.clear': 'Qiell i pastër',
       'wx.cloudy': 'Me re',
       'wx.drizzle': 'Shi i imët',

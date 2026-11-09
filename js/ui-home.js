@@ -7,6 +7,34 @@
   FB.views = FB.views || {};
 
   /* ---------- weather block ---------- */
+  function hourCell(x, first) {
+    return h('div', { class: 'wx-h' },
+      h('span', { class: 'wx-hn' }, first ? t('wx.now') : x.time.slice(11, 13) + ':00'),
+      h('span', { html: FB.weather.icon(FB.weather.kindOf(x.code, x.isDay), 30) }),
+      h('span', { class: 'wx-ht' }, Math.round(x.temp) + '°'),
+      h('span', { class: 'wx-hr' }, x.rain >= 20 ? x.rain + '%' : ''));
+  }
+
+  /* tap the weather: next 24 hours and the days ahead */
+  function openWeather() {
+    var w = FB.app.weather || {};
+    if (!w.data) return;
+    var hrs = FB.weather.hoursFrom(w.data, 24);
+    var body = h('div', { class: 'wx-sheet' },
+      h('h3', { class: 'wx-sh' }, t('wx.hourly')),
+      h('div', { class: 'wx-hscroll' }, hrs.map(function (x, i) { return hourCell(x, i === 0); })),
+      h('h3', { class: 'wx-sh' }, t('wx.daily')),
+      h('div', { class: 'wx-dlist' }, w.data.days.map(function (d, i) {
+        return h('div', { class: 'wx-drow' },
+          h('span', { class: 'wx-dn2' }, i === 0 ? t('wx.today') : FB.i18n.dayShort(U.weekday(d.date))),
+          h('span', { html: FB.weather.icon(FB.weather.kindOf(d.code, 1), 32) }),
+          h('span', { class: 'wx-dr' }, d.rain >= 20 ? d.rain + '%' : ''),
+          h('span', { class: 'wx-lo' }, Math.round(d.min) + '°'),
+          h('span', { class: 'wx-hi' }, Math.round(d.max) + '°'));
+      })));
+    ui.modal({ title: (FB.device.place || FB.weather.DEFAULT_PLACE).name, body: body, size: 'wide', focus: false });
+  }
+
   function weatherBlock() {
     var w = FB.app.weather || {};
     var place = FB.device.place || FB.weather.DEFAULT_PLACE;
@@ -32,10 +60,13 @@
         h('span', { class: 'wx-hi' }, Math.round(d.max) + '°'),
         h('span', { class: 'wx-lo' }, Math.round(d.min) + '°'));
     }));
-    return h('div', { class: 'wx' },
+    var hrs = FB.weather.hoursFrom(w.data, 6);
+    var hourly = hrs.length ? h('div', { class: 'wx-hours' }, hrs.map(function (x, i) { return hourCell(x, i === 0); })) : null;
+    return h('div', { class: 'wx', role: 'button', tabindex: '0', onclick: openWeather, onkeydown: function (e) { if (e.key === 'Enter') openWeather(); } },
       nowEl,
       h('div', { class: 'wx-desc' }, t(FB.weather.labelKey(cur.code)) + ' · ' + place.name),
       h('div', { class: 'wx-meta' }, meta.map(function (m) { return h('div', null, m); })),
+      hourly,
       strip,
       w.stale ? h('p', { class: 'wx-stale' }, t('wx.stale')) : null);
   }

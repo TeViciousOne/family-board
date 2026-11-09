@@ -1,0 +1,128 @@
+/* Liquid-glass layer on top of ios.css: soft coloured backdrop, frosted translucent surfaces with bright edges,
+   a floating pill tab bar. Blur is used only on a few large surfaces so older tablets stay smooth. */
+:root {
+  --g-fill: rgba(255, 255, 255, .62);
+  --g-fill-2: rgba(255, 255, 255, .42);
+  --g-edge: rgba(255, 255, 255, .85);
+  --g-edge-2: rgba(255, 255, 255, .25);
+  --g-shadow: 0 8px 28px rgba(40, 60, 120, .12), 0 1px 3px rgba(40, 60, 120, .08);
+  --g-shine: inset 0 1px 0 rgba(255, 255, 255, .9), inset 0 -1px 0 rgba(255, 255, 255, .25);
+  --bg-img:
+    radial-gradient(60% 50% at 12% 8%, rgba(120, 170, 255, .55), transparent 70%),
+    radial-gradient(50% 45% at 92% 12%, rgba(200, 160, 255, .45), transparent 70%),
+    radial-gradient(55% 50% at 80% 95%, rgba(120, 220, 200, .45), transparent 70%),
+    radial-gradient(50% 45% at 5% 90%, rgba(255, 190, 160, .35), transparent 70%),
+    linear-gradient(180deg, #EEF3FB, #E8EEF8);
+  --bar: rgba(255, 255, 255, .55);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --g-fill: rgba(255, 255, 255, .09);
+    --g-fill-2: rgba(255, 255, 255, .06);
+    --g-edge: rgba(255, 255, 255, .22);
+    --g-edge-2: rgba(255, 255, 255, .06);
+    --g-shadow: 0 10px 30px rgba(0, 0, 0, .45);
+    --g-shine: inset 0 1px 0 rgba(255, 255, 255, .22), inset 0 -1px 0 rgba(255, 255, 255, .04);
+    --bg-img:
+      radial-gradient(60% 50% at 10% 5%, rgba(40, 90, 200, .55), transparent 70%),
+      radial-gradient(50% 45% at 95% 10%, rgba(110, 60, 190, .45), transparent 70%),
+      radial-gradient(55% 50% at 85% 100%, rgba(20, 130, 120, .42), transparent 70%),
+      radial-gradient(50% 45% at 0% 95%, rgba(170, 70, 90, .3), transparent 70%),
+      linear-gradient(180deg, #0B0F1A, #05070D);
+    --card: rgba(255, 255, 255, .09);
+    --bar: rgba(40, 42, 54, .5);
+    --sea: transparent; --sea-2: transparent;
+  }
+}
+html { background: #E8EEF8; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) html, html { background: #05070D; } }
+body { background: var(--bg-img); background-attachment: fixed; background-size: cover; }
+:root { --card: var(--g-fill); }
+.rail, .day-panel, .board-hint { background: transparent; border: 0; }
+.rail-left, .rail-right { border: 0; }
+
+/* every card = frosted glass without blur (cheap), with a bright rim */
+.chore, .row, .shop, .invite, .note, .note-mini, .day, .who, .wc, .emoji-b, .check, .recur, .seg {
+  background: var(--g-fill); box-shadow: var(--g-shadow), var(--g-shine); border: 1px solid var(--g-edge-2);
+}
+.chore { border-radius: 22px; }
+.row, .shop, .invite, .who { border-radius: 20px; }
+.chore.done { background: var(--g-fill-2); }
+.day { border-radius: 14px; box-shadow: var(--g-shine); }
+.day.out { background: transparent; box-shadow: none; border-color: transparent; }
+.day.sel { box-shadow: var(--g-shine), inset 0 0 0 2px var(--brand); }
+.day-ev { background: var(--g-fill-2); }
+.wc { box-shadow: var(--g-shadow), var(--g-shine), inset 0 0 0 2px var(--c); }
+.note.pinned { background: rgba(255, 214, 10, .22); }
+.seg { padding: 3px; border-radius: 999px; }
+.seg-b { border-radius: 999px; }
+.seg-b.on { background: var(--card); box-shadow: 0 2px 8px rgba(0, 0, 0, .15), var(--g-shine); background-image: linear-gradient(180deg, rgba(255, 255, 255, .7), rgba(255, 255, 255, .35)); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .seg-b.on { background-color: rgba(255, 255, 255, .22); background-image: none; } }
+input[type=text], input[type=email], input[type=password], input[type=number], input[type=date], input[type=time], select, textarea {
+  background: var(--g-fill-2); box-shadow: var(--g-shine), inset 0 1px 3px rgba(0, 0, 0, .06); border: 1px solid var(--g-edge-2); border-radius: 16px;
+}
+.sheet input[type=text], .sheet input[type=email], .sheet input[type=password], .sheet input[type=number], .sheet input[type=date], .sheet input[type=time], .sheet select, .sheet textarea, .auth input { background: var(--g-fill-2); }
+
+/* buttons: glossy tinted glass */
+.btn { border-radius: 999px; background-image: linear-gradient(180deg, rgba(255, 255, 255, .28), rgba(255, 255, 255, 0) 60%); box-shadow: 0 6px 18px rgba(0, 122, 255, .35), inset 0 1px 0 rgba(255, 255, 255, .5); }
+.btn.danger { box-shadow: 0 6px 18px rgba(255, 59, 48, .3), inset 0 1px 0 rgba(255, 255, 255, .5); }
+.btn.ghost, .btn.danger.ghost { background-image: none; background-color: var(--g-fill); border: 1px solid var(--g-edge-2); box-shadow: var(--g-shine); }
+.shop-tile { border-radius: 22px; background-image: linear-gradient(180deg, rgba(255, 255, 255, .28), rgba(255, 255, 255, 0) 60%); box-shadow: 0 8px 22px rgba(0, 122, 255, .35), inset 0 1px 0 rgba(255, 255, 255, .5); }
+.icon-btn { border-radius: 50%; }
+.icon-btn:active { background: var(--g-fill); }
+
+/* floating pill tab bar (the one place with real blur) */
+#app { padding: 0; }
+#nav {
+  flex: none; align-self: center; width: min(600px, calc(100% - 24px)); height: 66px; margin: 0 0 calc(10px + env(safe-area-inset-bottom));
+  padding: 5px; gap: 2px; border-radius: 999px; border: 1px solid var(--g-edge); background: var(--bar);
+  -webkit-backdrop-filter: blur(28px) saturate(190%); backdrop-filter: blur(28px) saturate(190%);
+  box-shadow: 0 12px 34px rgba(30, 50, 110, .22), var(--g-shine);
+}
+#nav button { border-radius: 999px; padding-top: 0; justify-content: center; }
+#nav button.on { background: var(--g-fill); box-shadow: var(--g-shine), 0 2px 10px rgba(0, 0, 0, .1); color: var(--brand); }
+#toast { bottom: calc(66px + env(safe-area-inset-bottom) + 24px); }
+
+/* sheets and toasts */
+#layer .scrim { background: rgba(10, 20, 40, .28); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
+.sheet {
+  background: var(--g-fill); border: 1px solid var(--g-edge); border-radius: 32px; box-shadow: 0 24px 70px rgba(10, 20, 60, .35), var(--g-shine);
+  -webkit-backdrop-filter: blur(40px) saturate(190%); backdrop-filter: blur(40px) saturate(190%);
+}
+:root:not([data-theme="dark"]) .sheet { background-color: rgba(250, 252, 255, .72); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .sheet { background-color: rgba(30, 32, 44, .7); } }
+.toast { background: rgba(30, 34, 50, .72); border: 1px solid rgba(255, 255, 255, .18); border-radius: 22px; -webkit-backdrop-filter: blur(24px) saturate(180%); backdrop-filter: blur(24px) saturate(180%); box-shadow: 0 12px 34px rgba(0, 0, 0, .3), inset 0 1px 0 rgba(255, 255, 255, .2); }
+.toast.error { background: rgba(255, 59, 48, .8); }
+.toast.alert { background: rgba(0, 122, 255, .8); }
+.auth-brand { background: transparent; color: var(--ink); }
+.auth-brand p { color: var(--ink-2); }
+.auth-brand h1 { background: linear-gradient(135deg, #0A84FF, #BF5AF2); -webkit-background-clip: text; background-clip: text; color: transparent; }
+
+/* weather: hourly strip + details */
+.wx { cursor: pointer; }
+.wx-hours { display: grid; grid-template-columns: repeat(4, 1fr); gap: 2px; margin-top: 14px; padding: 10px 4px; border-radius: 20px; background: var(--g-fill); border: 1px solid var(--g-edge-2); box-shadow: var(--g-shine); }
+.wx-hours .wx-h:nth-child(n+5) { display: none; }
+.wx-h { display: flex; flex-direction: column; align-items: center; gap: 1px; min-width: 0; font-size: 13px; }
+.wx-hn { font-weight: 600; color: var(--ink-2); font-size: 12px; }
+.wx-ht { font-weight: 700; font-size: 15px; }
+.wx-hr { font-size: 11px; color: #3E8FD8; font-weight: 700; min-height: 13px; }
+.wx-strip { padding: 0 4px; }
+.wx-sh { font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; color: var(--ink-2); margin: 4px 0 8px 4px; }
+.wx-hscroll { display: flex; gap: 6px; overflow-x: auto; padding: 8px 4px 12px; margin-bottom: 8px; -webkit-overflow-scrolling: touch; }
+.wx-hscroll .wx-h { flex: none; width: 58px; padding: 8px 0; border-radius: 18px; background: var(--g-fill-2); font-size: 14px; }
+.wx-hscroll .wx-h:first-child { background: rgba(0, 122, 255, .16); }
+.wx-dlist { display: flex; flex-direction: column; border-radius: 20px; background: var(--g-fill-2); overflow: hidden; }
+.wx-drow { display: grid; grid-template-columns: 70px 40px 1fr 48px 48px; align-items: center; gap: 6px; padding: 8px 14px; border-top: .5px solid var(--line); }
+.wx-drow:first-child { border-top: 0; }
+.wx-dn2 { font-weight: 600; }
+.wx-dr { color: #3E8FD8; font-weight: 700; font-size: 14px; }
+.wx-drow .wx-lo { text-align: right; }
+.wx-drow .wx-hi { text-align: right; }
+@media (max-width: 1099px) { .wx-hours { max-width: 460px; grid-template-columns: repeat(6, 1fr); } .wx-hours .wx-h:nth-child(n+5) { display: flex; } }
+@media (max-width: 699px) {
+  #nav { height: 62px; }
+  .sheet, .sheet.wide { border-radius: 30px 30px 0 0; }
+  .wx-hours { max-width: none; }
+}
+@media (max-width: 420px) { .wx-hours { grid-template-columns: repeat(4, 1fr); } .wx-hours .wx-h:nth-child(n+5) { display: none; } }
+.board, .view, .page, .cal, .cal-main, .home, .lists, .list-body, .col { background: transparent; }

@@ -3,7 +3,7 @@
   'use strict';
   var FB = (root.FB = root.FB || {});
   var W = (FB.weather = {});
-  var CACHE_KEY = 'fb.weather.v1';
+  var CACHE_KEY = 'fb.weather.v2';
   var MAX_AGE = 25 * 60 * 1000; /* refresh after 25 minutes */
 
   W.DEFAULT_PLACE = { name: 'Tirana', country: 'Albania', lat: 41.3275, lon: 19.8187 };
@@ -52,6 +52,13 @@
     return '<svg class="wx-icon" width="' + s + '" height="' + s + '" viewBox="0 0 64 64" aria-hidden="true">' + (SVG[kind] || SVG.cloud) + '</svg>';
   };
 
+  /* hours from the current hour onwards (device clock), at most n */
+  W.hoursFrom = function (data, n) {
+    var d = new Date(), pad = function (x) { return String(x).padStart(2, '0'); };
+    var cut = d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) + 'T' + pad(d.getHours()) + ':00';
+    return ((data && data.hours) || []).filter(function (h) { return h.time >= cut; }).slice(0, n);
+  };
+
   function readCache() {
     try { return JSON.parse(localStorage.getItem(CACHE_KEY) || 'null'); } catch (e) { return null; }
   }
@@ -66,8 +73,9 @@
 
     var url = 'https://api.open-meteo.com/v1/forecast?latitude=' + place.lat + '&longitude=' + place.lon +
       '&current=temperature_2m,apparent_temperature,weather_code,is_day,wind_speed_10m' +
+      '&hourly=temperature_2m,weather_code,precipitation_probability,is_day' +
       '&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max' +
-      '&timezone=auto';
+      '&forecast_days=7&timezone=auto';
     return fetch(url).then(function (r) {
       if (!r.ok) throw new Error('weather ' + r.status);
       return r.json();
@@ -77,6 +85,13 @@
           temp: json.current.temperature_2m, feels: json.current.apparent_temperature,
           code: json.current.weather_code, isDay: json.current.is_day, wind: json.current.wind_speed_10m
         },
+        /* next 48 hours, local times like '2026-11-09T14:00'; the view picks the ones from "now" on */
+        hours: json.hourly ? json.hourly.time.slice(0, 48).map(function (t, i) {
+          return {
+            time: t, temp: json.hourly.temperature_2m[i], code: json.hourly.weather_code[i],
+            rain: json.hourly.precipitation_probability ? json.hourly.precipitation_probability[i] : null, isDay: json.hourly.is_day ? json.hourly.is_day[i] : 1
+          };
+        }) : [],
         days: json.daily.time.map(function (t, i) {
           return {
             date: t, code: json.daily.weather_code[i], max: json.daily.temperature_2m_max[i],

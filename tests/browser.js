@@ -8,7 +8,10 @@ const BASE = process.env.BASE || 'http://localhost:8123/';
 function fakeWeather() {
   const days = [], d0 = new Date();
   for (let i = 0; i < 7; i++) { const d = new Date(d0.getFullYear(), d0.getMonth(), d0.getDate() + i); days.push(d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0')); }
+  const pad = n => String(n).padStart(2, '0'), htimes = [], hcodes = [], htemps = [], hrain = [], hday = [];
+  for (let i = 0; i < 48; i++) { const d = new Date(d0.getFullYear(), d0.getMonth(), d0.getDate(), i); htimes.push(d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) + 'T' + pad(d.getHours()) + ':00'); hcodes.push([0, 2, 3, 61][i % 4]); htemps.push(10 + (i % 24) / 2); hrain.push((i * 7) % 60); hday.push(d.getHours() > 6 && d.getHours() < 19 ? 1 : 0); }
   return {
+    hourly: { time: htimes, temperature_2m: htemps, weather_code: hcodes, precipitation_probability: hrain, is_day: hday },
     current: { temperature_2m: 14.6, apparent_temperature: 12.8, weather_code: 2, is_day: 1, wind_speed_10m: 9 },
     daily: { time: days, weather_code: [2, 61, 3, 0, 1, 95, 71], temperature_2m_max: [17, 15, 14, 18, 19, 16, 3], temperature_2m_min: [8, 9, 7, 6, 8, 10, -1], precipitation_probability_max: [20, 80, 40, 0, 5, 70, 60] }
   };
@@ -42,6 +45,11 @@ function ok(cond, msg) { console.log((cond ? 'PASS ' : 'FAIL ') + msg); if (!con
   ok((await p.locator('.list-grid .chore').count()) === 5 && (await p.locator('.col').count()) === 1, 'home shows one shared chore list with person tags');
   ok((await p.locator('.wx-temp').innerText()).startsWith('15'), 'weather shows rounded current temperature');
   ok((await p.locator('.wx-day').count()) === 5, 'weather shows 5 forecast days');
+  ok((await p.locator('.wx-hours .wx-h').count()) >= 4 && (await p.locator('.wx-hours .wx-hn').first().innerText()) === 'Now', 'hourly weather strip starts with Now');
+  await p.click('.wx'); await p.waitForSelector('.wx-hscroll');
+  ok((await p.locator('.wx-hscroll .wx-h').count()) === 24 && (await p.locator('.wx-drow').count()) === 7, 'weather sheet shows 24 hours and 7 days');
+  await p.screenshot({ path: OUT + '/01b-weather-sheet.png' });
+  await p.keyboard.press('Escape');
 
   // complete a chore (wall device asks who did it)
   const before = await p.locator('.chore.done').count();
