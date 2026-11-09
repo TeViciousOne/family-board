@@ -122,7 +122,7 @@
     if (!items.length) body.appendChild(h('p', { class: 'col-empty' }, t('board.nothingToday')));
     else {
       if (doneN === items.length) body.appendChild(h('p', { class: 'col-allDone' }, t('board.allDone')));
-      body.appendChild(h('div', { class: 'list-grid', 'data-fit': '1', 'data-fit-min': '0.62', 'data-fit-max': '1.3' }, sorted.map(function (x) { return choreRow(x); })));
+      body.appendChild(h('div', { class: 'list-grid', 'data-fit': '1', 'data-fit-min': '0.62', 'data-fit-max': '1' }, sorted.map(function (x) { return choreRow(x); })));
     }
     return h('section', { class: 'col' }, head, bar, body);
   }

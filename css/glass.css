@@ -414,3 +414,6 @@ input[type=text], input[type=email], input[type=password], input[type=number], i
   .list-actions { flex: 1 0 100%; margin: 4px 0 0; }
   .list-actions > * { flex: 1; justify-content: center; min-height: 40px; }
 }
+
+/* tablets: chores sit in two compact columns instead of one wide, enlarged one */
+@media (orientation: landscape) and (min-width: 700px) { .list-grid { grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); } }
