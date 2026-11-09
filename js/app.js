@@ -291,6 +291,7 @@
   /* ================================================================ */
   var reloadTables = {}, reloadTimer = null;
   function onRemote(table) {
+    if (table === '*') { clearTimeout(reloadTimer); app.refreshAll(); return; }
     reloadTables[table] = 1;
     clearTimeout(reloadTimer);
     reloadTimer = setTimeout(function () {
@@ -326,6 +327,15 @@
         h('button', { class: 'btn big', onclick: function () { root.location.reload(); } }, t('common.retry')))));
   }
 
+  /* new app version: the service worker updates itself, then we reload once when nothing is being edited */
+  var swReg = null;
+  function checkUpdate() { if (swReg) swReg.update().catch(function () {}); }
+  var hadController = !!(navigator.serviceWorker && navigator.serviceWorker.controller);
+  function reloadWhenIdle() {
+    if (document.querySelector('.sheet')) return setTimeout(reloadWhenIdle, 15000);
+    root.location.reload();
+  }
+
   var timersStarted = false, lastMinute = -1;
   function startTimers() {
     if (timersStarted) return; timersStarted = true;
@@ -345,7 +355,14 @@
         if (Date.now() - app.weather.fetchedAt > 30 * 60 * 1000) app.loadWeather(false);
       }
     }, 1000);
-    document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'visible') { requestWake(); app.render(); night.update(); } });
+    document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'visible') { requestWake(); app.refreshAll(); night.update(); checkUpdate(); } });
+    /* safety net in case the live connection silently stops: re-read everything every 30 s while visible */
+    setInterval(function () {
+      if (document.visibilityState !== 'visible' || FB.store.mode !== 'cloud') return;
+      var typing = document.activeElement && document.activeElement.getAttribute && document.activeElement.getAttribute('data-fid');
+      if (!typing && !document.querySelector('.sheet')) app.refreshAll();
+    }, 30000);
+    setInterval(checkUpdate, 10 * 60 * 1000);
     root.addEventListener('resize', U.debounce(function () { app.render(); }, 150));
     root.addEventListener('online', function () { app.refreshAll(); app.loadWeather(true); });
     root.addEventListener('offline', function () { if (FB.store.flush) FB.store.flush(); });
@@ -452,7 +469,8 @@
   };
 
   if ('serviceWorker' in navigator && /^https?:$/.test(root.location.protocol)) {
-    root.addEventListener('load', function () { navigator.serviceWorker.register('sw.js').catch(function () { /* optional */ }); });
+    root.addEventListener('load', function () { navigator.serviceWorker.register('sw.js').then(function (r) { swReg = r; }, function () { /* optional */ }); });
+    navigator.serviceWorker.addEventListener('controllerchange', function () { if (hadController) reloadWhenIdle(); hadController = true; });
   }
   document.addEventListener('DOMContentLoaded', function () { app.boot(); });
 })(typeof window !== 'undefined' ? window : globalThis);

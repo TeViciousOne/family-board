@@ -6,7 +6,7 @@
   var L = (FB.logic = {});
 
   /* ---------- state ---------- */
-  FB.state = FB.state || { rev: 0, ready: false, household: null, members: [], chores: [], completions: [], events: [], shopping: [], notes: [], me: null };
+  FB.state = FB.state || { rev: 0, ready: false, household: null, members: [], chores: [], templates: [], completions: [], events: [], shopping: [], notes: [], me: null };
   L.touch = function () { FB.state.rev++; };
 
   var memo = { rev: -1, byChoreDate: null, byChore: null };

@@ -81,9 +81,10 @@
   /* ---------------------------------------------------------------- */
   /*  Chore form                                                        */
   /* ---------------------------------------------------------------- */
-  FB.actions.openChore = function (existing) {
+  FB.actions.openChore = function (existing, prefill) {
     var isNew = !existing;
     var c = existing ? Object.assign({}, existing) : { title: '', emoji: '🧹', member_id: null, rule: Object.assign(FB.recur.defaultRule(U.today()), { freq: 'daily' }), due_time: null, active: true };
+    if (prefill) c = Object.assign(c, prefill);
     var modal, emoji = c.emoji;
 
     var title = h('input', { type: 'text', value: c.title, placeholder: t('chore.titlePh'), maxlength: '80' });
@@ -120,7 +121,18 @@
     actions.push(h('button', { class: 'btn ghost', onclick: function () { modal.close(); } }, t('common.cancel')));
     actions.push(h('button', { class: 'btn', onclick: save }, t('common.save')));
 
+    var quick = null;
+    if (isNew && FB.state.templates.length) {
+      var owned = {}; FB.state.chores.forEach(function (x) { owned[x.title.trim().toLowerCase()] = true; });
+      quick = ui.field(t('tpl.quick'), h('div', { class: 'chips quick' },
+        FB.state.templates.filter(function (x) { return !owned[x.title.trim().toLowerCase()]; }).map(function (x) {
+          return h('button', { type: 'button', class: 'chip' + (title.value.trim() === x.title ? ' on' : ''), onclick: function () {
+            modal.close(); FB.actions.openChore(null, { title: x.title, emoji: x.emoji, rule: x.rule, due_time: x.due_time });
+          } }, (x.emoji ? x.emoji + ' ' : '') + x.title);
+        }).concat([h('button', { type: 'button', class: 'chip ghost', onclick: function () { modal.close(); FB.actions.openTemplates(); } }, ui.icon('edit', 16), ' ', t('tpl.manage'))])));
+    }
     var body = h('form', { class: 'form', onsubmit: function (ev) { ev.preventDefault(); save(); } },
+      quick,
       ui.field(t('chore.title'), title),
       ui.field(t('chore.icon'), grid),
       ui.field(t('chore.who'), who),
@@ -135,44 +147,90 @@
   /*  Templates: tick the usual chores and add them in one go           */
   /* ---------------------------------------------------------------- */
   FB.actions.openTemplates = function () {
-    var modal, picked = {}, have = {};
-    FB.state.chores.forEach(function (c) { have[c.title.trim().toLowerCase()] = true; });
+    var modal, picked = {};
     var who = h('select', null,
       h('option', { value: '' }, t('chore.anyone')),
       L.membersSorted().map(function (m) { return h('option', { value: m.id }, m.name); }));
     var addBtn = h('button', { class: 'btn', onclick: add }, '');
     var body = h('div', { class: 'tpl' });
+    function have() { var o = {}; FB.state.chores.forEach(function (c) { o[c.title.trim().toLowerCase()] = true; }); return o; }
     function refresh() {
       var n = Object.keys(picked).length;
       addBtn.textContent = t('tpl.add', { n: n }); addBtn.disabled = !n;
     }
-    FB.templates.groups().forEach(function (g) {
-      body.appendChild(h('h3', { class: 'grp' }, t(g.key)));
-      g.items.forEach(function (it) {
-        var name = FB.templates.name(it);
-        var exists = have[it.en.toLowerCase()] || have[it.sq.toLowerCase()] || have[name.toLowerCase()];
-        var cb = h('input', { type: 'checkbox', disabled: !!exists, onchange: function () { if (cb.checked) picked[it.en] = it; else delete picked[it.en]; refresh(); } });
-        body.appendChild(h('label', { class: 'row tpl-row' + (exists ? ' paused' : '') },
-          h('span', { class: 'row-emoji' }, it.emoji),
-          h('span', { class: 'row-main' },
-            h('span', { class: 'row-title' }, name),
-            h('span', { class: 'row-sub' }, exists ? t('tpl.have') : FB.recur.describe(it.rule, FB.i18n.L) + (it.time ? ' · ' + t('chore.by', { time: it.time }) : ''))),
-          cb));
+    function draw() {
+      U.clear(body);
+      var list = FB.state.templates.slice().sort(function (a, b) { return a.created_at < b.created_at ? -1 : 1; });
+      Object.keys(picked).forEach(function (id) { if (!list.some(function (x) { return x.id === id; })) delete picked[id]; });
+      if (!list.length) {
+        body.appendChild(h('p', { class: 'lead' }, t('tpl.empty')));
+        body.appendChild(h('button', { class: 'btn', onclick: function () {
+          Promise.all(FB.templates.starter().map(function (it) { return FB.data.add('chore_templates', it); })).then(draw);
+        } }, t('tpl.starter')));
+      }
+      var owned = have();
+      list.forEach(function (it) {
+        var exists = owned[it.title.trim().toLowerCase()];
+        var cb = h('input', { type: 'checkbox', disabled: !!exists, checked: !!picked[it.id], onchange: function () { if (cb.checked) picked[it.id] = it; else delete picked[it.id]; refresh(); } });
+        body.appendChild(h('div', { class: 'row tpl-row' + (exists ? ' paused' : '') },
+          h('label', { class: 'tpl-pick' },
+            h('span', { class: 'row-emoji' }, it.emoji),
+            h('span', { class: 'row-main' },
+              h('span', { class: 'row-title' }, it.title),
+              h('span', { class: 'row-sub' }, exists ? t('tpl.have') : FB.recur.describe(it.rule, FB.i18n.L) + (it.due_time ? ' · ' + t('chore.by', { time: it.due_time }) : ''))),
+            cb),
+          h('button', { class: 'btn ghost icon-btn', 'aria-label': t('common.edit'), onclick: function () { FB.actions.editTemplate(it, draw); } }, ui.icon('edit', 20))));
       });
-    });
+      refresh();
+    }
     function add() {
       var items = Object.keys(picked).map(function (k) { return picked[k]; });
       if (!items.length) return;
       addBtn.disabled = true;
       Promise.all(items.map(function (it) {
-        return FB.data.add('chores', { title: FB.templates.name(it), emoji: it.emoji, member_id: who.value || null, rule: it.rule, due_time: it.time || null, active: true });
+        return FB.data.add('chores', { title: it.title, emoji: it.emoji, member_id: who.value || null, rule: it.rule, due_time: it.due_time || null, active: true });
       })).then(function () { modal.close(); ui.toast(t('tpl.added', { n: items.length })); });
     }
-    refresh();
+    draw();
     modal = ui.modal({
       title: t('tpl.title'), size: 'wide', focus: false,
       body: h('div', null, h('p', { class: 'lead' }, t('tpl.hint')), ui.field(t('tpl.assign'), who), body),
-      actions: [h('span', { class: 'grow' }), h('button', { class: 'btn ghost', onclick: function () { modal.close(); } }, t('common.cancel')), addBtn]
+      actions: [
+        h('button', { class: 'btn ghost', onclick: function () { FB.actions.editTemplate(null, draw); } }, ui.icon('plus', 20), ' ', t('tpl.new')),
+        h('span', { class: 'grow' }), h('button', { class: 'btn ghost', onclick: function () { modal.close(); } }, t('common.cancel')), addBtn]
+    });
+  };
+
+  FB.actions.editTemplate = function (existing, done) {
+    var isNew = !existing;
+    var c = existing ? Object.assign({}, existing) : { title: '', emoji: '🧹', rule: Object.assign(FB.recur.defaultRule(U.today()), { freq: 'daily' }), due_time: null };
+    var modal, emoji = c.emoji;
+    var title = h('input', { type: 'text', value: c.title, placeholder: t('chore.titlePh'), maxlength: '80' });
+    var grid = ui.emojiGrid(ui.CHORE_EMOJI, emoji, function (v) { emoji = v; }, true);
+    var hasTime = h('input', { type: 'checkbox', checked: !!c.due_time, onchange: function () { timeIn.style.display = hasTime.checked ? '' : 'none'; } });
+    var timeIn = h('input', { type: 'time', value: c.due_time || '18:00', style: { display: c.due_time ? '' : 'none' } });
+    var rec = ui.recurEditor(c.rule, { onceLabel: t('rule.f.once') });
+    var err = h('p', { class: 'form-err', role: 'alert' });
+    function finish(r) { if (r) { modal.close(); if (done) done(); } }
+    function save() {
+      var name = title.value.trim();
+      if (!name) { err.textContent = t('chore.needTitle'); title.focus(); return; }
+      var row = { title: name, emoji: emoji || '', rule: rec.get(), due_time: hasTime.checked && timeIn.value ? timeIn.value : null };
+      (isNew ? FB.data.add('chore_templates', row) : FB.data.edit('chore_templates', existing.id, row)).then(finish);
+    }
+    var actions = [];
+    if (!isNew) actions.push(h('button', { class: 'btn danger ghost', onclick: function () {
+      ui.confirm({ title: t('tpl.deleteQ', { name: existing.title }), text: t('tpl.deleteHint'), yes: t('common.delete'), danger: true }).then(function (ok) {
+        if (ok) FB.data.del('chore_templates', existing.id).then(finish);
+      });
+    } }, ui.icon('trash', 20), ' ', t('common.delete')));
+    actions.push(h('span', { class: 'grow' }), h('button', { class: 'btn ghost', onclick: function () { modal.close(); } }, t('common.cancel')), h('button', { class: 'btn', onclick: save }, t('common.save')));
+    modal = ui.modal({
+      title: isNew ? t('tpl.newTitle') : t('tpl.editTitle'), size: 'wide', actions: actions,
+      body: h('form', { class: 'form', onsubmit: function (ev) { ev.preventDefault(); save(); } },
+        ui.field(t('chore.title'), title), ui.field(t('chore.icon'), grid),
+        h('div', { class: 'field' }, h('label', { class: 'check' }, hasTime, h('span', null, t('chore.hasTime'))), timeIn),
+        ui.field(t('chore.repeat'), rec.el), err)
     });
   };
 })(typeof window !== 'undefined' ? window : globalThis);

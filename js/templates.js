@@ -39,5 +39,11 @@
       ] }
     ];
   };
+  /* the starter set as rows ready to save as the family's own templates */
+  T.starter = function () {
+    var out = [];
+    T.groups().forEach(function (g) { g.items.forEach(function (it) { out.push({ title: T.name(it), emoji: it.emoji, rule: it.rule, due_time: it.time || null }); }); });
+    return out;
+  };
   T.name = function (it) { return FB.i18n.lang === 'sq' ? it.sq : it.en; };
 })(typeof window !== 'undefined' ? window : globalThis);

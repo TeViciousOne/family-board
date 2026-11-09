@@ -13,6 +13,7 @@
   S.TABLES = {
     members: 'members',
     chores: 'chores',
+    chore_templates: 'templates',
     chore_completions: 'completions',
     events: 'events',
     shopping_items: 'shopping',
@@ -179,13 +180,24 @@
       });
     }
 
+    var rtDown = false;
     function startRealtime() {
       if (channel) return;
       channel = sb.channel('family-board')
         .on('postgres_changes', { event: '*', schema: 'public' }, function (payload) {
           listeners.forEach(function (fn) { fn(payload.table); });
         })
-        .subscribe();
+        .subscribe(function (status) {
+          if (status === 'SUBSCRIBED') {
+            /* after a dropped connection we may have missed changes: reload everything once */
+            if (rtDown) { rtDown = false; listeners.forEach(function (fn) { fn('*'); }); }
+          } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') {
+            rtDown = true;
+            var ch = channel; channel = null;
+            try { sb.removeChannel(ch); } catch (e) { /* ignore */ }
+            setTimeout(startRealtime, 5000);
+          }
+        });
     }
 
 

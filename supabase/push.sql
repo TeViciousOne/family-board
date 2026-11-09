@@ -40,3 +40,22 @@ alter table public.push_config enable row level security; -- no policies: only t
 --   select net.http_post(url := 'https://<project>.supabase.co/functions/v1/reminders',
 --     headers := jsonb_build_object('Content-Type','application/json','x-cron-secret',(select cron_secret from public.push_config where id=1)),
 --     body := '{}'::jsonb); $$);
+
+-- Chore templates (editable by the family). Run once.
+create table if not exists public.chore_templates (
+  id uuid primary key,
+  household_id uuid not null references public.households(id) on delete cascade,
+  title text not null,
+  emoji text not null default '',
+  rule jsonb not null,
+  due_time text,
+  created_at timestamptz not null default now()
+);
+create index if not exists chore_templates_h on public.chore_templates(household_id);
+alter table public.chore_templates enable row level security;
+drop policy if exists chore_templates_all on public.chore_templates;
+create policy chore_templates_all on public.chore_templates for all to authenticated
+  using (household_id in (select public.my_household_ids())) with check (household_id in (select public.my_household_ids()));
+grant select, insert, update, delete on public.chore_templates to authenticated;
+alter table public.chore_templates replica identity full;
+alter publication supabase_realtime add table public.chore_templates;
