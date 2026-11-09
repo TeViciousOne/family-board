@@ -28,6 +28,7 @@ function ok(cond, msg) { console.log((cond ? 'PASS ' : 'FAIL ') + msg); if (!con
     await page.route('**/api.open-meteo.com/**', r => r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(fakeWeather()) }));
     await page.route('**/geocoding-api.open-meteo.com/**', r => r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ results: [{ name: 'Durrës', country: 'Albania', admin1: 'Durrës', latitude: 41.3246, longitude: 19.4565 }] }) }));
     await page.route(/fonts\.(googleapis|gstatic)\.com/, r => r.abort());
+    await page.route('**/config.js', r => r.fulfill({ contentType: 'text/javascript', body: 'window.FB_CONFIG={SUPABASE_URL:"",SUPABASE_ANON_KEY:""};' }));
     return { page, ctx, errors };
   }
 

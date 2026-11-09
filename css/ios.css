@@ -1,0 +1,148 @@
+/* iOS look: system colours, grouped cards, tab bar, segmented controls, switches, sheets. Loaded after style.css. */
+:root {
+  color-scheme: light dark;
+  --sea: #F2F2F7; --sea-2: #F2F2F7; --sea-3: #E5E5EA; --paper: #F2F2F7;
+  --card: #FFFFFF; --fill: rgba(118, 118, 128, .12); --fill-2: rgba(118, 118, 128, .2);
+  --ink: #000000; --ink-2: #6C6C70; --ink-3: #8E8E93;
+  --line: rgba(60, 60, 67, .18);
+  --brand: #007AFF; --brand-d: #007AFF; --alert: #FF3B30; --ok: #34C759;
+  --bar: rgba(249, 249, 249, .86);
+  --font-display: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Inter', system-ui, Roboto, sans-serif;
+  --font-body: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Inter', system-ui, Roboto, sans-serif;
+  --nav-h: 64px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --sea: #000000; --sea-2: #000000; --sea-3: #1C1C1E; --paper: #1C1C1E;
+    --card: #1C1C1E; --fill: rgba(118, 118, 128, .24); --fill-2: rgba(118, 118, 128, .36);
+    --ink: #FFFFFF; --ink-2: #AEAEB2; --ink-3: #8E8E93;
+    --line: rgba(84, 84, 88, .6);
+    --brand: #0A84FF; --brand-d: #0A84FF; --alert: #FF453A; --ok: #30D158;
+    --bar: rgba(29, 29, 31, .86);
+  }
+}
+body { font-weight: 400; font-size: 17px; letter-spacing: -0.01em; -webkit-font-smoothing: antialiased; }
+h1, h2, h3 { font-weight: 700; letter-spacing: -0.02em; }
+
+/* tab bar */
+#nav {
+  height: calc(var(--nav-h) + env(safe-area-inset-bottom)); background: var(--bar); color: var(--ink-3);
+  -webkit-backdrop-filter: saturate(180%) blur(20px); backdrop-filter: saturate(180%) blur(20px);
+  border-top: .5px solid var(--line);
+}
+#nav button { flex-direction: column; gap: 3px; font: 600 11px var(--font-body); padding-top: 6px; }
+#nav button.on { background: none; color: var(--brand); }
+#nav button svg { width: 26px; height: 26px; }
+#nav button span:last-child { max-width: 100%; }
+
+/* buttons, fields */
+.btn { border-radius: 14px; min-height: 50px; font-weight: 600; letter-spacing: -0.01em; }
+.btn:active { background: var(--brand); opacity: .75; }
+.btn.ghost { background: rgba(0, 122, 255, .12); color: var(--brand); box-shadow: none; }
+.btn.danger { background: var(--alert); }
+.btn.danger.ghost { background: rgba(255, 59, 48, .12); color: var(--alert); box-shadow: none; }
+.icon-btn { border-radius: 50%; color: var(--brand); }
+.icon-btn:active { background: var(--fill); }
+.icon-btn.faint { color: var(--ink-3); }
+.link-btn { text-decoration: none; color: var(--brand); font-weight: 600; }
+input[type=text], input[type=email], input[type=password], input[type=number], input[type=date], input[type=time], select, textarea {
+  border: 0; border-radius: 12px; background: var(--card); color: var(--ink); min-height: 50px; padding: 10px 16px;
+}
+.sheet input[type=text], .sheet input[type=email], .sheet input[type=password], .sheet input[type=number], .sheet input[type=date], .sheet input[type=time], .sheet select, .sheet textarea,
+.auth input { background: var(--card); }
+input:focus, select:focus, textarea:focus { box-shadow: 0 0 0 3px rgba(0, 122, 255, .35); }
+::placeholder { color: var(--ink-3); }
+.field > label { font-size: 13px; font-weight: 600; letter-spacing: .02em; text-transform: uppercase; color: var(--ink-2); margin: 0 0 6px 16px; }
+.hint { font-size: 14px; }
+
+/* segmented control */
+.seg { background: var(--fill); box-shadow: none; border-radius: 10px; padding: 2px; gap: 2px; }
+.seg-b { min-height: 40px; border-radius: 8px; font-weight: 600; color: var(--ink); }
+.seg-b.on { background: var(--card); color: var(--ink); box-shadow: 0 3px 8px rgba(0, 0, 0, .12), 0 3px 1px rgba(0, 0, 0, .04); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .seg-b.on { background: #636366; } }
+
+/* switches instead of checkboxes */
+input[type=checkbox] {
+  -webkit-appearance: none; appearance: none; width: 51px; height: 31px; border-radius: 16px; background: var(--fill-2);
+  position: relative; transition: background .2s; border: 0; cursor: pointer;
+}
+input[type=checkbox]::after {
+  content: ''; position: absolute; top: 2px; left: 2px; width: 27px; height: 27px; border-radius: 50%; background: #fff;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, .15), 0 1px 1px rgba(0, 0, 0, .16); transition: transform .2s;
+}
+input[type=checkbox]:checked { background: var(--ok); }
+input[type=checkbox]:checked::after { transform: translateX(20px); }
+.check { justify-content: space-between; flex-direction: row-reverse; background: var(--card); border-radius: 12px; padding: 8px 16px; font-weight: 500; }
+input[type=range] { accent-color: var(--brand); }
+.swatch { border: 0; box-shadow: none; }
+.swatch.on { box-shadow: 0 0 0 3px var(--card), 0 0 0 5px var(--brand); }
+.emoji-b { border: 0; background: var(--card); border-radius: 12px; }
+.emoji-b.on { background: rgba(0, 122, 255, .15); box-shadow: inset 0 0 0 2px var(--brand); }
+.stepper .icon-btn { background: var(--fill); box-shadow: none; }
+.chip { border: 0; background: var(--fill); font-weight: 600; }
+.chip.on { background: var(--brand); }
+.recur { background: var(--fill); border-radius: 14px; }
+.recur-sum { color: var(--brand); }
+
+/* cards */
+.rail { border-color: var(--line); }
+.rail-left { border-right: .5px solid var(--line); }
+.rail-right { border-left: .5px solid var(--line); }
+.rail h3, .grp { font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; color: var(--ink-2); }
+.clock { font-weight: 700; letter-spacing: -0.05em; }
+.dateline { font-weight: 600; }
+.list-title, .page-head h1 { font-size: 34px; font-weight: 700; letter-spacing: -0.03em; }
+.list-bar { background: var(--fill); height: 5px; }
+.chore { background: var(--card); border-radius: 14px; box-shadow: none; }
+.chore:active { background: var(--fill); }
+.chore.done { background: var(--card); opacity: .6; }
+.chore-title { font-weight: 600; font-size: 19px; }
+.chore.overdue { box-shadow: none; }
+.chore.overdue .chore-title { color: var(--alert); }
+.tick { border-width: 2px; }
+.chore-who { font-weight: 600; font-size: 14px; }
+.board-hint { background: transparent; }
+.row, .shop, .invite { background: var(--card); border-radius: 14px; }
+.row-title { font-weight: 600; }
+.wc { background: var(--card); box-shadow: inset 0 0 0 2px var(--c); }
+.note, .note-mini { background: var(--card); border-radius: 12px; border-left-width: 4px; }
+.note.pinned { background: rgba(255, 204, 0, .16); }
+.shop-tile { background: var(--brand); border-radius: 14px; }
+.shop-tick { border-width: 2px; border-color: var(--ink-3); }
+.shop.done .shop-tick { background: var(--brand); border-color: var(--brand); }
+.shop-title { font-weight: 500; }
+.cd b { color: var(--brand); }
+.ev-title { font-weight: 600; }
+
+/* calendar */
+.day { background: var(--card); border-radius: 10px; }
+.day.out { background: transparent; }
+.day.sel { box-shadow: inset 0 0 0 2px var(--brand); }
+.day.today .day-n { background: var(--brand); }
+.day-ev { background: var(--fill); border-left-width: 3px; border-radius: 4px; }
+.cal-head h1 { font-weight: 700; }
+.day-panel { background: var(--sea); border-left: .5px solid var(--line); }
+
+/* sheets and toasts */
+#layer .scrim { background: rgba(0, 0, 0, .4); -webkit-backdrop-filter: blur(2px); backdrop-filter: blur(2px); }
+.sheet { background: var(--paper); border-radius: 20px; box-shadow: 0 20px 60px rgba(0, 0, 0, .35); }
+.sheet-head h2 { font-size: 22px; }
+.who { background: var(--card); border-radius: 18px; }
+.who:active { background: var(--fill); }
+.toast { background: rgba(44, 44, 46, .92); -webkit-backdrop-filter: blur(20px); backdrop-filter: blur(20px); border-radius: 16px; font-weight: 600; }
+.toast.error { background: rgba(255, 59, 48, .95); }
+.toast.alert { background: var(--brand); }
+.toast-act { background: rgba(255, 255, 255, .2); border-radius: 10px; }
+#toast { bottom: calc(var(--nav-h) + env(safe-area-inset-bottom) + 12px); }
+
+/* sign-in */
+.auth-brand { background: linear-gradient(160deg, #0A84FF, #5E5CE6); color: #fff; }
+.auth-brand p { color: rgba(255, 255, 255, .85); }
+.auth-form .btn { min-height: 52px; }
+
+@media (max-width: 699px) {
+  #nav button { font-size: 10.5px; }
+  .sheet, .sheet.wide { border-radius: 20px 20px 0 0; }
+  .sheet::before { content: ''; display: block; width: 36px; height: 5px; border-radius: 3px; background: var(--fill-2); margin: -6px auto 10px; flex: none; }
+  .page-head h1, .list-title { font-size: 30px; }
+}
