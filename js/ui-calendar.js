@@ -93,7 +93,7 @@
       rows.push(dayCell(d, U.parts(d).m === p.m, today));
     }
     var grid = h('div', { class: 'cal-grid cal-rows-' + rows.length / 7 }, rows);
-    return h('div', { class: 'cal' }, h('div', { class: 'cal-main' }, head, weekdays, grid), dayPanel(today));
+    return h('div', { class: 'cal', 'data-scroll': 'page-cal' }, h('div', { class: 'cal-main' }, head, weekdays, grid), dayPanel(today));
   };
 
   /* ---------------------------------------------------------------- */
