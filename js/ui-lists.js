@@ -32,7 +32,7 @@
     items.forEach(function (x) { if (!x.done) open[norm(x.title)] = 1; });
     var list = Object.keys(hs.c).map(function (k) { return hs.c[k]; }).filter(function (e) { return e.n >= 2; })
       .sort(function (a, b) { return b.n - a.n; }).map(function (e) { return e.t; });
-    (DEFAULTS[FB.i18n.L] || DEFAULTS.en).forEach(function (d) { if (list.length < 8 && list.map(norm).indexOf(norm(d)) === -1) list.push(d); });
+    (DEFAULTS[FB.i18n.lang] || DEFAULTS.en).forEach(function (d) { if (list.length < 8 && list.map(norm).indexOf(norm(d)) === -1) list.push(d); });
     return list.filter(function (x) { return !open[norm(x)]; }).slice(0, 8);
   }
 
