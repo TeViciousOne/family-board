@@ -138,7 +138,11 @@
       h('span', { class: 'ev-title' }, title));
   }
 
-  function rightRail(today) {
+  /* wide landscape (iPad / wall tablet): events and countdown live in the left column, shopping at the top right */
+  function isWide() { return !!(root.matchMedia && root.matchMedia('(orientation: landscape) and (min-width: 900px)').matches); }
+
+  function rightRail(today, leftIn) {
+    var wide = isWide() && leftIn;
     var rail = h('aside', { class: 'rail rail-right', 'data-scroll': 'rail-right' });
     var inner = h('div', { class: 'rail-in', 'data-fit': '1', 'data-fit-min': '0.6' });
     rail.appendChild(inner);
@@ -157,7 +161,7 @@
       group.appendChild(eventLine(x));
     });
     secUps.appendChild(h('button', { type: 'button', class: 'link-btn', onclick: function () { FB.app.go('calendar'); } }, t('home.openCalendar')));
-    inner.appendChild(secUps);
+    (wide ? leftIn : inner).appendChild(secUps);
 
     var cds = L.countdowns(today).slice(0, 3);
     if (cds.length) {
@@ -166,7 +170,7 @@
         secCd.appendChild(h('button', { type: 'button', class: 'cd', onclick: function () { FB.actions.openEvent(c.event); } },
           h('b', null, String(c.days)), h('span', null, (c.days === 1 ? t('unit.day') : t('unit.days')) + ' · ' + c.event.title)));
       });
-      inner.appendChild(secCd);
+      (wide ? leftIn : inner).appendChild(secCd);
     }
 
     var notes = L.notesSorted().slice(0, 2);
@@ -178,6 +182,7 @@
           h('span', null, n.body), m ? h('small', null, m.name) : null));
       });
       inner.appendChild(secN);
+      var notesEl = secN;
     }
 
     var openItems = L.shoppingSorted().filter(function (s) { return !s.done; });
@@ -191,7 +196,8 @@
           h('span', null, it.title), m ? h('small', null, m.name) : null));
       });
       if (open > 4) secS.appendChild(h('button', { type: 'button', class: 'link-btn', onclick: function () { FB.actions.openShopping(); } }, t('home.shopMore', { n: open - 4 })));
-      inner.appendChild(secS);
+      if (wide) inner.insertBefore(secS, inner.firstChild); else inner.appendChild(secS);
+      if (wide) rail.classList.add('wide-shop');
     }
     inner.appendChild(h('button', { type: 'button', class: 'shop-tile', onclick: function () { FB.actions.openShopping(); } },
       ui.icon('cart', 26),
@@ -223,6 +229,6 @@
     if (nw) { board.classList.add('has-news'); board.insertBefore(nw, board.firstChild); }
     if (sum) { board.classList.add('has-sum'); board.insertBefore(h('div', { class: 'ai-sum', 'data-fit-skip': '1' }, h('span', { class: 'ai-sum-ico' }, ui.icon('sparkle', 18)), h('p', null, sum)), board.firstChild); }
 
-    return h('div', { class: 'home' }, left, board, rightRail(today));
+    return h('div', { class: 'home' }, left, board, rightRail(today, left.firstChild));
   };
 })(typeof window !== 'undefined' ? window : globalThis);

@@ -479,3 +479,12 @@ input[type=text], input[type=email], input[type=password], input[type=number], i
   .rail-left .clock { font-size: min(110px, 37cqw); padding-right: .06em; }
   .board { padding-top: 30px; }
 }
+
+/* iPad landscape: events + countdown moved to the left column, shopping list leads the right column */
+@media (orientation: landscape) and (min-width: 900px) {
+  .rail-right { padding-top: 30px; }
+  .rail-left .rr { margin-top: 16px; }
+  .rail-left .rr h3 { margin: 0 0 6px; }
+  .rail-right .rr-shop h3 { margin: 0 0 8px; font-size: 22px; font-weight: 800; letter-spacing: -.01em; text-transform: none; color: var(--ink); }
+  .rail-right .rr-shop .note-mini { font-size: 17px; }
+}
