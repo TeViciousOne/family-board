@@ -165,6 +165,14 @@ function ok(cond, msg) { console.log((cond ? 'PASS ' : 'FAIL ') + msg); if (!con
   await p.waitForTimeout(200);
   ok((await p.locator('.shop', { hasText: 'Olive oil' }).count()) === 1, 'shopping item added with Enter');
   ok((await p.locator('[data-fid=shop-add]').evaluate(e => e === document.activeElement)), 'input keeps focus for the next item');
+  { const chip = p.locator('.quick-chips .qchip').first(); const name = (await chip.innerText()).trim();
+    await chip.click(); await p.waitForTimeout(300);
+    ok((await p.locator('.shop-row:not(.done) .shop-title', { hasText: name }).count()) === 1, 'quick chip adds "' + name + '"');
+    await p.locator('.shop-row', { hasText: 'Olive oil' }).click(); await p.waitForTimeout(300);
+    ok((await p.locator('.shop-row:not(.done)', { hasText: 'Olive oil' }).count()) === 0, 'ticked item leaves the open list');
+    await p.locator('.bought-tog').click(); await p.waitForTimeout(200);
+    await p.locator('.shop-row.done', { hasText: 'Olive oil' }).click(); await p.waitForTimeout(300);
+    ok((await p.locator('.shop-row:not(.done)', { hasText: 'Olive oil' }).count()) === 1, 'bought item can be put back with one tap'); }
   await p.fill('[data-fid=note-add]', 'Gas bottle arrives at 5');
   await p.locator('.pane .btn', { hasText: 'Post note' }).click();
   await p.waitForTimeout(200);

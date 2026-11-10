@@ -67,6 +67,7 @@
     x: '<path d="M6 6l12 12M18 6L6 18"/>',
     left: '<path d="M14.5 5l-7 7 7 7"/>',
     right: '<path d="M9.5 5l7 7-7 7"/>',
+    down: '<path d="M5 9.5l7 7 7-7"/>',
     clock: '<circle cx="12" cy="12" r="8.5"/><path d="M12 7v5l3 2"/>',
     bell: '<path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15L6 16zM10 20.5h4"/>',
     undo: '<path d="M9 6L4 11l5 5"/><path d="M4 11h10a6 6 0 0 1 0 12"/>',
