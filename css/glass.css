@@ -606,3 +606,31 @@ input[type=text], input[type=email], input[type=password], input[type=number], i
   .list-actions { flex: none; margin: 0; }
   .list-actions > * { flex: none; min-height: 40px; }
 }
+
+/* holidays and name days */
+.day.holiday .day-n { color: #FF453A; font-weight: 800; }
+.day-ev.day-hol { --c: #FF453A; color: #FF453A; font-weight: 700; }
+.day-ev.day-hol.cel { --c: #BF5AF2; color: #BF5AF2; }
+.hol-row { display: flex; align-items: center; gap: 12px; margin: 0 0 8px; padding: 10px 14px; border-radius: 16px; background: var(--g-fill); }
+.hol-row.t-holiday, .hol-row.t-off { background: rgba(255, 69, 58, .14); border: 1px solid rgba(255, 69, 58, .35); }
+.hol-row.t-celebrant { background: rgba(191, 90, 242, .16); border: 1px solid rgba(191, 90, 242, .4); }
+.hol-ico { font-size: 24px; flex: none; }
+.hol-txt { display: flex; flex-direction: column; min-width: 0; }
+.hol-txt b { font-size: 16px; }
+.hol-txt small { font-size: 13px; color: var(--ink-3); }
+.ts-hol { border-left-color: #FF453A; }
+.ts-hol.t-nameday, .ts-hol.t-observance { border-left-color: var(--ink-3); }
+.ts-hol.t-celebrant { border-left-color: #BF5AF2; font-weight: 700; }
+
+/* AC schedule */
+.ac-sched { margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--line, rgba(127, 127, 127, .2)); }
+.ac-sched-head { display: flex; align-items: center; margin-bottom: 8px; }
+.ac-sched-head h3 { margin: 0; font-size: 18px; }
+.ac-s-row { display: flex; align-items: center; gap: 14px; padding: 10px 12px; margin-bottom: 8px; border-radius: 16px; background: var(--g-fill); cursor: pointer; }
+.ac-s-row.paused { opacity: .55; }
+.ac-s-at { font-size: 24px; font-variant-numeric: tabular-nums; }
+.ac-s-main { display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 0; font-size: 15px; }
+.ac-form { display: flex; flex-direction: column; gap: 12px; padding: 12px; margin-bottom: 10px; border-radius: 18px; background: var(--g-fill); }
+.ac-form-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.ac-form-row input[type=time] { width: auto; font-size: 20px; }
+.ac-form-actions { display: flex; gap: 8px; align-items: center; }

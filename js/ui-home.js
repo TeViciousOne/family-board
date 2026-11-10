@@ -126,9 +126,14 @@
   /* today's events as a strip above the chores */
   function todayStrip(today) {
     var evs = L.eventsOn(today).filter(function (x) { return x.event.kind !== 'countdown'; });
-    if (!evs.length) return null;
+    var sp = L.special(today);
+    if (!evs.length && !sp.length) return null;
     return h('div', { class: 'today-strip', 'data-fit-skip': '1' },
       h('span', { class: 'ts-lbl' }, t('rel.today')),
+      sp.slice(0, 3).map(function (x) {
+        var txt = x.type === 'celebrant' ? t('hol.congrats', { name: x.label }) : x.type === 'nameday' ? t('hol.nameday') + ': ' + x.names.slice(0, 3).join(', ') : x.label;
+        return h('button', { type: 'button', class: 'ts-ev ts-hol t-' + x.type, onclick: function () { FB.app.go('calendar'); } }, h('span', null, x.icon + ' ' + txt));
+      }),
       evs.slice(0, 6).map(function (x) {
         var e = x.event, m = L.member(e.member_id);
         var title = e.kind === 'birthday' ? '🎂 ' + (x.age && x.age > 0 ? t('event.turns', { name: e.title, n: x.age }) : e.title) : e.title;

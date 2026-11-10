@@ -40,8 +40,19 @@ Deno.serve(async (req) => {
     const jwt = (req.headers.get("authorization") || "").replace(/^Bearer\s+/i, "");
     const { data: u } = await sb.auth.getUser(jwt);
     if (!u?.user) return json({ error: "auth" }, 401);
-    const { data: member } = await sb.from("members").select("id").eq("user_id", u.user.id).limit(1).maybeSingle();
+    const { data: member } = await sb.from("members").select("id,household_id").eq("user_id", u.user.id).limit(1).maybeSingle();
     if (!member) return json({ error: "auth" }, 403);
+    const b = await req.json();
+    const lang = LANG[b.lang] || LANG.en;
+
+    /* one summary per household and language: reuse it for an hour (and only for the same day) */
+    if (b.action === "summary") {
+      const day = String((b.context && b.context.date) || new Date().toISOString().slice(0, 10)).slice(0, 10);
+      const { data: cached } = await sb.from("ai_summary").select("*").eq("household_id", member.household_id).eq("lang", b.lang === "sq" ? "sq" : "en").maybeSingle();
+      if (cached && cached.day === day && Date.now() - new Date(cached.at).getTime() < 60 * 60 * 1000) {
+        return json({ ok: true, data: { text: cached.text, shared: true } });
+      }
+    }
 
     const { data: use } = await sb.from("ai_usage").select("n").eq("user_id", u.user.id).eq("day", new Date().toISOString().slice(0, 10)).maybeSingle();
     if ((use?.n || 0) >= DAILY_LIMIT) return json({ error: "limit" }, 429);
@@ -49,15 +60,14 @@ Deno.serve(async (req) => {
 
     const { data: cfg } = await sb.from("ai_config").select("*").eq("id", 1).single();
     if (!cfg) return json({ error: "config" }, 500);
-    const b = await req.json();
-    const lang = LANG[b.lang] || LANG.en;
 
     if (b.action === "summary") {
-      const sys = `You write the one-line daily summary shown on a family's wall tablet. Write in ${lang}, warm and plain, at most 2 short sentences (about 30 words). Mention only what matters today: events (with times), chores still to do, weather only if notable (rain, cold, hot), and shopping only if the list is not empty. No greetings, no emojis, no lists, no markdown.`;
-      const text = await gemini(cfg, sys, [{ text: JSON.stringify(b.context).slice(0, 4000) }], false);
-      return json({ ok: true, data: { text: text.replace(/\s+/g, " ").slice(0, 300) } });
+      const sys = `You write the one-line daily summary shown on a family's wall tablet in Albania. Write in ${lang}, warm and plain, at most 2 short sentences (about 30 words). Mention only what matters today: a public holiday or a family member's name day if there is one (congratulate them), events (with times), chores still to do, weather only if notable (rain, cold, hot), and shopping only if the list is not empty. No greetings, no emojis, no lists, no markdown.`;
+      const text = (await gemini(cfg, sys, [{ text: JSON.stringify(b.context).slice(0, 4000) }], false)).replace(/\s+/g, " ").slice(0, 300);
+      const day = String((b.context && b.context.date) || new Date().toISOString().slice(0, 10)).slice(0, 10);
+      await sb.from("ai_summary").upsert({ household_id: member.household_id, lang: b.lang === "sq" ? "sq" : "en", day, text, at: new Date().toISOString() });
+      return json({ ok: true, data: { text } });
     }
-
     if (b.action === "tidy") {
       const sys = `You tidy a family shopping list. Items may be in Albanian or English. For each item give a cleaned-up short name in the same language (fix typos, capitalise the first letter, keep quantities like "2 litra qumësht") and a category. Detect duplicates (same product, even if spelled differently) and list them in "merge" as groups of ids, the first id being the one to keep.
 Reply with JSON only: {"items":[{"id":string,"title":string,"category":"produce"|"dairy"|"bakery"|"meat"|"pantry"|"frozen"|"drinks"|"household"|"personal"|"other"}],"merge":[string[]]}. Every input id must appear in "items".`;

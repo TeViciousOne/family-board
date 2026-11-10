@@ -38,7 +38,7 @@
       return { title: x.chore.title, by: x.chore.due_time || null, who: who ? who.name : null };
     });
     var ctx = { date: today, weekday: WEEKDAYS[d.getDay()], part: d.getHours() < 12 ? 'morning' : d.getHours() < 18 ? 'afternoon' : 'evening',
-      eventsToday: evs(today), eventsTomorrow: evs(tomorrow), choresLeft: left, shoppingOpen: FB.state.shopping.filter(function (s) { return !s.done; }).length };
+      eventsToday: evs(today), eventsTomorrow: evs(tomorrow), specialDaysToday: L.special ? L.special(today).filter(function (x) { return x.type !== 'nameday'; }).map(function (x) { return (x.type === 'celebrant' ? 'name day of ' : '') + x.label; }) : [], choresLeft: left, shoppingOpen: FB.state.shopping.filter(function (s) { return !s.done; }).length };
     var w = FB.app && FB.app.weather && FB.app.weather.data;
     if (w && w.days && w.days[0]) {
       ctx.weather = { now: w.current ? Math.round(w.current.temp) : null, summary: w.current ? t(FB.weather.labelKey(w.current.code)) : null,

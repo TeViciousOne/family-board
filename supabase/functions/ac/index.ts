@@ -58,7 +58,7 @@ Deno.serve(async (req) => {
   try {
     const { data: cfg } = await sb.from("ac_config").select("*").eq("id", 1).maybeSingle();
     const secret = req.headers.get("x-cron-secret");
-    let admin = false;
+    let admin = false, hid: string | null = null;
     if (secret) {
       const { data: pc } = await sb.from("push_config").select("cron_secret").eq("id", 1).single();
       admin = !!pc && pc.cron_secret === secret;
@@ -67,11 +67,35 @@ Deno.serve(async (req) => {
       const jwt = (req.headers.get("authorization") || "").replace(/^Bearer\s+/i, "");
       const { data: u } = await sb.auth.getUser(jwt);
       if (!u?.user) return json({ error: "auth" }, 401);
-      const { data: member } = await sb.from("members").select("id").eq("user_id", u.user.id).limit(1).maybeSingle();
+      const { data: member } = await sb.from("members").select("id,household_id").eq("user_id", u.user.id).limit(1).maybeSingle();
       if (!member) return json({ error: "auth" }, 403);
+      hid = member.household_id;
+    }
+    const b = await req.json().catch(() => ({}));
+
+    /* schedules: "turn on at 17:30 on weekdays, heat 23°" (run by the reminders function) */
+    if (b.action === "schedules" || b.action === "schedule_save" || b.action === "schedule_delete") {
+      if (!hid) return json({ error: "auth" }, 403);
+      if (b.action === "schedule_save") {
+        const x = b.schedule || {};
+        const row: Record<string, unknown> = {
+          household_id: hid, at: String(x.at || "").slice(0, 5),
+          days: (Array.isArray(x.days) ? x.days : []).map(Number).filter((d: number) => d >= 0 && d <= 6),
+          action: x.action === "off" ? "off" : "on",
+          mode: x.action === "off" ? null : (["cold", "hot", "wet", "wind", "auto"].includes(x.mode) ? x.mode : null),
+          temp: x.action === "off" || x.temp == null ? null : Math.max(16, Math.min(30, Math.round(Number(x.temp)))),
+          enabled: x.enabled !== false,
+        };
+        if (!/^[0-2][0-9]:[0-5][0-9]$/.test(String(row.at)) || !(row.days as number[]).length) return json({ error: "input" }, 400);
+        const q = x.id ? sb.from("ac_schedules").update(row).eq("id", x.id).eq("household_id", hid) : sb.from("ac_schedules").insert(row);
+        const { error } = await q;
+        if (error) throw new Error(error.message);
+      }
+      if (b.action === "schedule_delete") await sb.from("ac_schedules").delete().eq("id", b.id).eq("household_id", hid);
+      const { data: list } = await sb.from("ac_schedules").select("id,at,days,action,mode,temp,enabled").eq("household_id", hid).order("at");
+      return json({ ok: true, data: { schedules: list || [] } });
     }
     if (!cfg) return json({ error: "config" }, 500);
-    const b = await req.json().catch(() => ({}));
     const dev = encodeURIComponent(cfg.device_id);
 
     if (b.action === "info") { /* what the air conditioner supports and its current state */

@@ -66,3 +66,12 @@ Each phone enables them in Settings → Notifications. Types: event reminders, c
 
 ## News strip
 The `news` edge function (cached 10 min) returns Euronews Albania headlines (RSS), Top Channel headlines (its feeds are blocked, so the homepage is scraped; this may need a fix if the site changes) and WTI/Brent prices (Yahoo chart API). The home screen shows one item at a time, rotating every 8 s; tap it for the full list. No setup or secrets needed.
+
+## Albanian calendar
+`js/holidays.js` holds the official holidays (fixed dates, both Easters computed, Bajram dates listed up to 2031 — check them each year against the Muslim Community of Albania announcement), the "first working day off" rule for weekend holidays, national days and traditional name days. Holidays show in red in the calendar and on the home strip; family members whose first name matches a name day are congratulated (on screen and with a morning notification). Name days can be hidden per device in Settings.
+
+## Extras (supabase/extras.sql)
+- **One AI summary per household**: the `ai` function stores the daily summary in `ai_summary` and reuses it for an hour, so every device shares it.
+- **AC schedules**: managed in the air conditioner popup ("Orari"), stored in `ac_schedules`, run by the `reminders` function (within 10 minutes of the set time, once per day).
+- **Morning weather alert**: at 7:30 each phone gets a notification only on days with rain, snow, storms, strong wind, frost or heat, for the place set on that phone. Switch it off in Settings → Notifications.
+- `reminders?dry=1&at=07:35` (with the cron secret) shows what would be sent at that time without sending anything.

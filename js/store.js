@@ -378,7 +378,9 @@
       },
       pushSave: function (sub, lang) {
         var j = sub.toJSON();
-        return sb.from('push_subscriptions').upsert({ endpoint: j.endpoint, household_id: hid, user_id: user.id, p256dh: j.keys.p256dh, auth: j.keys.auth, lang: lang }).then(check);
+        var pl = (FB.device && FB.device.place) || (FB.weather && FB.weather.DEFAULT_PLACE) || {};
+        return sb.from('push_subscriptions').upsert({ endpoint: j.endpoint, household_id: hid, user_id: user.id, p256dh: j.keys.p256dh, auth: j.keys.auth, lang: lang,
+          lat: pl.lat == null ? null : pl.lat, lon: pl.lon == null ? null : pl.lon, place: pl.name || null, wx_alert: !(FB.device && FB.device.wxAlert === false) }).then(check);
       },
       pushRemove: function (endpoint) { return sb.from('push_subscriptions').delete().eq('endpoint', endpoint).then(check); },
       saveSnapshot: function (state) {

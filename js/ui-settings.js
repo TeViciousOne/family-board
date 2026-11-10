@@ -84,7 +84,7 @@
         rs.forEach(function (r) {
           results.appendChild(h('button', { type: 'button', class: 'row', onclick: function () {
             FB.device.place = { name: r.name, country: r.country, lat: r.lat, lon: r.lon };
-            saveDevice(); FB.app.loadWeather(true); FB.app.render();
+            saveDevice(); FB.app.loadWeather(true); FB.app.render(); if (FB.push && FB.push.resave) FB.push.resave();
           } }, h('span', { class: 'row-main' }, h('span', { class: 'row-title' }, r.name), h('span', { class: 'row-sub' }, [r.region, r.country].filter(Boolean).join(', ')))));
         });
       });
@@ -117,6 +117,7 @@
       });
     } });
     s.appendChild(h('div', { class: 'toggle' }, h('label', { class: 'check' }, cb, h('span', null, t('push.on')))));
+    s.appendChild(toggle(t('push.wx'), FB.device.wxAlert !== false, function (v) { FB.device.wxAlert = v; FB.saveDevice(); FB.push.resave(); }, t('push.wxHint')));
     var dbg = h('p', { class: 'muted', style: { fontSize: '12px' } }, '…');
     s.appendChild(dbg);
     function report(extra) {
@@ -150,6 +151,7 @@
     s.appendChild(ui.field(t('set.askWho'), ui.seg([
       { v: 'always', label: t('set.ask.always') }, { v: 'unassigned', label: t('set.ask.unassigned') }, { v: 'never', label: t('set.ask.never') }
     ], FB.device.askWho, function (v) { FB.device.askWho = v; saveDevice(); }), t('set.askWhoHint')));
+    s.appendChild(toggle(t('set.namedays'), FB.device.namedays !== false, function (v) { FB.device.namedays = v; saveDevice(); }, t('set.namedaysHint')));
     s.appendChild(toggle(t('set.calm'), FB.device.calm, function (v) { FB.device.calm = v; saveDevice(); }, t('set.calmHint')));
     s.appendChild(toggle(t('set.homeIdle'), FB.device.homeIdle, function (v) { FB.device.homeIdle = v; saveDevice(); }, t('set.homeIdleHint')));
     s.appendChild(toggle(t('set.reload4'), FB.device.reload4, function (v) { FB.device.reload4 = v; saveDevice(); }, t('set.reload4Hint')));

@@ -26,11 +26,16 @@
 
   function dayCell(date, inMonth, today) {
     var evs = L.eventsOn(date);
-    var cls = 'day' + (inMonth ? '' : ' out') + (date === today ? ' today' : '') + (date === cal.sel ? ' sel' : '');
-    var labels = h('span', { class: 'day-evs' }, evs.slice(0, 3).map(function (x) {
-      var m = L.member(x.event.member_id);
-      return h('span', { class: 'day-ev', style: { '--c': m ? m.color : '#5A6B8C' } }, eventChipLabel(x));
-    }));
+    var sp = L.special(date);
+    var off = sp.some(function (x) { return x.type === 'holiday' || x.type === 'off'; });
+    var cls = 'day' + (inMonth ? '' : ' out') + (date === today ? ' today' : '') + (date === cal.sel ? ' sel' : '') + (off ? ' holiday' : '');
+    var spShow = sp.filter(function (x) { return x.type === 'holiday' || x.type === 'off' || x.type === 'celebrant'; }).slice(0, 1);
+    var labels = h('span', { class: 'day-evs' },
+      spShow.map(function (x) { return h('span', { class: 'day-ev day-hol' + (x.type === 'celebrant' ? ' cel' : '') }, x.icon + ' ' + (x.type === 'off' ? t('hol.off') : x.label)); }),
+      evs.slice(0, 3 - spShow.length).map(function (x) {
+        var m = L.member(x.event.member_id);
+        return h('span', { class: 'day-ev', style: { '--c': m ? m.color : '#5A6B8C' } }, eventChipLabel(x));
+      }));
     var dots = h('span', { class: 'day-dots' }, evs.slice(0, 4).map(function (x) {
       var m = L.member(x.event.member_id);
       return h('i', { style: { background: m ? m.color : '#5A6B8C' } });
@@ -51,7 +56,15 @@
       h('div', { class: 'day-panel-head' },
         h('h2', null, FB.i18n.dateLong(date)),
         h('button', { class: 'btn', onclick: function () { FB.actions.openEvent(null, { on_date: date }); } }, ui.icon('plus', 20), ' ', t('event.add'))));
-    if (!evs.length) panel.appendChild(h('p', { class: 'muted' }, t('cal.nothing')));
+    var sp = L.special(date);
+    sp.forEach(function (x) {
+      var txt = x.type === 'celebrant' ? t('hol.congrats', { name: x.label }) : x.type === 'nameday' ? t('hol.nameday') + ': ' + x.names.join(', ') : x.label;
+      panel.appendChild(h('div', { class: 'hol-row t-' + x.type },
+        h('span', { class: 'hol-ico' }, x.icon),
+        h('span', { class: 'hol-txt' }, h('b', null, txt),
+          x.type === 'holiday' || x.type === 'off' ? h('small', null, t('hol.dayOff')) : x.type === 'nameday' ? h('small', null, x.label) : null)));
+    });
+    if (!evs.length && !sp.length) panel.appendChild(h('p', { class: 'muted' }, t('cal.nothing')));
     evs.forEach(function (x) {
       var e = x.event, m = L.member(e.member_id);
       var when = e.all_day || !e.start_time ? t('event.allDay') : e.start_time + (e.end_time ? '–' + e.end_time : '');

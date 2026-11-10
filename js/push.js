@@ -26,6 +26,11 @@
     }).then(function (sub) { return FB.store.pushSave(sub, FB.device.lang || 'en'); }).then(function () { P.wanted(true); });
   };
   /* remembered per device, so the switch stays on even if the browser drops the subscription */
+  /* re-send this phone's settings (language, place, weather alert) with its subscription */
+  P.resave = function () {
+    if (!P.supported()) return Promise.resolve();
+    return P.current().then(function (sub) { if (sub && P.wanted()) return FB.store.pushSave(sub, FB.device.lang || 'en'); }).catch(function () {});
+  };
   P.wanted = function (v) {
     try { if (v === undefined) return localStorage.getItem('fb.push.on') === '1'; localStorage.setItem('fb.push.on', v ? '1' : '0'); } catch (e) { return false; }
   };

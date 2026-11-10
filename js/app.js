@@ -384,6 +384,10 @@
         h('span', null, t(FB.weather.labelKey(w.current.code)))));
     }
     var lines = [];
+    L.special(today).filter(function (x) { return x.type !== 'nameday'; }).slice(0, 2).forEach(function (x) {
+      lines.push(h('div', { class: 'calm-next' }, h('small', null, t('rel.today')),
+        h('span', null, x.icon + ' ' + (x.type === 'celebrant' ? t('hol.congrats', { name: x.label }) : x.label))));
+    });
     if (next) {
       var e = next.event;
       lines.push(h('div', { class: 'calm-next' }, h('small', null, FB.i18n.relDay(next.date)),

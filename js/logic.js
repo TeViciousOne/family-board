@@ -113,6 +113,19 @@
     return out;
   };
 
+  /* holidays / national days / name days for a date, respecting the device setting for name days */
+  L.special = function (date) {
+    if (!FB.holidays) return [];
+    var showNames = !FB.device || FB.device.namedays !== false;
+    var lang = FB.i18n ? FB.i18n.lang : 'sq';
+    var out = FB.holidays.on(date).filter(function (x) { return x.type !== 'nameday' || showNames; }).map(function (x) {
+      return { type: x.type, icon: x.icon, label: FB.holidays.label(x, lang), names: x.names || null };
+    });
+    var cel = showNames ? FB.holidays.celebrants(date, FB.state.members) : [];
+    cel.forEach(function (m) { out.unshift({ type: 'celebrant', icon: '🎉', label: m.name, member: m }); });
+    return out;
+  };
+
   /* events and birthdays for the next `days` days, flattened and ordered; countdowns are separate */
   L.upcoming = function (fromDate, days) {
     var out = [];

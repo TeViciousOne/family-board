@@ -48,6 +48,9 @@ const stub = () => {
       if (name === 'ac') {
         window.__ac = window.__ac || { switch: false, temp_set: 24, temp_current: 21, mode: 'hot', fan_speed_enum: 'auto', sleep: false }; window.__acCalls = window.__acCalls || [];
         window.__acCalls.push(o.body);
+        window.__sched = window.__sched || [];
+        if (o.body.action === 'schedules') return { data: { ok: true, data: { schedules: window.__sched } }, error: null };
+        if (o.body.action === 'schedule_save') { const x = Object.assign({ id: 's' + (window.__sched.length + 1) }, o.body.schedule); window.__sched = window.__sched.filter(y => y.id !== x.id).concat([x]); return { data: { ok: true, data: { schedules: window.__sched } }, error: null }; }
         if (o.body.action === 'status') return { data: { ok: true, data: { online: true, status: Object.keys(window.__ac).map(k => ({ code: k, value: window.__ac[k] })) } }, error: null };
         if (o.body.action === 'set') { o.body.commands.forEach(c => { window.__ac[c.code] = c.value; }); return { data: { ok: true }, error: null }; }
       }
@@ -96,6 +99,9 @@ const stub = () => {
   await p.locator('.ac-pop .seg-b', { hasText: 'Cool' }).click(); await p.waitForTimeout(900);
   ok((await p.evaluate(() => window.__ac.mode)) === 'cold', 'AC mode set to cool');
   ok((await p.evaluate(() => window.__acCalls.filter(c => c.action === 'set').length)) === 2, 'quick taps were sent as one request');
+  await p.locator('.ac-sched .link-btn').click(); await p.waitForSelector('.ac-form');
+  await p.locator('.ac-form .btn:not(.ghost)').click(); await p.waitForSelector('.ac-s-row');
+  ok((await p.evaluate(() => window.__sched.length === 1 && window.__sched[0].action === 'on' && window.__sched[0].days.length === 5)), 'AC schedule saved (on, weekdays)');
   if (process.env.SHOTS) await p.screenshot({ path: process.env.SHOTS + '/ac-pop.png' });
   await p.keyboard.press('Escape'); await p.waitForTimeout(300);
   /* tidy */

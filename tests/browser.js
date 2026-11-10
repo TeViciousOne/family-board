@@ -44,6 +44,8 @@ function ok(cond, msg) { console.log((cond ? 'PASS ' : 'FAIL ') + msg); if (!con
   await p.screenshot({ path: OUT + '/01-home.png' });
   ok((await p.locator('.list-grid .chore').count()) >= 3 && (await p.locator('.col').count()) === 1, 'home shows one shared chore list with person tags');
   ok((await p.locator('.list-head .ring svg').count()) === 1, 'progress ring shows in the chores header');
+  ok(await p.evaluate(() => FB.logic.special('2026-11-28').some(x => x.type === 'holiday' && /Independence/.test(x.label))), 'Independence Day is a holiday');
+  ok(await p.evaluate(() => { const m = FB.state.members[0], old = m.name; m.name = 'Andi'; const r = FB.logic.special('2026-11-30').some(x => x.type === 'celebrant'); m.name = old; return r; }), 'a member with a name day gets congratulated');
   await p.evaluate(() => { FB.device.calm = true; FB.calm.after = 0; }); await p.waitForTimeout(1300);
   ok((await p.locator('#calm.on .calm-clock').count()) === 1 && (await p.locator('#calm .calm-chores').count()) === 1, 'calm screen appears when idle');
   await p.screenshot({ path: OUT + '/01b-calm.png' });
