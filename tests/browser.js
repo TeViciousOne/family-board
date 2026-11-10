@@ -118,7 +118,10 @@ function ok(cond, msg) { console.log((cond ? 'PASS ' : 'FAIL ') + msg); if (!con
   await p.fill('.sheet input[type=text]', 'Piano lesson');
   await p.uncheck('.sheet input[type=checkbox]');
   await p.screenshot({ path: OUT + '/04-event-form.png' });
-  await p.locator('.sheet .seg').nth(1).locator('.seg-b', { hasText: 'Weekly' }).click();
+  await p.locator('.sheet .day-dot').nth(0).click(); await p.locator('.sheet .day-dot').nth(2).click();
+  ok((await p.evaluate(() => document.querySelector('.sheet .recur-sum').textContent)).toLowerCase().includes('week'), 'tapping day circles makes a weekly repeat');
+  for (const i of [1, 3, 4, 5, 6]) await p.locator('.sheet .day-dot').nth(i).click();
+  ok((await p.locator('.sheet .day-dot.on').count()) === 7, 'all seven circles = every day');
   await p.screenshot({ path: OUT + '/05-event-weekly.png' });
   await p.locator('.sheet-actions .btn', { hasText: 'Save' }).click();
   await p.waitForTimeout(250);
@@ -135,6 +138,7 @@ function ok(cond, msg) { console.log((cond ? 'PASS ' : 'FAIL ') + msg); if (!con
   await p.locator('.sheet-actions .btn.ghost', { hasText: 'Custom chore' }).click();
   await p.waitForSelector('.sheet form');
   await p.fill('.sheet input[type=text]', 'Mop the kitchen');
+  await p.locator('.sheet .recur-more').click();
   await p.locator('.sheet .seg-b', { hasText: 'Monthly' }).click();
   await p.locator('.sheet .seg-b', { hasText: 'Weekday' }).click();
   await p.screenshot({ path: OUT + '/07-chore-form-monthly.png' });

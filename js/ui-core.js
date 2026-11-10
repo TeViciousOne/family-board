@@ -255,47 +255,67 @@
 
     var dayOrder = [1, 2, 3, 4, 5, 6, 0];
 
+    var adv = !!opts.advanced;
+    function allDays() { return [0, 1, 2, 3, 4, 5, 6]; }
+    function curDays() { return r.freq === 'daily' && (r.interval || 1) === 1 ? allDays() : r.freq === 'weekly' ? r.weekdays : []; }
+    /* alarm-clock style: the day circles decide the rule (none = once, all seven = daily) */
+    function setDays(days) {
+      days = days.slice();
+      if (!days.length) r.freq = 'once';
+      else if (days.length === 7 && (r.interval || 1) === 1) { r.freq = 'daily'; r.weekdays = []; }
+      else { r.freq = 'weekly'; r.weekdays = days; }
+      commit();
+    }
+    function same(a, b) { return a.length === b.length && a.every(function (x) { return b.indexOf(x) !== -1; }); }
+
     function draw() {
       U.clear(rootEl);
-      var freqSeg = ui.seg([
-        { v: 'once', label: opts.onceLabel || t('rule.f.once') },
-        { v: 'daily', label: t('rule.f.daily') }, { v: 'weekly', label: t('rule.f.weekly') },
-        { v: 'monthly', label: t('rule.f.monthly') }, { v: 'yearly', label: t('rule.f.yearly') }
-      ], r.freq, function (v) {
-        r.freq = v;
-        if (v === 'weekly' && !r.weekdays.length) r.weekdays = [U.weekday(r.start)];
-        if (v === 'monthly') { r.dom = U.parts(r.start).d; r.nth = nthOfStart(); r.nthDay = U.weekday(r.start); }
-        commit();
+      if (r.freq === 'monthly' || r.freq === 'yearly' || (r.interval || 1) > 1) adv = true;
+      var cd = curDays();
+      var quick = h('div', { class: 'chips alarm-quick' });
+      [
+        { l: opts.onceLabel || t('rule.f.once'), on: r.freq === 'once', f: function () { r.freq = 'once'; commit(); } },
+        { l: t('rule.f.daily'), on: r.freq === 'daily' && (r.interval || 1) === 1, f: function () { setDays(allDays()); } },
+        { l: t('rule.weekdays'), on: r.freq === 'weekly' && same(cd, [1, 2, 3, 4, 5]), f: function () { setDays([1, 2, 3, 4, 5]); } },
+        { l: t('rule.weekends'), on: r.freq === 'weekly' && same(cd, [6, 0]), f: function () { setDays([6, 0]); } }
+      ].forEach(function (q) {
+        quick.appendChild(h('button', { type: 'button', class: 'chip' + (q.on ? ' on' : ''), 'aria-pressed': q.on ? 'true' : 'false', onclick: q.f }, q.l));
       });
-      rootEl.appendChild(freqSeg);
+      rootEl.appendChild(quick);
+      var dots = h('div', { class: 'day-dots' });
+      dayOrder.forEach(function (d) {
+        var on = cd.indexOf(d) !== -1;
+        dots.appendChild(h('button', {
+          type: 'button', class: 'day-dot' + (on ? ' on' : ''), 'aria-pressed': on ? 'true' : 'false',
+          onclick: function () {
+            var days = (r.freq === 'daily' || r.freq === 'weekly') ? curDays().slice() : [];
+            var i = days.indexOf(d);
+            if (i === -1) days.push(d); else days.splice(i, 1);
+            setDays(days);
+          }
+        }, FB.i18n.dayShort(d)));
+      });
+      rootEl.appendChild(dots);
+      rootEl.appendChild(h('button', { type: 'button', class: 'link-btn recur-more', onclick: function () { adv = !adv; draw(); changed(); } }, adv ? t('rule.fewer') : t('rule.more')));
 
-      if (r.freq !== 'once') {
-        var unit = { daily: 'day', weekly: 'week', monthly: 'month', yearly: 'year' }[r.freq];
-        rootEl.appendChild(h('div', { class: 'recur-row' },
-          h('span', { class: 'recur-lbl' }, t('rule.every')),
-          ui.stepper(r.interval || 1, 1, 99, function (n) { r.interval = n; drawSummary(); changed(); }),
-          h('span', { class: 'recur-lbl' }, t('unit.' + unit + (r.interval === 1 ? '' : 's')))));
-      }
-
-      if (r.freq === 'weekly') {
-        var chips = h('div', { class: 'chips' });
-        dayOrder.forEach(function (d) {
-          var on = r.weekdays.indexOf(d) !== -1;
-          chips.appendChild(h('button', {
-            type: 'button', class: 'chip' + (on ? ' on' : ''), 'aria-pressed': on ? 'true' : 'false',
-            onclick: function () {
-              var i = r.weekdays.indexOf(d);
-              if (i === -1) r.weekdays.push(d); else if (r.weekdays.length > 1) r.weekdays.splice(i, 1);
-              commit();
-            }
-          }, FB.i18n.dayShort(d)));
-        });
-        rootEl.appendChild(chips);
-        var presets = h('div', { class: 'preset-row' },
-          h('button', { type: 'button', class: 'link-btn', onclick: function () { r.weekdays = [1, 2, 3, 4, 5]; commit(); } }, t('rule.weekdays')),
-          h('button', { type: 'button', class: 'link-btn', onclick: function () { r.weekdays = [6, 0]; commit(); } }, t('rule.weekends')),
-          h('button', { type: 'button', class: 'link-btn', onclick: function () { r.weekdays = [0, 1, 2, 3, 4, 5, 6]; commit(); } }, t('rule.f.daily')));
-        rootEl.appendChild(presets);
+      if (adv) {
+        rootEl.appendChild(ui.seg([
+          { v: 'once', label: opts.onceLabel || t('rule.f.once') },
+          { v: 'daily', label: t('rule.f.daily') }, { v: 'weekly', label: t('rule.f.weekly') },
+          { v: 'monthly', label: t('rule.f.monthly') }, { v: 'yearly', label: t('rule.f.yearly') }
+        ], r.freq, function (v) {
+          r.freq = v;
+          if (v === 'weekly' && !r.weekdays.length) r.weekdays = [U.weekday(r.start)];
+          if (v === 'monthly') { r.dom = U.parts(r.start).d; r.nth = nthOfStart(); r.nthDay = U.weekday(r.start); }
+          commit();
+        }));
+        if (r.freq !== 'once') {
+          var unit = { daily: 'day', weekly: 'week', monthly: 'month', yearly: 'year' }[r.freq];
+          rootEl.appendChild(h('div', { class: 'recur-row' },
+            h('span', { class: 'recur-lbl' }, t('rule.every')),
+            ui.stepper(r.interval || 1, 1, 99, function (n) { r.interval = n; drawSummary(); changed(); }),
+            h('span', { class: 'recur-lbl' }, t('unit.' + unit + (r.interval === 1 ? '' : 's')))));
+        }
       }
 
       if (r.freq === 'monthly') {
