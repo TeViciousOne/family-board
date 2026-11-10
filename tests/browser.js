@@ -132,8 +132,13 @@ function ok(cond, msg) { console.log((cond ? 'PASS ' : 'FAIL ') + msg); if (!con
   await p.waitForSelector('.page .row');
   await p.screenshot({ path: OUT + '/06-chores.png' });
   { const n0 = await p.evaluate(() => FB.state.chores.length);
-    await p.locator('.row .row-del').first().click(); await p.locator('.btn.danger').last().click(); await p.waitForTimeout(400);
-    ok((await p.evaluate(() => FB.state.chores.length)) === n0 - 1, 'a chore can be deleted straight from the list'); }
+    ok((await p.locator('.chore-row .row-del').count()) === 0 && (await p.locator('.chore-row .mini-sw').count()) === n0, 'chore rows have a pause switch and no delete button');
+    ok((await p.locator('.chore-groups .grp').count()) >= 1, 'chores are grouped');
+    await p.locator('.chore-row .mini-sw').first().click(); await p.waitForTimeout(250);
+    ok((await p.locator('.chore-row.paused').count()) === 1, 'the switch pauses a chore');
+    await p.locator('.chore-row.paused .mini-sw').click(); await p.waitForTimeout(250);
+    await p.locator('.chore-row').first().click(); await p.locator('.sheet-actions .btn.danger').click(); await p.locator('.btn.danger').last().click(); await p.waitForTimeout(400);
+    ok((await p.evaluate(() => FB.state.chores.length)) === n0 - 1, 'a chore can be deleted from its edit sheet'); }
   await p.locator('.page-head .btn:not(.ghost)').click();
   await p.locator('.sheet-actions .btn.ghost', { hasText: 'Custom chore' }).click();
   await p.waitForSelector('.sheet form');

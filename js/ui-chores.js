@@ -13,34 +13,59 @@
     return ui.seg([{ v: 'chores', label: t('chores.tabChores') }, { v: 'history', label: t('chores.tabHistory') }], tab, function (v) { tab = v; FB.app.render(); });
   }
 
+  var DOTS = [1, 2, 3, 4, 5, 6, 0];
+  /* mini day dots for daily / weekly rules, plain text for the rest */
+  function ruleView(r) {
+    if (r && (r.interval || 1) === 1 && (r.freq === 'daily' || r.freq === 'weekly')) {
+      var on = r.freq === 'daily' ? DOTS : (r.weekdays && r.weekdays.length ? r.weekdays : [U.weekday(r.start)]);
+      return h('span', { class: 'mini-dots', 'aria-label': FB.recur.describe(r, FB.i18n.L) }, DOTS.map(function (d) {
+        return h('i', { class: on.indexOf(d) !== -1 ? 'on' : '' }, FB.i18n.dayShort(d).charAt(0));
+      }));
+    }
+    if (r && r.freq === 'once') return h('span', { class: 'meta-txt' }, FB.i18n.relDay(r.start));
+    return h('span', { class: 'meta-txt' }, FB.recur.describe(r, FB.i18n.L));
+  }
+
+  function choreRow(c, today) {
+    var m = L.member(c.member_id), last = L.lastDone(c.id), lm = last ? L.member(last.done_by) : null;
+    var next = c.active && c.rule && c.rule.freq !== 'once' ? FB.recur.nextOccurrence(c.rule, today, 400) : null;
+    var meta = h('span', { class: 'row-meta' },
+      h('span', { class: 'who-pill', style: { '--c': m ? m.color : 'var(--ink-3)' } }, m ? m.name : t('board.everyone')),
+      ruleView(c.rule),
+      c.due_time ? h('span', { class: 'meta-txt' }, t('chore.by', { time: c.due_time })) : null,
+      next && next !== today ? h('span', { class: 'meta-txt' }, '→ ' + FB.i18n.relDay(next)) : null);
+    var sw = h('button', { type: 'button', class: 'mini-sw' + (c.active ? ' on' : ''), role: 'switch', 'aria-checked': c.active ? 'true' : 'false', 'aria-label': t('chore.active'),
+      onclick: function (e) { e.stopPropagation(); FB.data.edit('chores', c.id, { active: !c.active }); } }, h('i'));
+    return h('div', { role: 'button', tabindex: '0', class: 'row chore-row' + (c.active ? '' : ' paused'), onclick: function () { FB.actions.openChore(c); },
+      onkeydown: function (e) { if (e.target === e.currentTarget && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); FB.actions.openChore(c); } } },
+      h('span', { class: 'row-emoji' }, c.emoji || '•'),
+      h('span', { class: 'row-main' },
+        h('span', { class: 'row-title' }, c.title),
+        meta,
+        last ? h('span', { class: 'row-sub' }, t('chore.last', { name: lm ? lm.name : t('chore.someone'), when: FB.i18n.relDay(last.on_date) })) : null),
+      sw);
+  }
+
   function choreList() {
-    var wrap = h('div', { class: 'list' });
-    var members = L.membersSorted();
-    var groups = members.map(function (m) { return { m: m, items: [] }; });
-    var shared = { m: null, items: [] };
-    FB.state.chores.slice().sort(function (a, b) { return a.title.localeCompare(b.title); }).forEach(function (c) {
-      var g = groups.filter(function (x) { return x.m.id === c.member_id; })[0] || shared;
-      g.items.push(c);
+    var wrap = h('div', { class: 'list chore-groups' });
+    var today = U.today();
+    var g = { today: [], repeat: [], once: [], paused: [] };
+    FB.state.chores.forEach(function (c) {
+      if (!c.active) g.paused.push(c);
+      else if (FB.recur.occursOn(c.rule, today)) g.today.push(c);
+      else if (c.rule && c.rule.freq === 'once') g.once.push(c);
+      else g.repeat.push(c);
     });
-    groups.push(shared);
+    function byTime(a, b) { return (a.due_time || '99').localeCompare(b.due_time || '99') || a.title.localeCompare(b.title); }
+    g.once.sort(function (a, b) { return (a.rule.start || '').localeCompare(b.rule.start || '') || a.title.localeCompare(b.title); });
     var any = false;
-    groups.forEach(function (g) {
-      if (!g.items.length) return;
+    [['today', 'chores.g.today'], ['repeat', 'chores.g.repeat'], ['once', 'chores.g.once'], ['paused', 'chores.g.paused']].forEach(function (x) {
+      var items = g[x[0]];
+      if (!items.length) return;
       any = true;
-      wrap.appendChild(h('h3', { class: 'grp' }, g.m ? ui.avatar(g.m, 26) : null, ' ', g.m ? g.m.name : t('board.everyone')));
-      g.items.forEach(function (c) {
-        wrap.appendChild(h('div', { role: 'button', tabindex: '0', class: 'row' + (c.active ? '' : ' paused'), onclick: function () { FB.actions.openChore(c); },
-          onkeydown: function (e) { if (e.target === e.currentTarget && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); FB.actions.openChore(c); } } },
-          h('span', { class: 'row-emoji' }, c.emoji || '•'),
-          h('span', { class: 'row-main' },
-            h('span', { class: 'row-title' }, c.title + (c.active ? '' : ' · ' + t('chores.paused'))),
-            h('span', { class: 'row-sub' }, FB.recur.describe(c.rule, FB.i18n.L) + (c.due_time ? ' · ' + t('chore.by', { time: c.due_time }) : ''))),
-          h('button', { type: 'button', class: 'icon-btn faint row-del', 'aria-label': t('common.delete') + ': ' + c.title, onclick: function (e) {
-            e.stopPropagation();
-            ui.confirm({ title: t('chore.deleteQ', { name: c.title }), text: t('chore.deleteHint'), yes: t('common.delete'), danger: true }).then(function (ok) { if (ok) FB.data.del('chores', c.id); });
-          } }, ui.icon('trash', 22)),
-          ui.icon('right', 20)));
-      });
+      if (x[0] !== 'once') items.sort(byTime);
+      wrap.appendChild(h('h3', { class: 'grp' }, t(x[1]), h('span', { class: 'grp-n' }, String(items.length))));
+      wrap.appendChild(h('div', { class: 'chore-grid' }, items.map(function (c) { return choreRow(c, today); })));
     });
     if (!any) wrap.appendChild(h('div', { class: 'pad' }, h('p', { class: 'muted' }, t('chores.empty'))));
     return wrap;
