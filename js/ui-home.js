@@ -103,6 +103,40 @@
     return row;
   }
 
+  /* progress ring: fills as chores get done */
+  function ring(done, total) {
+    var r = 22, c = 2 * Math.PI * r, f = total ? done / total : 0;
+    var svg = '<svg viewBox="0 0 52 52" width="52" height="52"><circle cx="26" cy="26" r="' + r + '" class="ring-bg"/>' +
+      '<circle cx="26" cy="26" r="' + r + '" class="ring-fg" stroke-dasharray="' + c.toFixed(1) + '" stroke-dashoffset="' + (c * (1 - f)).toFixed(1) + '"/></svg>';
+    return h('div', { class: 'col-count ring' + (done === total ? ' full' : ''), 'aria-label': done + '/' + total },
+      h('span', { class: 'ring-svg', html: svg }), h('span', { class: 'ring-txt' }, done + '/' + total));
+  }
+
+  /* everything done: say so, and show what is coming tomorrow */
+  function allDone() {
+    var tm = U.addDays(U.today(), 1);
+    var next = L.choresDue(tm, '00:00').filter(function (x) { return !x.done; }).slice(0, 5);
+    return h('div', { class: 'col-allDone all-done' },
+      h('span', { class: 'ad-ico' }, ui.icon('check', 30)),
+      h('div', { class: 'ad-txt' },
+        h('b', null, t('board.allDone')),
+        next.length ? h('span', null, t('home.tomorrow') + ': ' + next.map(function (x) { return (x.chore.emoji ? x.chore.emoji + ' ' : '') + x.chore.title; }).join(' · ')) : null));
+  }
+
+  /* today's events as a strip above the chores */
+  function todayStrip(today) {
+    var evs = L.eventsOn(today).filter(function (x) { return x.event.kind !== 'countdown'; });
+    if (!evs.length) return null;
+    return h('div', { class: 'today-strip', 'data-fit-skip': '1' },
+      h('span', { class: 'ts-lbl' }, t('rel.today')),
+      evs.slice(0, 6).map(function (x) {
+        var e = x.event, m = L.member(e.member_id);
+        var title = e.kind === 'birthday' ? '🎂 ' + (x.age && x.age > 0 ? t('event.turns', { name: e.title, n: x.age }) : e.title) : e.title;
+        return h('button', { type: 'button', class: 'ts-ev', style: { '--c': m ? m.color : 'var(--ink-3)' }, onclick: function () { FB.actions.openEvent(e); } },
+          e.all_day || !e.start_time ? null : h('b', null, e.start_time), h('span', null, title));
+      }));
+  }
+
   /* one shared list: to-do first, finished at the bottom; the person shows as a small coloured tag */
   function list(items) {
     var sorted = items.map(function (x, i) { return { x: x, i: i }; }).sort(function (a, b) {
@@ -113,15 +147,16 @@
     var pct = items.length ? Math.round((doneN / items.length) * 100) : 0;
     var head = h('div', { class: 'list-head' },
       h('div', { class: 'list-title' }, t('nav.chores')),
-      h('div', { class: 'col-count' }, items.length ? doneN + '/' + items.length : ''),
+      items.length ? ring(doneN, items.length) : null,
       h('div', { class: 'list-actions' },
         h('button', { type: 'button', class: 'btn add-pill', onclick: function () { FB.actions.openTemplates(); } }, ui.icon('plus', 18), h('span', null, t('board.addChores')))));
     var bar = h('div', { class: 'list-bar' }, h('i', { style: { width: pct + '%' } }));
     var body = h('div', { class: 'list-body', 'data-scroll': 'chores-list' });
     if (!items.length) body.appendChild(h('p', { class: 'col-empty' }, t('board.nothingToday')));
     else {
-      if (doneN === items.length) body.appendChild(h('p', { class: 'col-allDone' }, t('board.allDone')));
-      body.appendChild(h('div', { class: 'list-grid', 'data-fit': '1', 'data-fit-min': '0.62', 'data-fit-max': '1' }, sorted.map(function (x) { return choreRow(x); })));
+      if (doneN === items.length) body.appendChild(allDone());
+      var size = sorted.length <= 4 ? ' few' : sorted.length <= 8 ? ' mid' : '';
+      body.appendChild(h('div', { class: 'list-grid' + size, 'data-fit': '1', 'data-fit-min': '0.62', 'data-fit-max': '1' }, sorted.map(function (x) { return choreRow(x); })));
     }
     return h('section', { class: 'col' }, head, bar, body);
   }
@@ -170,9 +205,10 @@
         secCd.appendChild(h('button', { type: 'button', class: 'cd', onclick: function () { FB.actions.openEvent(c.event); } },
           h('b', null, String(c.days)), h('span', null, (c.days === 1 ? t('unit.day') : t('unit.days')) + ' · ' + c.event.title)));
       });
-      (wide ? leftIn : inner).appendChild(secCd);
+      inner.appendChild(secCd);
     }
 
+    if (wide && FB.ac && FB.showW('ac')) { var act = FB.ac.tile(); if (act) inner.appendChild(act); }
     var notes = FB.showW('notes') ? L.notesSorted().slice(0, 2) : [];
     if (notes.length) {
       var secN = h('section', { class: 'rr rr-notes' }, h('h3', null, t('home.notes')));
@@ -218,7 +254,7 @@
           h('button', { type: 'button', class: 'icon-btn sleep-btn', 'aria-label': t('home.sleep'), onclick: function () { FB.night.sleepNow(); } }, ui.icon('moon'))),
         h('div', { class: 'dateline' }, FB.i18n.dateLong(today)),
         FB.showW('weather') ? weatherBlock() : null,
-        FB.ac && FB.showW('ac') ? FB.ac.tile() : null));
+        FB.ac && FB.showW('ac') && !isWide() ? FB.ac.tile() : null));
 
     var board = h('main', { class: 'board' });
     if (!FB.state.chores.length) {
@@ -227,6 +263,8 @@
     } else board.appendChild(list(due));
     var sum = FB.ai && FB.ai.enabled() && FB.showW('summary') ? FB.ai.summary() : '';
     var nw = FB.news && FB.showW('news') ? FB.news.strip() : null;
+    var ts = FB.showW('events') ? todayStrip(today) : null;
+    if (ts) { board.classList.add('has-news'); board.insertBefore(ts, board.firstChild); }
     if (nw) { board.classList.add('has-news'); board.insertBefore(nw, board.firstChild); }
     if (sum) { board.classList.add('has-sum'); board.insertBefore(h('div', { class: 'ai-sum', 'data-fit-skip': '1' }, h('span', { class: 'ai-sum-ico' }, ui.icon('sparkle', 18)), h('p', null, sum)), board.firstChild); }
 

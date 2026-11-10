@@ -150,6 +150,7 @@
     s.appendChild(ui.field(t('set.askWho'), ui.seg([
       { v: 'always', label: t('set.ask.always') }, { v: 'unassigned', label: t('set.ask.unassigned') }, { v: 'never', label: t('set.ask.never') }
     ], FB.device.askWho, function (v) { FB.device.askWho = v; saveDevice(); }), t('set.askWhoHint')));
+    s.appendChild(toggle(t('set.calm'), FB.device.calm, function (v) { FB.device.calm = v; saveDevice(); }, t('set.calmHint')));
     s.appendChild(toggle(t('set.homeIdle'), FB.device.homeIdle, function (v) { FB.device.homeIdle = v; saveDevice(); }, t('set.homeIdleHint')));
     s.appendChild(toggle(t('set.reload4'), FB.device.reload4, function (v) { FB.device.reload4 = v; saveDevice(); }, t('set.reload4Hint')));
     s.appendChild(h('h3', { class: 'set-sub' }, t('home.show')));

@@ -43,6 +43,12 @@ function ok(cond, msg) { console.log((cond ? 'PASS ' : 'FAIL ') + msg); if (!con
   await p.waitForTimeout(300);
   await p.screenshot({ path: OUT + '/01-home.png' });
   ok((await p.locator('.list-grid .chore').count()) >= 3 && (await p.locator('.col').count()) === 1, 'home shows one shared chore list with person tags');
+  ok((await p.locator('.list-head .ring svg').count()) === 1, 'progress ring shows in the chores header');
+  await p.evaluate(() => { FB.device.calm = true; FB.calm.after = 0; }); await p.waitForTimeout(1300);
+  ok((await p.locator('#calm.on .calm-clock').count()) === 1 && (await p.locator('#calm .calm-chores').count()) === 1, 'calm screen appears when idle');
+  await p.screenshot({ path: OUT + '/01b-calm.png' });
+  await p.evaluate(() => { FB.calm.after = 5 * 60 * 1000; }); await p.mouse.click(600, 400); await p.waitForTimeout(400);
+  ok((await p.locator('#calm.on').count()) === 0, 'a touch closes the calm screen');
   ok((await p.locator('.wx-temp').innerText()).startsWith('15'), 'weather shows rounded current temperature');
   ok((await p.locator('.wx-day').count()) === 5, 'weather shows 5 forecast days');
   /* chore templates */

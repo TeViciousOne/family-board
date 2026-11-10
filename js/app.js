@@ -366,6 +366,45 @@
   }
 
   var lastTouch = Date.now();
+  /* calm screen: after 5 idle minutes on the home screen (daytime), a big clock, weather and what is next */
+  var calm = (FB.calm = { el: null, on: false, after: 5 * 60 * 1000 });
+  calm.build = function () {
+    var w = app.weather.data, today = U.today();
+    var due = L.choresDue(today, U.hhmm(new Date())), left = due.filter(function (x) { return !x.done; }).length;
+    var next = L.upcoming(today, 3).filter(function (x) {
+      var e = x.event; return x.date > today || e.all_day || !e.start_time || e.start_time >= U.hhmm(new Date());
+    })[0];
+    U.clear(calm.el);
+    calm.el.appendChild(h('div', { class: 'calm-clock' }, U.hhmm(new Date())));
+    calm.el.appendChild(h('div', { class: 'calm-date' }, FB.i18n.dateLong(today)));
+    if (w && w.current) {
+      calm.el.appendChild(h('div', { class: 'calm-wx' },
+        h('span', { html: FB.weather.icon(FB.weather.kindOf(w.current.code, w.current.isDay), 64) }),
+        h('b', null, Math.round(w.current.temp) + '°'),
+        h('span', null, t(FB.weather.labelKey(w.current.code)))));
+    }
+    var lines = [];
+    if (next) {
+      var e = next.event;
+      lines.push(h('div', { class: 'calm-next' }, h('small', null, FB.i18n.relDay(next.date)),
+        h('span', null, (e.all_day || !e.start_time ? '' : e.start_time + ' · ') + e.title)));
+    }
+    lines.push(h('div', { class: 'calm-chores' + (left ? '' : ' ok') }, left === 0 ? t('calm.none') : left === 1 ? t('calm.one') : t('calm.left', { n: left })));
+    calm.el.appendChild(h('div', { class: 'calm-info' }, lines));
+  };
+  calm.update = function (now) {
+    if (!calm.el) {
+      calm.el = h('div', { id: 'calm', 'aria-hidden': 'true' });
+      calm.el.addEventListener('pointerdown', function (e) { e.stopPropagation(); e.preventDefault(); lastTouch = Date.now(); calm.hide(); });
+      document.body.appendChild(calm.el);
+    }
+    var want = FB.device.calm && route() === 'home' && Date.now() - lastTouch >= calm.after &&
+      !(night.el && night.el.classList.contains('on')) && !document.querySelector('#layer .scrim');
+    if (want && !calm.on) { calm.on = true; calm.build(); calm.el.classList.add('on'); }
+    else if (!want && calm.on) calm.hide();
+    else if (want && now.getSeconds() === 0) calm.build();
+  };
+  calm.hide = function () { calm.on = false; if (calm.el) calm.el.classList.remove('on'); };
   var timersStarted = false, lastMinute = -1;
   function startTimers() {
     if (timersStarted) return; timersStarted = true;
@@ -379,6 +418,7 @@
         var typing = ae && ae.getAttribute && ae.getAttribute('data-fid') && ae.value;
         if (!typing) { lastTouch = Date.now(); if (ui.closeAllModals) ui.closeAllModals(); app.go('home'); }
       }
+      calm.update(now);
       var m = now.getHours() * 60 + now.getMinutes();
       if (m !== lastMinute) {
         lastMinute = m;

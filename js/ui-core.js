@@ -30,10 +30,11 @@
   };
   if (!FB.device.kind) FB.device.kind = FB.device.wall ? 'wall' : (root.innerWidth < 700 ? 'phone' : 'tablet');
   if (!FB.device.show) FB.device.show = FB.kindDefaults(FB.device.kind);
+  if (FB.device.calm == null) FB.device.calm = FB.device.kind === 'wall';
   FB.showW = function (w) { return !FB.device.show || FB.device.show[w] !== false; };
   FB.setKind = function (k) {
     var d = FB.device;
-    d.kind = k; d.wall = k === 'wall'; d.homeIdle = k === 'wall';
+    d.kind = k; d.wall = k === 'wall'; d.homeIdle = k === 'wall'; d.calm = k === 'wall';
     d.askWho = k === 'wall' ? 'always' : 'never';
     d.show = FB.kindDefaults(k); d.kindAsked = true;
     FB.saveDevice();
