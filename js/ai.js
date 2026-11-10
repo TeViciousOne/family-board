@@ -54,7 +54,7 @@
     if (!A.enabled() || !FB.state.ready) return '';
     var ctx = sumContext(), key = FB.i18n.lang + '|' + hashOf(JSON.stringify(ctx)), cur = readSum();
     var fresh = cur && cur.key === key;
-    var recent = cur && Date.now() - cur.at < 20 * 60 * 1000 && cur.date === ctx.date;
+    var recent = cur && Date.now() - cur.at < 60 * 60 * 1000 && cur.date === ctx.date;
     if (!fresh && !recent && !sumBusy && Date.now() - sumFail > 5 * 60 * 1000 && navigator.onLine !== false && document.visibilityState === 'visible') {
       sumBusy = true;
       FB.store.ai({ action: 'summary', lang: FB.i18n.lang, context: ctx }).then(function (d) {

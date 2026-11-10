@@ -2,7 +2,7 @@
 create table if not exists public.ai_config (
   id int primary key default 1 check (id = 1),
   gemini_key text not null,
-  model text not null default 'gemini-3.5-flash'
+  model text not null default 'gemini-3.5-flash-lite'
 );
 alter table public.ai_config enable row level security; -- no policies: only the edge function reads it
 -- insert into public.ai_config(id, gemini_key) values (1, '<your Google AI Studio key>');
