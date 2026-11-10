@@ -21,6 +21,23 @@
     nightOn: true, nightFrom: '22:30', nightTo: '06:30',
     place: FB.weather.DEFAULT_PLACE, reload4: true, homeIdle: wallGuess
   }, stored);
+  /* device type + which home-screen blocks this device shows */
+  FB.widgets = ['weather', 'ac', 'news', 'summary', 'events', 'countdown', 'shopping', 'notes'];
+  FB.kindDefaults = function (k) {
+    var m = {}; FB.widgets.forEach(function (w) { m[w] = true; });
+    if (k === 'phone') { m.news = false; m.weather = false; m.notes = false; }
+    return m;
+  };
+  if (!FB.device.kind) FB.device.kind = FB.device.wall ? 'wall' : (root.innerWidth < 700 ? 'phone' : 'tablet');
+  if (!FB.device.show) FB.device.show = FB.kindDefaults(FB.device.kind);
+  FB.showW = function (w) { return !FB.device.show || FB.device.show[w] !== false; };
+  FB.setKind = function (k) {
+    var d = FB.device;
+    d.kind = k; d.wall = k === 'wall'; d.homeIdle = k === 'wall';
+    d.askWho = k === 'wall' ? 'always' : 'never';
+    d.show = FB.kindDefaults(k); d.kindAsked = true;
+    FB.saveDevice();
+  };
   FB.saveDevice = function () { try { localStorage.setItem(DEV_KEY, JSON.stringify(FB.device)); } catch (e) { /* ignore */ } };
 
   /* ---------------------------------------------------------------- */

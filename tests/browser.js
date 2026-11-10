@@ -207,7 +207,9 @@ function ok(cond, msg) { console.log((cond ? 'PASS ' : 'FAIL ') + msg); if (!con
   /* ---------------- phone ---------------- */
   const P = await newPage(390, 844, { hasTouch: true, isMobile: true, deviceScaleFactor: 2 });
   const q = P.page;
-  await q.goto(BASE); await q.waitForSelector('.home .col'); await q.waitForSelector('.wx-temp');
+  await q.goto(BASE); await q.waitForSelector('.home .col');
+  ok((await q.locator('.wx-temp').count()) === 0 && (await q.evaluate(() => FB.device.kind)) === 'phone', 'phone defaults: type phone, weather hidden');
+  await q.evaluate(() => { FB.device.show.weather = true; FB.app.render(); }); await q.waitForSelector('.wx-temp');
   await q.waitForTimeout(250);
   await q.screenshot({ path: OUT + '/20-phone-home.png' });
   ok(await q.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1), 'phone: no horizontal overflow on home');

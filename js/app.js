@@ -472,11 +472,24 @@
       app.render();
       app.loadWeather(false);
       startTimers();
+      if (!FB.device.kindAsked && !navigator.webdriver) app.askKind();
       if (FB.store.mode === 'demo' && !localStorage.getItem('fb.demoNote')) {
         try { localStorage.setItem('fb.demoNote', '1'); } catch (e) { /* ignore */ }
         ui.toast(t('app.demoNote'), { ms: 9000, kind: 'info' });
       }
     });
+  };
+
+  /* first time on a device: what is it? (decides the default home screen) */
+  app.askKind = function () {
+    var m, done = false;
+    function pick(k) { if (done) return; done = true; FB.setKind(k); m.close(); if (app.applyDevice) app.applyDevice(); app.render(); }
+    var body = h('div', { class: 'kind-ask' },
+      h('p', { class: 'muted' }, t('dev.askHint')),
+      ['phone', 'tablet', 'wall'].map(function (k) {
+        return h('button', { type: 'button', class: 'btn kind-btn', onclick: function () { pick(k); } }, t('dev.' + k));
+      }));
+    m = ui.modal({ title: t('dev.askTitle'), body: body, focus: false, onClose: function () { if (!done) { done = true; FB.device.kindAsked = true; FB.saveDevice(); } } });
   };
 
   app.afterAuth = function () {

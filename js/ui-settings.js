@@ -142,14 +142,22 @@
   /* ---------- this device ---------- */
   function deviceSection() {
     var s = section(t('set.device'));
-    s.appendChild(toggle(t('set.wall'), FB.device.wall, function (v) {
-      FB.device.wall = v; if (v && FB.device.askWho === 'never') FB.device.askWho = 'always'; saveDevice(); FB.app.render();
-    }, t('set.wallHint')));
+    s.appendChild(ui.field(t('dev.kind'), ui.seg([
+      { v: 'phone', label: t('dev.phone') }, { v: 'tablet', label: t('dev.tablet') }, { v: 'wall', label: t('dev.wall') }
+    ], FB.device.kind, function (v) {
+      FB.setKind(v); if (FB.app.applyDevice) FB.app.applyDevice(); FB.app.render();
+    }), t('dev.kindHint')));
     s.appendChild(ui.field(t('set.askWho'), ui.seg([
       { v: 'always', label: t('set.ask.always') }, { v: 'unassigned', label: t('set.ask.unassigned') }, { v: 'never', label: t('set.ask.never') }
     ], FB.device.askWho, function (v) { FB.device.askWho = v; saveDevice(); }), t('set.askWhoHint')));
     s.appendChild(toggle(t('set.homeIdle'), FB.device.homeIdle, function (v) { FB.device.homeIdle = v; saveDevice(); }, t('set.homeIdleHint')));
     s.appendChild(toggle(t('set.reload4'), FB.device.reload4, function (v) { FB.device.reload4 = v; saveDevice(); }, t('set.reload4Hint')));
+    s.appendChild(h('h3', { class: 'set-sub' }, t('home.show')));
+    s.appendChild(h('p', { class: 'muted' }, t('home.showHint')));
+    FB.widgets.forEach(function (w) {
+      if (w === 'ac' && !(FB.ac && FB.ac.enabled())) return;
+      s.appendChild(toggle(t('w.' + w), FB.showW(w), function (v) { FB.device.show[w] = v; saveDevice(); }));
+    });
     s.appendChild(ui.field(t('set.language'), ui.seg([{ v: 'en', label: 'English' }, { v: 'sq', label: 'Shqip' }], FB.device.lang, function (v) {
       FB.device.lang = v; saveDevice(); FB.app.render();
     })));

@@ -161,9 +161,9 @@
       group.appendChild(eventLine(x));
     });
     secUps.appendChild(h('button', { type: 'button', class: 'link-btn', onclick: function () { FB.app.go('calendar'); } }, t('home.openCalendar')));
-    (wide ? leftIn : inner).appendChild(secUps);
+    if (FB.showW('events')) (wide ? leftIn : inner).appendChild(secUps);
 
-    var cds = L.countdowns(today).slice(0, 3);
+    var cds = FB.showW('countdown') ? L.countdowns(today).slice(0, 3) : [];
     if (cds.length) {
       var secCd = h('section', { class: 'rr rr-cd' }, h('h3', null, t('home.countdowns')));
       cds.forEach(function (c) {
@@ -173,7 +173,7 @@
       (wide ? leftIn : inner).appendChild(secCd);
     }
 
-    var notes = L.notesSorted().slice(0, 2);
+    var notes = FB.showW('notes') ? L.notesSorted().slice(0, 2) : [];
     if (notes.length) {
       var secN = h('section', { class: 'rr rr-notes' }, h('h3', null, t('home.notes')));
       notes.forEach(function (n) {
@@ -187,7 +187,8 @@
 
     var openItems = L.shoppingSorted().filter(function (s) { return !s.done; });
     var open = openItems.length;
-    if (open) {
+    var showShop = FB.showW('shopping');
+    if (open && showShop) {
       rail.classList.add('has-shop');
       var secS = h('section', { class: 'rr rr-shop' }, h('h3', null, t('shop.title')));
       openItems.slice(0, 4).forEach(function (it) {
@@ -199,7 +200,7 @@
       if (wide) inner.insertBefore(secS, inner.firstChild); else inner.appendChild(secS);
       if (wide) rail.classList.add('wide-shop');
     }
-    inner.appendChild(h('button', { type: 'button', class: 'shop-tile', onclick: function () { FB.actions.openShopping(); } },
+    if (showShop) inner.appendChild(h('button', { type: 'button', class: 'shop-tile', onclick: function () { FB.actions.openShopping(); } },
       ui.icon('cart', 26),
       h('span', null, open ? t('home.shoppingCount', { n: open }) : t('home.shoppingEmpty'))));
     return rail;
@@ -216,16 +217,16 @@
           h('div', { class: 'clock' }, U.hhmm(ctx.now)),
           h('button', { type: 'button', class: 'icon-btn sleep-btn', 'aria-label': t('home.sleep'), onclick: function () { FB.night.sleepNow(); } }, ui.icon('moon'))),
         h('div', { class: 'dateline' }, FB.i18n.dateLong(today)),
-        weatherBlock(),
-        FB.ac ? FB.ac.tile() : null));
+        FB.showW('weather') ? weatherBlock() : null,
+        FB.ac && FB.showW('ac') ? FB.ac.tile() : null));
 
     var board = h('main', { class: 'board' });
     if (!FB.state.chores.length) {
       board.appendChild(h('div', { class: 'board-hint' }, h('p', null, t('board.noChores')),
         h('button', { class: 'btn', onclick: function () { FB.actions.openTemplates(); } }, t('board.addChores'))));
     } else board.appendChild(list(due));
-    var sum = FB.ai && FB.ai.enabled() ? FB.ai.summary() : '';
-    var nw = FB.news ? FB.news.strip() : null;
+    var sum = FB.ai && FB.ai.enabled() && FB.showW('summary') ? FB.ai.summary() : '';
+    var nw = FB.news && FB.showW('news') ? FB.news.strip() : null;
     if (nw) { board.classList.add('has-news'); board.insertBefore(nw, board.firstChild); }
     if (sum) { board.classList.add('has-sum'); board.insertBefore(h('div', { class: 'ai-sum', 'data-fit-skip': '1' }, h('span', { class: 'ai-sum-ico' }, ui.icon('sparkle', 18)), h('p', null, sum)), board.firstChild); }
 

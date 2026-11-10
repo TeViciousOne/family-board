@@ -83,6 +83,12 @@ const stub = () => {
   ok(['Euronews', 'Top Channel', 'Crude oil'].every(x => srcs.includes(x)), 'news strip rotates Euronews, Top Channel and oil: ' + [...seen].join(' | '));
   await p.click('.news-strip'); await p.waitForSelector('.news-row'); ok((await p.locator('.news-row').count()) === 3, 'news list shows oil + 2 headlines');
   await p.keyboard.press('Escape'); await p.waitForTimeout(300);
+  await p.evaluate(() => { FB.setKind('phone'); FB.app.render(); });
+  ok((await p.locator('.news-strip').count()) === 0, 'phone type hides the news strip by default');
+  await p.evaluate(() => { FB.device.show.news = true; FB.app.render(); });
+  ok((await p.locator('.news-strip').count()) === 1, 'a hidden block can be switched back on');
+  await p.evaluate(() => { FB.setKind('wall'); FB.app.render(); });
+  ok((await p.locator('.news-strip').count()) === 1 && (await p.evaluate(() => FB.device.wall && FB.device.homeIdle)), 'wall tablet type shows everything and turns on idle-to-home');
   await p.click('.ac-tile'); await p.waitForSelector('.ac-pop .ac-power');
   await p.click('.ac-pop .ac-power'); await p.click('.ac-pop .ac-step >> nth=1'); await p.click('.ac-pop .ac-step >> nth=1'); await p.waitForTimeout(900);
   const ac1 = await p.evaluate(() => window.__ac);
