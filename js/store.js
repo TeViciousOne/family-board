@@ -351,15 +351,18 @@
       updateHousehold: function (patch) { return sb.from('households').update(patch).eq('id', hid).select().single().then(check); },
       /* calm-screen photos in Storage: <household>/<name>.jpg, read through short-lived signed links */
       photos: {
-        list: function () {
+        /* reuse = { name: url } links still valid; only new photos get a fresh link, so the browser cache keeps working */
+        list: function (reuse) {
+          reuse = reuse || {};
           return sb.storage.from('photos').list(hid, { limit: 100, sortBy: { column: 'created_at', order: 'desc' } }).then(function (r) {
             if (r.error) throw r.error;
             var names = (r.data || []).filter(function (f) { return f.name && f.name.charAt(0) !== '.'; }).map(function (f) { return hid + '/' + f.name; });
-            if (!names.length) return [];
-            return sb.storage.from('photos').createSignedUrls(names, 3600).then(function (s) {
+            var fresh = names.filter(function (n) { return !reuse[n]; });
+            var signed = fresh.length ? sb.storage.from('photos').createSignedUrls(fresh, 3600).then(function (s) {
               if (s.error) throw s.error;
-              return s.data.map(function (x, i) { return { name: names[i], url: x.signedUrl }; });
-            });
+              s.data.forEach(function (x, i) { reuse[fresh[i]] = x.signedUrl; });
+            }) : Promise.resolve();
+            return signed.then(function () { return names.map(function (n) { return { name: n, url: reuse[n] }; }); });
           });
         },
         upload: function (blob) {

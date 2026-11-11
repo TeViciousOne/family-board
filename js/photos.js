@@ -1,9 +1,11 @@
-/* Photos for the calm screen: shrink on upload, list with short-lived links, cached for 50 minutes. */
+/* Photos for the calm screen: shrink on upload, list with short-lived links, checked again every 3 minutes. */
 (function (root) {
   'use strict';
   var FB = (root.FB = root.FB || {});
   var P = (FB.photos = { items: [], at: 0, loading: null });
-  var TTL = 50 * 60 * 1000;
+  var TTL = 3 * 60 * 1000;           /* look for new or deleted photos every 3 minutes */
+  var LINK_LIFE = 45 * 60 * 1000;    /* signed links last 60 minutes; renew them after 45 */
+  var linkAt = 0;
 
   function api() { return FB.store && FB.store.photos; }
 
@@ -11,7 +13,10 @@
     if (!api()) return Promise.resolve([]);
     if (!force && P.at && Date.now() - P.at < TTL) return Promise.resolve(P.items);
     if (P.loading) return P.loading;
-    P.loading = api().list().then(function (items) {
+    var reuse = {}, renew = Date.now() - linkAt > LINK_LIFE;
+    if (!renew) P.items.forEach(function (x) { reuse[x.name] = x.url; });
+    P.loading = api().list(reuse).then(function (items) {
+      if (renew) linkAt = Date.now();
       P.items = items || []; P.at = Date.now(); P.loading = null; return P.items;
     }, function (e) { P.loading = null; console.warn('photos', e); return P.items; });
     return P.loading;
