@@ -191,13 +191,16 @@
 
     var ups = L.upcoming(today, 8);
     var shown = ups.slice(0, 7);
-    var secUps = h('section', { class: 'rr rr-ups' }, h('h3', null, t('home.comingUp')));
+    /* the first day sits on the heading line, to its right */
+    var head = h('h3', { class: 'ups-head' }, h('span', null, t('home.comingUp')));
+    var secUps = h('section', { class: 'rr rr-ups' }, head);
     if (!shown.length) secUps.appendChild(h('p', { class: 'muted empty-mini' }, '📭 ' + t('home.noEvents')));
     var lastDate = null, group = null;
-    shown.forEach(function (x) {
+    shown.forEach(function (x, i) {
       if (x.date !== lastDate) {
         lastDate = x.date;
-        group = h('div', { class: 'ev-group' }, h('div', { class: 'ev-day' }, FB.i18n.relDay(x.date)));
+        if (i === 0) { head.appendChild(h('span', { class: 'ev-day ev-day-head' }, FB.i18n.relDay(x.date))); group = h('div', { class: 'ev-group' }); }
+        else group = h('div', { class: 'ev-group' }, h('div', { class: 'ev-day' }, FB.i18n.relDay(x.date)));
         secUps.appendChild(group);
       }
       group.appendChild(eventLine(x));
@@ -272,10 +275,14 @@
     var sum = FB.ai && FB.ai.enabled() && FB.showW('summary') ? FB.ai.summary() : '';
     var nw = FB.news && FB.showW('news') ? FB.news.strip() : null;
     var ts = FB.showW('events') ? todayStrip(today) : null;
+    var tsSide = null;
+    if (ts && isWide()) { ts.classList.add('today-side'); tsSide = ts; ts = null; }
     if (ts) { board.classList.add('has-news'); board.insertBefore(ts, board.firstChild); }
     if (nw) { board.classList.add('has-news'); board.insertBefore(nw, board.firstChild); }
     if (sum) { board.classList.add('has-sum'); board.insertBefore(h('div', { class: 'ai-sum', 'data-fit-skip': '1' }, h('span', { class: 'ai-sum-ico' }, ui.icon('sparkle', 18)), h('p', null, sum)), board.firstChild); }
 
-    return h('div', { class: 'home' }, left, board, rightRail(today, left.firstChild));
+    var rr = rightRail(today, left.firstChild);
+    if (tsSide) left.firstChild.appendChild(tsSide); /* below "coming up" on wide screens */
+    return h('div', { class: 'home' }, left, board, rr);
   };
 })(typeof window !== 'undefined' ? window : globalThis);
