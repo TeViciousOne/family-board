@@ -764,31 +764,35 @@ body.lite::before { transition: none; }
   .list-grid.few .chore-who-av .avatar { width: 46px !important; height: 46px !important; font-size: 22px !important; }
 }
 
-/* ===== phones (portrait): one calm scrolling column, nothing squeezed side by side =====
-   order: clock + date (+ weather) · summary · news · today · chores · shopping · coming up · countdown · AC · notes */
+/* ===== phones (portrait): everything on one screen, no scrolling =====
+   clock + date · summary · today · chores (compact, shrink to fit) · a row of small tiles (shopping, next event, AC, countdown) */
 @media (max-width: 699px) and (orientation: portrait) {
-  .home { display: block !important; height: 100% !important; overflow-y: auto !important; overflow-x: hidden; -webkit-overflow-scrolling: touch; padding-bottom: 96px; }
-  .home .rail-left, .home .board, .home .rail-right { max-height: none !important; height: auto !important; overflow: visible !important; }
-  .home .board { padding: 4px 12px 0 !important; }
-  .home .list-body { overflow: visible !important; }
-  .home .rail-right { padding: 6px 16px 12px !important; }
-  .home .rail-right .rail-in { display: flex !important; flex-direction: column; gap: 14px; align-items: stretch; }
-  .home .rail-right .rr { margin: 0; }
-  .home .rail-right .rr-cd, .home .rail-right .rr-notes, .home .rail-right .rr-ups .link-btn { display: flex !important; }
-  .home .rail-right .rr-notes, .home .rail-right .rr-ups { flex-direction: column; }
-  .home .rail-right .rr-ups .ev-group { display: block !important; }
-  .home .rail-right .rr-ups .link-btn { align-self: flex-start; }
-  .home .rail-right h3 { margin: 0 0 6px !important; font-size: 15px; }
-  .home .rail-right.has-shop .shop-tile { display: none; }
-  .home .rail-right .rr-shop { display: flex; flex-direction: column; gap: 6px; }
-  .home .rail-right .shop-mini { width: 100%; }
-  .home .rail-right .shop-tile { width: 100%; min-height: 52px; white-space: normal; }
-  .home .rail-right .ac-tile { margin: 0 !important; }
-  .home .ev { font-size: 16px; align-items: baseline; }
-  .home .ev-when { flex: none; min-width: 64px; }
-  .home .ups-head { font-size: 15px; }
-  .home .ai-sum { margin: 6px 0 10px; }
-  .home .ai-sum p { font-size: 16px; }
-  .home .today-strip { margin: 0 0 10px; }
-  .home .today-strip .ts-ev { font-size: 15px; }
+  .home { display: grid !important; grid-template-rows: auto minmax(0, 1fr) auto !important; height: 100% !important; overflow: hidden !important; padding-bottom: 0; }
+  .home .rail-left { max-height: none !important; }
+  .home .board { min-height: 0; overflow: hidden !important; padding: 2px 12px 0 !important; display: flex; flex-direction: column; }
+  .home .board > .col { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+  .home .list-body { flex: 1; min-height: 0; overflow: hidden !important; }
+  .home .ai-sum { margin: 4px 0 8px; padding: 8px 12px; }
+  .home .ai-sum p { font-size: 15px; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; overflow: hidden; }
+  .home .today-strip { margin: 0 0 6px; flex-wrap: nowrap; overflow: hidden; }
+  .home .today-strip .ts-ev { font-size: 14px; padding: 6px 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .home .news-strip { display: none; }
+  /* compact chore rows */
+  .home .list-grid { grid-template-columns: minmax(0, 1fr) !important; gap: 8px !important; }
+  .home .chore { min-height: 0 !important; padding: 8px 12px !important; gap: 10px; }
+  .home .chore .tick { width: 34px; height: 34px; }
+  .home .chore-title { font-size: 17px !important; }
+  .home .chore-meta { font-size: 13px; }
+  .home .chore-meta + .chore-meta { display: none; }
+  .home .chore-who-av { flex-direction: row; min-width: 0; gap: 6px; }
+  .home .list-grid .chore-who-av .avatar { width: 30px !important; height: 30px !important; font-size: 14px !important; }
+  .home .chore-who-av small { display: none; }
+  .home .all-done { padding: 10px 12px; margin-bottom: 8px; }
+  /* tiles */
+  .ptiles { display: grid; gap: 8px; padding: 8px 12px 10px; }
+  .ptile { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; min-width: 0; min-height: 84px; padding: 8px 4px; border: 0; border-radius: 18px; color: var(--ink); background: var(--g-fill); box-shadow: var(--g-shine), var(--g-shadow); }
+  .ptile .pt-ico { font-size: 20px; line-height: 1; }
+  .ptile b { font-size: 20px; line-height: 1.2; font-variant-numeric: tabular-nums; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .ptile small { font-size: 12px; font-weight: 600; color: var(--ink-2); max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding: 0 4px; }
+  .ptile.pt-ac.on b { color: #0A84FF; }
 }

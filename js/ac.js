@@ -66,6 +66,23 @@
     return btn;
   };
 
+  /* small tile for phones: "20° · Fikur" */
+  AC.mini = function () {
+    if (!AC.enabled()) return null;
+    var big = h('b', null, '–'), small = h('small', null, t('ac.title'));
+    var btn = h('button', { type: 'button', class: 'ptile pt-ac', onclick: function () { AC.open(); } }, h('span', { class: 'pt-ico' }, '❄️'), big, small);
+    function paint() {
+      var s = st.s, on = AC.on() && st.online;
+      btn.classList.toggle('on', on);
+      if (!st.loaded) return;
+      big.textContent = s.temp_current != null ? s.temp_current + '°' : '–';
+      small.textContent = !st.online ? t('ac.offline') : on ? t('ac.on') + ' · ' + (s.temp_set != null ? s.temp_set + '°' : '') : t('ac.off');
+    }
+    var fn = function () { if (!document.body.contains(btn)) { listeners = listeners.filter(function (x) { return x !== fn; }); return; } paint(); };
+    listeners.push(fn); paint(); AC.refresh();
+    return btn;
+  };
+
   /* ---- schedules: turn on / off at set times ---- */
   var DOTS = [1, 2, 3, 4, 5, 6, 0];
   function schedules() {

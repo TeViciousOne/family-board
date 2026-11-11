@@ -184,8 +184,36 @@
   function isPhone() { return !!(root.matchMedia && root.matchMedia('(max-width: 699px) and (orientation: portrait)').matches); }
   function isWide() { return !!(root.matchMedia && root.matchMedia('(orientation: landscape) and (min-width: 900px)').matches); }
 
+  /* phones: one row of small tiles under the chores instead of the right column (tap = full view) */
+  function phoneTiles(today) {
+    var tiles = [];
+    function tile(cls, ico, big, small, fn) {
+      tiles.push(h('button', { type: 'button', class: 'ptile ' + cls, onclick: fn }, h('span', { class: 'pt-ico' }, ico), h('b', null, big), h('small', null, small)));
+    }
+    if (FB.showW('shopping')) {
+      var n = FB.state.shopping.filter(function (x) { return !x.done; }).length;
+      tile('pt-shop', '🛒', String(n), n ? t('pt.toBuy') : t('pt.listEmpty'), function () { FB.actions.openShopping(); });
+    }
+    if (FB.showW('events')) {
+      var now = U.hhmm(new Date());
+      var nx = L.upcoming(today, 14).filter(function (x) { var e = x.event; return x.date > today || e.all_day || !e.start_time || e.start_time >= now; })[0];
+      if (nx) {
+        var e = nx.event, when = nx.date === today ? (e.start_time && !e.all_day ? e.start_time : t('rel.today')) : nx.date === U.addDays(today, 1) ? t('rel.tomorrow') : FB.i18n.dayShort(U.weekday(nx.date)) + ' ' + U.parts(nx.date).d;
+        tile('pt-ev', e.kind === 'birthday' ? '🎂' : '📅', when, e.title, function () { FB.actions.openEvent(e); });
+      } else tile('pt-ev', '📅', '—', t('pt.noEvents'), function () { FB.app.go('calendar'); });
+    }
+    if (FB.ac && FB.showW('ac') && FB.ac.mini) { var ac = FB.ac.mini(); if (ac) tiles.push(ac); }
+    if (FB.showW('countdown')) {
+      var cd = L.countdowns(today)[0];
+      if (cd) tile('pt-cd', '⏳', String(cd.days), (cd.days === 1 ? t('unit.day') : t('unit.days')) + ' · ' + cd.event.title, function () { FB.actions.openEvent(cd.event); });
+    }
+    if (!tiles.length) return null;
+    return h('nav', { class: 'ptiles', style: { gridTemplateColumns: 'repeat(' + tiles.length + ', minmax(0, 1fr))' } }, tiles);
+  }
+
   function rightRail(today, leftIn) {
     var wide = isWide() && leftIn, phone = isPhone();
+    if (phone) return phoneTiles(today) || h('span');
     var rail = h('aside', { class: 'rail rail-right', 'data-scroll': 'rail-right' });
     var inner = h('div', { class: 'rail-in', 'data-fit': '1', 'data-fit-min': '0.6' });
     rail.appendChild(inner);
