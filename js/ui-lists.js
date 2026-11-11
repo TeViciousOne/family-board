@@ -115,17 +115,19 @@
       ta.value = '';
       FB.data.add('notes', { body: v, author: me(), pinned: false, created_at: new Date().toISOString() });
     }
-    var list = h('div', { class: 'note-grid' }, L.notesSorted().map(function (n, i) {
+    /* notes as clean glass cards: who and when on top, the message in readable text, pin / delete on the side */
+    var list = h('div', { class: 'note-list' }, L.notesSorted().map(function (n) {
       var m = L.member(n.author);
-      return h('article', { class: 'note note-sq' + (n.pinned ? ' pinned' : ''), style: { '--paper': m ? U.tint(m.color, .16) : 'transparent', '--tilt': ((i % 3) - 1) * 1.2 + 'deg' } },
-        n.pinned ? h('span', { class: 'note-pin', 'aria-hidden': 'true' }, ui.icon('pin', 16)) : null,
-        h('p', null, n.body),
-        h('footer', null,
-          h('span', { class: 'note-by' }, (m ? m.name + ' · ' : '') + FB.i18n.relDay(U.ymd(new Date(n.created_at))) + ' ' + FB.i18n.timeOf(n.created_at)),
+      return h('article', { class: 'note-card' + (n.pinned ? ' pinned' : ''), style: { '--c': m ? m.color : 'var(--ink-3)' } },
+        h('header', { class: 'nc-head' },
+          m ? ui.avatar(m, 30) : null,
+          h('span', { class: 'nc-who' }, h('b', null, m ? m.name : ''), h('small', null, FB.i18n.relDay(U.ymd(new Date(n.created_at))) + ' · ' + FB.i18n.timeOf(n.created_at))),
+          n.pinned ? h('span', { class: 'nc-badge' }, ui.icon('pin', 13), ' ', t('notes.pinned')) : null,
           h('span', { class: 'grow' }),
-          h('button', { type: 'button', class: 'note-btn' + (n.pinned ? ' on' : ''), 'aria-label': n.pinned ? t('notes.unpin') : t('notes.pin'), 'aria-pressed': n.pinned ? 'true' : 'false',
-            onclick: function () { FB.data.edit('notes', n.id, { pinned: !n.pinned }); } }, ui.icon('pin', 16)),
-          h('button', { type: 'button', class: 'note-btn', 'aria-label': t('common.delete'), onclick: function () { FB.data.del('notes', n.id); } }, ui.icon('trash', 16))));
+          h('button', { type: 'button', class: 'nc-btn' + (n.pinned ? ' on' : ''), 'aria-label': n.pinned ? t('notes.unpin') : t('notes.pin'), 'aria-pressed': n.pinned ? 'true' : 'false',
+            onclick: function () { FB.data.edit('notes', n.id, { pinned: !n.pinned }); } }, ui.icon('pin', 18)),
+          h('button', { type: 'button', class: 'nc-btn', 'aria-label': t('common.delete'), onclick: function () { FB.data.del('notes', n.id); } }, ui.icon('trash', 18))),
+        h('p', { class: 'nc-body' }, n.body));
     }));
     if (!FB.state.notes.length) list = ui.empty('📝', t('notes.empty'), t('empty.notesHint'));
     return h('section', { class: 'pane pane-notes' },

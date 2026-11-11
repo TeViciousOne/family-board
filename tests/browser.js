@@ -190,7 +190,7 @@ function ok(cond, msg) { console.log((cond ? 'PASS ' : 'FAIL ') + msg); if (!con
   await p.locator('.pane .btn', { hasText: 'Post note' }).click();
   await p.waitForTimeout(200);
   await p.screenshot({ path: OUT + '/09-lists.png' });
-  ok((await p.locator('.note', { hasText: 'Gas bottle' }).count()) === 1, 'note posted');
+  ok((await p.locator('.note-card', { hasText: 'Gas bottle' }).count()) === 1, 'note posted');
 
   /* ---------------- settings ---------------- */
   await p.locator('#nav button[data-route=settings]').click();
