@@ -354,7 +354,7 @@
     if (nw) { board.classList.add('has-news'); board.insertBefore(nw, board.firstChild); }
     if (sum) {
       board.classList.add('has-sum');
-      board.insertBefore(h('button', { type: 'button', class: 'ai-sum', 'data-fit-skip': '1', onclick: function () {
+      board.insertBefore(h('button', { type: 'button', class: 'ai-sum' + (sum.length < 90 ? ' short' : ''), 'data-fit-skip': '1', onclick: function () {
         ui.modal({ title: t('ai.summaryTitle'), body: h('p', { class: 'lead' }, sum), focus: false });
       } }, h('span', { class: 'ai-sum-ico' }, ui.icon('sparkle', 18)), h('p', null, sum)), board.firstChild);
     }
