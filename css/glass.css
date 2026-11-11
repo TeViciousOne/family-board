@@ -951,3 +951,7 @@ button.ai-sum { width: 100%; text-align: left; color: var(--ink); font: inherit;
   .home .rail-left .clock { line-height: .9; }
   .home .sleep-btn { position: absolute !important; right: 8px; top: 12px; opacity: .7; }
 }
+@media (max-width: 699px) and (orientation: portrait) {
+  .home .sleep-btn { display: none !important; }
+  .home .rail-left { padding-right: 16px !important; }
+}
