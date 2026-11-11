@@ -162,7 +162,9 @@
   function allDone() {
     var tm = U.addDays(U.today(), 1);
     var next = L.choresDue(tm, '00:00').filter(function (x) { return !x.done; }).slice(0, 5);
-    return h('div', { class: 'col-allDone all-done' },
+    /* pop in only the first time it appears today, not on every minute's redraw */
+    var key = U.today(), fresh = FB.allDoneSeen !== key; FB.allDoneSeen = key;
+    return h('div', { class: 'col-allDone all-done' + (fresh ? ' pop' : '') },
       h('span', { class: 'ad-ico' }, ui.icon('check', 30)),
       h('div', { class: 'ad-txt' },
         h('b', null, t('board.allDone')),
