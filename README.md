@@ -79,3 +79,6 @@ The `news` edge function (cached 10 min) returns Euronews Albania headlines (RSS
 ## Layout test
 `node tests/layout.js [devices] [profiles] [routes]` opens the board on 9 screen sizes (iPhone SE/X, small Android, S25 Ultra, iPad and Tab A in both orientations, laptop) with 6 option sets (everything on, busy, everything off, all done, empty, defaults) and fails when blocks overlap, go off screen, hide under the tab bar or chores disappear without a "+N" chip. Screenshots go to `$SHOTS`.
 The previous layout is kept on the branch `backup-layout-v1`.
+
+## Calm screen photos
+Settings → Home screen → *Calm screen photos*. Photos are shrunk on the device (longest side 1920 px, JPEG) and stored in the private Supabase Storage bucket `photos`, in a folder named after the household, so every screen in the family sees the same set. The calm screen cross-fades a new one every 20 seconds, with the clock moved to the bottom-left. The tap that wakes the calm or night screen is swallowed, so it never presses the button underneath. Test: `node tests/calm.js`.

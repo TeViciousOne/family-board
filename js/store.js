@@ -150,6 +150,28 @@
         return Promise.resolve();
       },
       updateHousehold: function (patch) { Object.assign(db.household, patch); save(); return Promise.resolve(db.household); },
+      /* demo mode keeps a few small photos in this browser only */
+      photos: (function () {
+        var PK = 'fb.demo.photos';
+        function all() { try { return JSON.parse(localStorage.getItem(PK)) || []; } catch (e) { return []; } }
+        function put(list) { localStorage.setItem(PK, JSON.stringify(list)); }
+        return {
+          list: function () { return Promise.resolve(all().map(function (p) { return { name: p.name, url: p.url }; })); },
+          upload: function (blob) {
+            return new Promise(function (res, rej) {
+              var r = new FileReader();
+              r.onload = function () {
+                var list = all(); if (list.length >= 6) return rej(new Error('limit'));
+                var name = 'demo/' + Date.now() + '.jpg'; list.unshift({ name: name, url: r.result });
+                try { put(list); res(name); } catch (e) { rej(new Error('limit')); }
+              };
+              r.onerror = function () { rej(r.error); };
+              r.readAsDataURL(blob);
+            });
+          },
+          remove: function (name) { put(all().filter(function (p) { return p.name !== name; })); return Promise.resolve(); }
+        };
+      })(),
       subscribe: function (fn) { listeners.push(fn); return function () { listeners = listeners.filter(function (f) { return f !== fn; }); }; },
       reset: function () { db = seed(); save(); TABLE_NAMES.forEach(emit); return Promise.resolve(); }
     };
@@ -327,6 +349,25 @@
         return write({ k: 'del', t: t, id: id }, function () { return sb.from(t).delete().eq('id', id).then(check); });
       },
       updateHousehold: function (patch) { return sb.from('households').update(patch).eq('id', hid).select().single().then(check); },
+      /* calm-screen photos in Storage: <household>/<name>.jpg, read through short-lived signed links */
+      photos: {
+        list: function () {
+          return sb.storage.from('photos').list(hid, { limit: 100, sortBy: { column: 'created_at', order: 'desc' } }).then(function (r) {
+            if (r.error) throw r.error;
+            var names = (r.data || []).filter(function (f) { return f.name && f.name.charAt(0) !== '.'; }).map(function (f) { return hid + '/' + f.name; });
+            if (!names.length) return [];
+            return sb.storage.from('photos').createSignedUrls(names, 3600).then(function (s) {
+              if (s.error) throw s.error;
+              return s.data.map(function (x, i) { return { name: names[i], url: x.signedUrl }; });
+            });
+          });
+        },
+        upload: function (blob) {
+          var name = hid + '/' + Date.now() + '-' + Math.random().toString(36).slice(2, 7) + '.jpg';
+          return sb.storage.from('photos').upload(name, blob, { contentType: 'image/jpeg', upsert: false }).then(function (r) { if (r.error) throw r.error; return name; });
+        },
+        remove: function (name) { return sb.storage.from('photos').remove([name]).then(function (r) { if (r.error) throw r.error; }); }
+      },
       subscribe: function (fn) { listeners.push(fn); return function () { listeners = listeners.filter(function (f) { return f !== fn; }); }; },
       /* sync status for the banner */
       sync: status,

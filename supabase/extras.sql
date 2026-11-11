@@ -32,3 +32,14 @@ alter table public.push_subscriptions add column if not exists lat double precis
 alter table public.push_subscriptions add column if not exists lon double precision;
 alter table public.push_subscriptions add column if not exists place text;
 alter table public.push_subscriptions add column if not exists wx_alert boolean not null default true;
+
+-- photos for the calm screen (private bucket, one folder per household: <household_id>/<file>.jpg)
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values ('photos', 'photos', false, 5242880, array['image/jpeg','image/png','image/webp'])
+on conflict (id) do nothing;
+create policy photos_select on storage.objects for select to authenticated
+  using (bucket_id = 'photos' and (split_part(name, '/', 1))::uuid in (select public.my_household_ids()));
+create policy photos_insert on storage.objects for insert to authenticated
+  with check (bucket_id = 'photos' and (split_part(name, '/', 1))::uuid in (select public.my_household_ids()));
+create policy photos_delete on storage.objects for delete to authenticated
+  using (bucket_id = 'photos' and (split_part(name, '/', 1))::uuid in (select public.my_household_ids()));

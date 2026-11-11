@@ -431,11 +431,12 @@
     var next = L.upcoming(today, 3).filter(function (x) {
       var e = x.event; return x.date > today || e.all_day || !e.start_time || e.start_time >= U.hhmm(new Date());
     })[0];
-    U.clear(calm.el);
-    calm.el.appendChild(h('div', { class: 'calm-clock' }, U.hhmm(new Date())));
-    calm.el.appendChild(h('div', { class: 'calm-date' }, FB.i18n.dateLong(today)));
+    var fg = calm.fg;
+    U.clear(fg);
+    fg.appendChild(h('div', { class: 'calm-clock' }, U.hhmm(new Date())));
+    fg.appendChild(h('div', { class: 'calm-date' }, FB.i18n.dateLong(today)));
     if (w && w.current) {
-      calm.el.appendChild(h('div', { class: 'calm-wx' },
+      fg.appendChild(h('div', { class: 'calm-wx' },
         h('span', { html: FB.weather.icon(FB.weather.kindOf(w.current.code, w.current.isDay), 64) }),
         h('b', null, Math.round(w.current.temp) + '°'),
         h('span', null, t(FB.weather.labelKey(w.current.code)))));
@@ -451,21 +452,65 @@
         h('span', null, (e.all_day || !e.start_time ? '' : e.start_time + ' · ') + e.title)));
     }
     lines.push(h('div', { class: 'calm-chores' + (left ? '' : ' ok') }, left === 0 ? t('calm.none') : left === 1 ? t('calm.one') : t('calm.left', { n: left })));
-    calm.el.appendChild(h('div', { class: 'calm-info' }, lines));
+    fg.appendChild(h('div', { class: 'calm-info' }, lines));
   };
+  /* family photos behind the clock: two layers that cross-fade every 20 seconds */
+  calm.slide = { i: -1, front: 0, timer: null };
+  calm.photosOn = function () { return FB.device.calmPhotos !== false && FB.photos && FB.photos.items.length > 0; };
+  calm.nextPhoto = function () {
+    var items = FB.photos ? FB.photos.items : [];
+    calm.el.classList.toggle('photos', calm.photosOn());
+    if (!calm.photosOn()) return;
+    var s = calm.slide, n = items.length;
+    var j = n === 1 ? 0 : (function () { var k; do { k = Math.floor(Math.random() * n); } while (k === s.i); return k; })();
+    if (j === s.i && s.i !== -1) return;
+    s.i = j;
+    var back = calm.imgs[1 - s.front];
+    back.onload = function () { back.classList.add('show'); calm.imgs[s.front].classList.remove('show'); s.front = 1 - s.front; };
+    back.onerror = function () { FB.photos.list(true); };
+    back.src = items[j].url;
+  };
+  calm.startSlides = function () {
+    clearInterval(calm.slide.timer);
+    FB.photos.list().then(function () { if (calm.on) calm.nextPhoto(); });
+    calm.slide.timer = setInterval(function () {
+      if (!calm.on) return;
+      FB.photos.list().then(calm.nextPhoto); /* refreshes the signed links before they expire */
+    }, 20000);
+  };
+  /* the tap that wakes the screen must not also press whatever is underneath */
+  /* from the waking press until the finger lifts, plus a moment for the click that follows */
+  var swallowUntil = 0;
+  ['click', 'pointerup', 'mouseup', 'touchend', 'pointerdown', 'mousedown', 'touchstart', 'contextmenu'].forEach(function (type) {
+    document.addEventListener(type, function (e) {
+      if (Date.now() >= swallowUntil) return;
+      e.stopPropagation(); e.stopImmediatePropagation(); if (e.cancelable) e.preventDefault();
+      if (/up$|end$/.test(type)) swallowUntil = Math.min(swallowUntil, Date.now() + 350);
+    }, { capture: true, passive: false });
+  });
+  FB.swallowTaps = function () { swallowUntil = Date.now() + 3000; };
   calm.update = function (now) {
     if (!calm.el) {
-      calm.el = h('div', { id: 'calm', 'aria-hidden': 'true' });
-      calm.el.addEventListener('pointerdown', function (e) { e.stopPropagation(); e.preventDefault(); lastTouch = Date.now(); calm.hide(); });
+      calm.imgs = [h('img', { class: 'calm-photo', alt: '' }), h('img', { class: 'calm-photo', alt: '' })];
+      calm.fg = h('div', { class: 'calm-fg' });
+      calm.el = h('div', { id: 'calm', 'aria-hidden': 'true' }, h('div', { class: 'calm-bg' }, calm.imgs, h('div', { class: 'calm-shade' })), calm.fg);
+      var wake = function (e) {
+        if (!calm.on) return;
+        e.stopPropagation(); if (e.cancelable) e.preventDefault();
+        lastTouch = Date.now(); calm.hide(); FB.swallowTaps();
+      };
+      calm.el.addEventListener('pointerdown', wake);
+      calm.el.addEventListener('touchstart', wake, { passive: false });
       document.body.appendChild(calm.el);
     }
-    var want = FB.device.calm && route() === 'home' && Date.now() - lastTouch >= calm.after &&
+    var want = calm.forced || FB.device.calm && route() === 'home' && Date.now() - lastTouch >= calm.after &&
       !(night.el && night.el.classList.contains('on')) && !document.querySelector('#layer .scrim');
-    if (want && !calm.on) { calm.on = true; calm.build(); calm.el.classList.add('on'); }
+    if (want && !calm.on) { calm.on = true; calm.build(); calm.el.classList.add('on'); calm.startSlides(); }
     else if (!want && calm.on) calm.hide();
     else if (want && now.getSeconds() === 0) calm.build();
   };
-  calm.hide = function () { calm.on = false; if (calm.el) calm.el.classList.remove('on'); };
+  calm.preview = function () { calm.forced = true; calm.update(new Date()); };
+  calm.hide = function () { calm.on = false; calm.forced = false; clearInterval(calm.slide.timer); if (calm.el) calm.el.classList.remove('on'); };
   var timersStarted = false, lastMinute = -1;
   function startTimers() {
     if (timersStarted) return; timersStarted = true;
@@ -630,7 +675,10 @@
     night.el = document.getElementById('night');
     night.el.appendChild(h('div', { class: 'night-clock' }));
     night.el.appendChild(h('div', { class: 'night-sub' }));
-    night.el.addEventListener('pointerdown', function (e) { e.stopPropagation(); night.wake(); });
+    night.el.addEventListener('pointerdown', function (e) {
+      if (!night.el.classList.contains('on')) return;
+      e.stopPropagation(); if (e.cancelable) e.preventDefault(); night.wake(); FB.swallowTaps();
+    });
     FB.store = FB.storeLib.create(root.FB_CONFIG || {});
     FB.store.init().then(function (status) {
       if (status === 'ready') return app.enter();

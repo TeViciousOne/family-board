@@ -165,7 +165,48 @@
     s.appendChild(toggle(t('set.namedays'), FB.device.namedays !== false, function (v) { FB.device.namedays = v; saveDevice(); }, t('set.namedaysHint')));
     s.appendChild(toggle(t('set.calm'), FB.device.calm, function (v) { FB.device.calm = v; saveDevice(); }, t('set.calmHint')));
     s.appendChild(toggle(t('set.homeIdle'), FB.device.homeIdle, function (v) { FB.device.homeIdle = v; saveDevice(); }, t('set.homeIdleHint')));
+    s.appendChild(photosBlock());
     return s;
+  }
+
+  /* photos shown on the calm screen, shared by the whole family */
+  function photosBlock() {
+    var box = h('div', { class: 'ph-block' });
+    var grid = h('div', { class: 'ph-grid' }), status = h('span', { class: 'hint' });
+    var input = h('input', { type: 'file', accept: 'image/*', multiple: true });
+    var addBtn = h('button', { type: 'button', class: 'btn', onclick: function () { input.click(); } }, '＋ ', t('ph.add'));
+    var prevBtn = h('button', { type: 'button', class: 'btn ghost', onclick: function () { FB.calm.preview(); } }, t('ph.preview'));
+    function draw() {
+      U.clear(grid);
+      var items = FB.photos.items;
+      if (!items.length) { grid.appendChild(h('p', { class: 'hint ph-empty' }, t('ph.empty'))); return; }
+      items.forEach(function (p) {
+        grid.appendChild(h('div', { class: 'ph-item' },
+          h('img', { src: p.url, alt: '', loading: 'lazy' }),
+          h('button', { type: 'button', class: 'ph-del', 'aria-label': t('common.delete'), onclick: function () {
+            ui.confirm({ title: t('ph.deleteQ'), text: t('ph.deleteHint'), yes: t('common.delete'), danger: true }).then(function (ok) {
+              if (!ok) return;
+              FB.photos.remove(p.name).then(draw, function () { ui.toast(t('ph.failed')); });
+            });
+          } }, '✕')));
+      });
+    }
+    input.addEventListener('change', function () {
+      var files = input.files; if (!files || !files.length) return;
+      addBtn.disabled = true; status.textContent = t('ph.uploading', { n: files.length });
+      FB.photos.add(files).then(function (r) {
+        addBtn.disabled = false; status.textContent = ''; input.value = ''; draw();
+        ui.toast(r.failed ? t('ph.someFailed', { n: r.failed }) : t('ph.added', { n: r.done }));
+      });
+    });
+    box.appendChild(h('h3', { class: 'set-sub' }, '🖼️ ' + t('ph.title')));
+    box.appendChild(h('p', { class: 'hint' }, t('ph.hint')));
+    box.appendChild(toggle(t('ph.show'), FB.device.calmPhotos !== false, function (v) { FB.device.calmPhotos = v; saveDevice(); }));
+    box.appendChild(h('div', { class: 'ph-add' }, addBtn, prevBtn, status, input));
+    box.appendChild(grid);
+    grid.appendChild(h('p', { class: 'hint ph-empty' }, '…'));
+    FB.photos.list().then(draw);
+    return box;
   }
 
   /* ---------- look ---------- */
