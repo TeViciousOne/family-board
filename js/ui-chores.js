@@ -30,7 +30,7 @@
     var m = L.member(c.member_id), last = L.lastDone(c.id), lm = last ? L.member(last.done_by) : null;
     var next = c.active && c.rule && c.rule.freq !== 'once' ? FB.recur.nextOccurrence(c.rule, today, 400) : null;
     var meta = h('span', { class: 'row-meta' },
-      h('span', { class: 'who-pill', style: { '--c': m ? m.color : 'var(--ink-3)' } }, m ? m.name : t('board.everyone')),
+      h('span', { class: 'who-pill', style: { '--c': m ? m.color : 'var(--ink-3)' } }, m ? ui.avatar(m, 22) : null, m ? m.name : t('board.everyone')),
       ruleView(c.rule),
       c.due_time ? h('span', { class: 'meta-txt' }, t('chore.by', { time: c.due_time })) : null,
       next && next !== today ? h('span', { class: 'meta-txt' }, '→ ' + FB.i18n.relDay(next)) : null);
@@ -67,7 +67,7 @@
       wrap.appendChild(h('h3', { class: 'grp' }, t(x[1]), h('span', { class: 'grp-n' }, String(items.length))));
       wrap.appendChild(h('div', { class: 'chore-grid' }, items.map(function (c) { return choreRow(c, today); })));
     });
-    if (!any) wrap.appendChild(h('div', { class: 'pad' }, h('p', { class: 'muted' }, t('chores.empty'))));
+    if (!any) wrap.appendChild(ui.empty('🧹', t('chores.empty'), t('empty.choresAll')));
     return wrap;
   }
 
@@ -80,7 +80,7 @@
       return h('div', { class: 'wc', style: { '--c': m.color } }, ui.avatar(m, 36), h('b', null, String(counts[m.id] || 0)), h('span', null, m.name));
     })));
     var items = L.recentCompletions(150);
-    if (!items.length) { wrap.appendChild(h('p', { class: 'muted pad' }, t('hist.empty'))); return wrap; }
+    if (!items.length) { wrap.appendChild(ui.empty('📜', t('hist.empty'))); return wrap; }
     var lastDay = null;
     items.forEach(function (c) {
       var day = c.done_at.slice(0, 10);

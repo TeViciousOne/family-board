@@ -152,6 +152,8 @@
       { v: 'always', label: t('set.ask.always') }, { v: 'unassigned', label: t('set.ask.unassigned') }, { v: 'never', label: t('set.ask.never') }
     ], FB.device.askWho, function (v) { FB.device.askWho = v; saveDevice(); }), t('set.askWhoHint')));
     s.appendChild(toggle(t('set.namedays'), FB.device.namedays !== false, function (v) { FB.device.namedays = v; saveDevice(); }, t('set.namedaysHint')));
+    s.appendChild(toggle(t('set.lite'), !!FB.device.lite, function (v) { FB.device.lite = v; saveDevice(); FB.app.ambience(new Date()); }, t('set.liteHint')));
+    s.appendChild(toggle(t('set.twemoji'), !FB.device.nativeEmoji, function (v) { FB.device.nativeEmoji = !v; saveDevice(); location.reload(); }, t('set.twemojiHint')));
     s.appendChild(toggle(t('set.calm'), FB.device.calm, function (v) { FB.device.calm = v; saveDevice(); }, t('set.calmHint')));
     s.appendChild(toggle(t('set.homeIdle'), FB.device.homeIdle, function (v) { FB.device.homeIdle = v; saveDevice(); }, t('set.homeIdleHint')));
     s.appendChild(toggle(t('set.reload4'), FB.device.reload4, function (v) { FB.device.reload4 = v; saveDevice(); }, t('set.reload4Hint')));

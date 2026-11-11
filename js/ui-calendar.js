@@ -64,7 +64,7 @@
         h('span', { class: 'hol-txt' }, h('b', null, txt),
           x.type === 'holiday' || x.type === 'off' ? h('small', null, t('hol.dayOff')) : x.type === 'nameday' ? h('small', null, x.label) : null)));
     });
-    if (!evs.length && !sp.length) panel.appendChild(h('p', { class: 'muted' }, t('cal.nothing')));
+    if (!evs.length && !sp.length) panel.appendChild(ui.empty('🗓️', t('cal.nothing'), t('empty.calHint')));
     evs.forEach(function (x) {
       var e = x.event, m = L.member(e.member_id);
       var when = e.all_day || !e.start_time ? t('event.allDay') : e.start_time + (e.end_time ? '–' + e.end_time : '');

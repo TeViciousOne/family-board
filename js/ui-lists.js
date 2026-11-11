@@ -71,7 +71,7 @@
     }
 
     var list;
-    if (!open.length) list = h('p', { class: 'muted pad' }, t('shop.empty'));
+    if (!open.length) list = ui.empty('🛒', t('shop.empty'), t('empty.shopHint'));
     else if (open.some(function (x) { return x.category; })) {
       var order = FB.ai ? FB.ai.cats : [], seen = {}, groups = [];
       open.forEach(function (x) { var k = x.category || 'other'; (seen[k] = seen[k] || []).push(x); });
@@ -127,7 +127,7 @@
             onclick: function () { FB.data.edit('notes', n.id, { pinned: !n.pinned }); } }, ui.icon('pin', 16)),
           h('button', { type: 'button', class: 'note-btn', 'aria-label': t('common.delete'), onclick: function () { FB.data.del('notes', n.id); } }, ui.icon('trash', 16))));
     }));
-    if (!FB.state.notes.length) list = h('p', { class: 'muted pad' }, t('notes.empty'));
+    if (!FB.state.notes.length) list = ui.empty('📝', t('notes.empty'), t('empty.notesHint'));
     return h('section', { class: 'pane pane-notes' },
       h('div', { class: 'pane-head' }, h('span', { class: 'pane-ico' }, ui.icon('edit', 22)), h('h2', null, t('notes.title'))),
       h('div', { class: 'add-row note-add' }, ta, h('button', { class: 'btn', onclick: add }, ui.icon('plus', 20), ' ', t('notes.post'))),

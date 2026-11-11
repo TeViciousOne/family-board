@@ -89,8 +89,10 @@
     }
     var who = L.member(c.member_id);
     color = who ? who.color : null;
+    var pop = done && FB.justDone && Date.now() - (FB.justDone[c.id] || 0) < 2500;
     var row = h('button', {
-      type: 'button', class: 'chore' + (done ? ' done' : '') + (entry.overdue ? ' overdue' : ''),
+      type: 'button', class: 'chore' + (done ? ' done' : '') + (entry.overdue ? ' overdue' : '') + (pop ? ' pop' : ''),
+      'data-flip': c.id,
       style: { '--c': color || 'var(--brand)' },
       'aria-label': (done ? t('chore.markUndo') : t('chore.markDone')) + ': ' + c.title,
       onclick: function () { FB.actions.tapChore(entry, row); }
@@ -99,7 +101,7 @@
       h('span', { class: 'chore-txt' },
         h('span', { class: 'chore-title' }, (c.emoji ? c.emoji + ' ' : '') + c.title),
         meta.map(function (m) { return h('span', { class: 'chore-meta' }, m); })),
-      who ? h('span', { class: 'chore-who', style: { background: who.color, color: U.textOn(who.color) } }, who.emoji || who.name) : null);
+      who ? h('span', { class: 'chore-who-av' }, ui.avatar(who, 44), h('small', null, who.name)) : null);
     return row;
   }
 
@@ -157,7 +159,7 @@
         h('button', { type: 'button', class: 'btn add-pill', onclick: function () { FB.actions.openTemplates(); } }, ui.icon('plus', 18), h('span', null, t('board.addChores')))));
     var bar = h('div', { class: 'list-bar' }, h('i', { style: { width: pct + '%' } }));
     var body = h('div', { class: 'list-body', 'data-scroll': 'chores-list' });
-    if (!items.length) body.appendChild(h('p', { class: 'col-empty' }, t('board.nothingToday')));
+    if (!items.length) body.appendChild(ui.empty('🌤️', t('board.nothingToday'), t('empty.choresHint')));
     else {
       if (doneN === items.length) body.appendChild(allDone());
       var size = sorted.length <= 4 ? ' few' : sorted.length <= 8 ? ' mid' : '';
@@ -190,7 +192,7 @@
     var ups = L.upcoming(today, 8);
     var shown = ups.slice(0, 7);
     var secUps = h('section', { class: 'rr rr-ups' }, h('h3', null, t('home.comingUp')));
-    if (!shown.length) secUps.appendChild(h('p', { class: 'muted' }, t('home.noEvents')));
+    if (!shown.length) secUps.appendChild(h('p', { class: 'muted empty-mini' }, '📭 ' + t('home.noEvents')));
     var lastDate = null, group = null;
     shown.forEach(function (x) {
       if (x.date !== lastDate) {
@@ -207,8 +209,9 @@
     if (cds.length) {
       var secCd = h('section', { class: 'rr rr-cd' }, h('h3', null, t('home.countdowns')));
       cds.forEach(function (c) {
-        secCd.appendChild(h('button', { type: 'button', class: 'cd', onclick: function () { FB.actions.openEvent(c.event); } },
-          h('b', null, String(c.days)), h('span', null, (c.days === 1 ? t('unit.day') : t('unit.days')) + ' · ' + c.event.title)));
+        secCd.appendChild(h('button', { type: 'button', class: 'cd cd-card', onclick: function () { FB.actions.openEvent(c.event); } },
+          h('span', { class: 'cd-num' }, h('b', null, String(c.days)), h('small', null, c.days === 1 ? t('unit.day') : t('unit.days'))),
+          h('span', { class: 'cd-title' }, c.event.title)));
       });
       inner.appendChild(secCd);
     }

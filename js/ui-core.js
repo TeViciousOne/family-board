@@ -31,10 +31,11 @@
   if (!FB.device.kind) FB.device.kind = FB.device.wall ? 'wall' : (root.innerWidth < 700 ? 'phone' : 'tablet');
   if (!FB.device.show) FB.device.show = FB.kindDefaults(FB.device.kind);
   if (FB.device.calm == null) FB.device.calm = FB.device.kind === 'wall';
+  if (FB.device.lite == null) FB.device.lite = FB.device.kind === 'wall';
   FB.showW = function (w) { return !FB.device.show || FB.device.show[w] !== false; };
   FB.setKind = function (k) {
     var d = FB.device;
-    d.kind = k; d.wall = k === 'wall'; d.homeIdle = k === 'wall'; d.calm = k === 'wall';
+    d.kind = k; d.wall = k === 'wall'; d.homeIdle = k === 'wall'; d.calm = k === 'wall'; d.lite = k === 'wall';
     d.askWho = k === 'wall' ? 'always' : 'never';
     d.show = FB.kindDefaults(k); d.kindAsked = true;
     FB.saveDevice();
@@ -139,7 +140,7 @@
     var sheet = h('div', { class: 'sheet' + (opts.size ? ' ' + opts.size : ''), role: 'dialog', 'aria-modal': 'true' },
       head, h('div', { class: 'sheet-body' }, opts.body), opts.actions ? h('div', { class: 'sheet-actions' }, opts.actions) : null);
     scrim.appendChild(sheet);
-    layer.appendChild(scrim);
+    layer.appendChild(scrim); ui.emojify(sheet);
     var api = {
       el: sheet,
       close: function () {
@@ -242,6 +243,29 @@
       h('button', { type: 'button', class: 'icon-btn', 'aria-label': '−', onclick: function () { set(v - 1); } }, '−'),
       out,
       h('button', { type: 'button', class: 'icon-btn', 'aria-label': '+', onclick: function () { set(v + 1); } }, '+'));
+  };
+
+  /* friendly empty state: big emoji, a line and an optional hint */
+  ui.empty = function (emoji, title, sub) {
+    return h('div', { class: 'empty-state' }, h('span', { class: 'es-ico' }, emoji), h('b', null, title), sub ? h('span', null, sub) : null);
+  };
+
+  /* one emoji look on every device (Twemoji images; falls back to the system emoji when offline) */
+  var TW_JS = 'https://cdn.jsdelivr.net/npm/@twemoji/api@17.0.2/dist/twemoji.min.js';
+  var TW_BASE = 'https://cdn.jsdelivr.net/gh/jdecked/twemoji@17.0.2/assets/';
+  var twLoading = false;
+  ui.emojify = function (el) {
+    if (!el || (FB.device && FB.device.nativeEmoji)) return;
+    if (root.twemoji) {
+      try { root.twemoji.parse(el, { base: TW_BASE, folder: 'svg', ext: '.svg', className: 'emoji' }); } catch (e) { /* ignore */ }
+      return;
+    }
+    if (twLoading || !root.document) return;
+    twLoading = true;
+    var s = document.createElement('script');
+    s.src = TW_JS; s.async = true;
+    s.onload = function () { ui.emojify(document.body); };
+    document.head.appendChild(s);
   };
 
   ui.confetti = function (anchor, color) {

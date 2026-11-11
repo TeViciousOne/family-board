@@ -24,10 +24,31 @@
     pending = setTimeout(function () { pending = null; doRender(); }, 0);
   };
 
+  /* remember where chore cards were, so they can glide to their new place after a re-render */
+  function flipFirst(view) {
+    var m = {};
+    [].forEach.call(view.querySelectorAll('[data-flip]'), function (el) { m[el.getAttribute('data-flip')] = el.getBoundingClientRect(); });
+    return m;
+  }
+  function flipPlay(view, first) {
+    if (FB.device.lite || (root.matchMedia && root.matchMedia('(prefers-reduced-motion: reduce)').matches)) return;
+    [].forEach.call(view.querySelectorAll('[data-flip]'), function (el) {
+      var a = first[el.getAttribute('data-flip')]; if (!a) return;
+      var b = el.getBoundingClientRect(), dx = a.left - b.left, dy = a.top - b.top;
+      if (Math.abs(dx) < 2 && Math.abs(dy) < 2) return;
+      el.style.transition = 'none'; el.style.transform = 'translate(' + dx + 'px,' + dy + 'px)';
+      requestAnimationFrame(function () { requestAnimationFrame(function () {
+        el.style.transition = 'transform .45s cubic-bezier(.2,.8,.2,1)'; el.style.transform = '';
+        setTimeout(function () { el.style.transition = ''; }, 500);
+      }); });
+    });
+  }
+
   function doRender() {
     var st = FB.state;
     var view = document.getElementById('view');
     if (!st.ready || !view) return;
+    var flip = flipFirst(view);
 
     var scrolls = {};
     [].forEach.call(view.querySelectorAll('[data-scroll]'), function (el) { scrolls[el.getAttribute('data-scroll')] = el.scrollTop; });
@@ -47,6 +68,8 @@
     U.clear(view);
     view.appendChild(node);
     view.className = 'view view-' + name;
+    flipPlay(view, flip);
+    ui.emojify(view);
 
     [].forEach.call(view.querySelectorAll('[data-scroll]'), function (el) {
       var k = el.getAttribute('data-scroll');
@@ -176,6 +199,7 @@
   function complete(entry, who, anchor) {
     var c = entry.chore, today = U.today();
     if (anchor) { var m = L.member(who || c.member_id); ui.confetti(anchor, m ? m.color : '#17707A'); }
+    FB.justDone = FB.justDone || {}; FB.justDone[c.id] = Date.now();
     FB.sound.done();
     var row = { chore_id: c.id, on_date: today, done_by: who || null, done_at: new Date().toISOString() };
     return FB.data.add('chore_completions', row).then(function (srv) {
@@ -423,6 +447,7 @@
         if (!typing) { lastTouch = Date.now(); if (ui.closeAllModals) ui.closeAllModals(); app.go('home'); }
       }
       calm.update(now);
+      app.ambience(now);
       var m = now.getHours() * 60 + now.getMinutes();
       if (m !== lastMinute) {
         lastMinute = m;
@@ -525,6 +550,23 @@
   };
 
   /* first time on a device: what is it? (decides the default home screen) */
+  /* background tint that follows the time of day and the weather; light mode for slower tablets */
+  var lastAmb = '';
+  app.ambience = function (now) {
+    var hr = now.getHours(), tod = hr >= 5 && hr < 10 ? 'morning' : hr < 17 ? 'day' : hr < 21 ? 'evening' : 'night';
+    var w = app.weather && app.weather.data && app.weather.data.current, wx = 'clear';
+    if (w) {
+      var c = w.code;
+      wx = c >= 95 ? 'storm' : (c >= 71 && c <= 77) || c === 85 || c === 86 ? 'snow' : (c >= 51 && c <= 67) || (c >= 80 && c <= 82) ? 'rain' : c >= 45 && c <= 48 ? 'fog' : c >= 2 ? 'cloud' : 'clear';
+    }
+    var key = tod + wx + (FB.device.lite ? 'L' : '');
+    if (key === lastAmb) return;
+    lastAmb = key;
+    var de = document.documentElement;
+    de.setAttribute('data-tod', tod); de.setAttribute('data-wx', wx);
+    document.body.classList.toggle('lite', !!FB.device.lite);
+  };
+
   app.askKind = function () {
     var m, done = false;
     function pick(k) { if (done) return; done = true; FB.setKind(k); m.close(); if (app.applyDevice) app.applyDevice(); app.render(); }
