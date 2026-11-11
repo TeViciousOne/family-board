@@ -75,3 +75,7 @@ The `news` edge function (cached 10 min) returns Euronews Albania headlines (RSS
 - **AC schedules**: managed in the air conditioner popup ("Orari"), stored in `ac_schedules`, run by the `reminders` function (within 10 minutes of the set time, once per day).
 - **Morning weather alert**: at 7:30 each phone gets a notification only on days with rain, snow, storms, strong wind, frost or heat, for the place set on that phone. Switch it off in Settings → Notifications.
 - `reminders?dry=1&at=07:35` (with the cron secret) shows what would be sent at that time without sending anything.
+
+## Layout test
+`node tests/layout.js [devices] [profiles] [routes]` opens the board on 9 screen sizes (iPhone SE/X, small Android, S25 Ultra, iPad and Tab A in both orientations, laptop) with 6 option sets (everything on, busy, everything off, all done, empty, defaults) and fails when blocks overlap, go off screen, hide under the tab bar or chores disappear without a "+N" chip. Screenshots go to `$SHOTS`.
+The previous layout is kept on the branch `backup-layout-v1`.

@@ -61,11 +61,14 @@
         h('span', { class: 'wx-lo' }, Math.round(d.min) + '°'));
     }));
     var hrs = FB.weather.hoursFrom(w.data, 6);
+    var rainAt = FB.weather.hoursFrom(w.data, 14).filter(function (x, i) { return i > 0 && (x.rain >= 50 || /rain|storm|snow|drizzle/.test(FB.weather.kindOf(x.code, 1))); })[0];
+    var next = h('div', { class: 'wx-next' }, rainAt ? '☔ ' + t('wx.rainAt', { time: rainAt.time.slice(11, 16) }) : (today.max != null ? t('wx.hiLo', { hi: Math.round(today.max), lo: Math.round(today.min) }) : ''));
     var hourly = hrs.length ? h('div', { class: 'wx-hours' }, hrs.map(function (x, i) { return hourCell(x, i === 0); })) : null;
     return h('div', { class: 'wx', role: 'button', tabindex: '0', onclick: openWeather, onkeydown: function (e) { if (e.key === 'Enter') openWeather(); } },
       nowEl,
       h('div', { class: 'wx-desc' }, t(FB.weather.labelKey(cur.code)) + ' · ' + place.name),
       h('div', { class: 'wx-meta' }, meta.map(function (m) { return h('div', null, m); })),
+      next,
       hourly,
       strip,
       w.stale ? h('p', { class: 'wx-stale' }, t('wx.stale')) : null);
@@ -127,9 +130,9 @@
 
   /* today's events as a strip above the chores */
   function todayStrip(today) {
-    var evs = L.eventsOn(today).filter(function (x) { return x.event.kind !== 'countdown'; });
+    var evs = []; /* today's events live in "Coming up" / the event tile: one place only */
     var sp = L.special(today);
-    if (!evs.length && !sp.length) return null;
+    if (!sp.length) return null;
     return h('div', { class: 'today-strip', 'data-fit-skip': '1' },
       h('span', { class: 'ts-lbl' }, t('rel.today')),
       sp.slice(0, 3).map(function (x) {
@@ -163,7 +166,7 @@
     else {
       if (doneN === items.length) body.appendChild(allDone());
       var size = sorted.length <= 4 ? ' few' : sorted.length <= 8 ? ' mid' : '';
-      body.appendChild(h('div', { class: 'list-grid' + size, 'data-fit': '1', 'data-fit-min': '0.62', 'data-fit-max': '1' }, sorted.map(function (x) { return choreRow(x); })));
+      body.appendChild(h('div', { class: 'list-grid' + size, 'data-fit': '1', 'data-fit-min': '0.86', 'data-fit-max': '1', 'data-cap': '1' }, sorted.map(function (x) { return choreRow(x); })));
     }
     return h('section', { class: 'col' }, head, bar, body);
   }
@@ -215,7 +218,7 @@
     var wide = isWide() && leftIn, phone = isPhone();
     if (phone) return phoneTiles(today) || h('span');
     var rail = h('aside', { class: 'rail rail-right', 'data-scroll': 'rail-right' });
-    var inner = h('div', { class: 'rail-in', 'data-fit': '1', 'data-fit-min': '0.6' });
+    var inner = h('div', { class: 'rail-in', 'data-fit': '1', 'data-fit-min': '0.9', 'data-cap': 'soft' });
     rail.appendChild(inner);
 
     var ups = L.upcoming(today, 8);
@@ -249,7 +252,7 @@
     }
 
     if ((wide || phone) && FB.ac && FB.showW('ac')) { var act = FB.ac.tile(); if (act) inner.appendChild(act); }
-    var notes = FB.showW('notes') ? L.notesSorted().slice(0, 2) : [];
+    var notes = FB.showW('notes') ? L.notesSorted().slice(0, wide ? 1 : 2) : [];
     if (notes.length) {
       var secN = h('section', { class: 'rr rr-notes' }, h('h3', null, t('home.notes')));
       notes.forEach(function (n) {
@@ -288,7 +291,7 @@
     var due = L.choresDue(today, ctx.nowHHMM);
 
     var left = h('aside', { class: 'rail rail-left', 'data-scroll': 'rail-left' },
-      h('div', { class: 'rail-in', 'data-fit': '1', 'data-fit-min': '0.6' },
+      h('div', { class: 'rail-in', 'data-fit': '1', 'data-fit-min': '0.9', 'data-cap': 'soft' },
         h('div', { class: 'clock-row' },
           h('div', { class: 'clock' }, U.hhmm(ctx.now)),
           h('button', { type: 'button', class: 'icon-btn sleep-btn', 'aria-label': t('home.sleep'), onclick: function () { FB.night.sleepNow(); } }, ui.icon('moon'))),
@@ -308,7 +311,12 @@
     if (ts && isWide()) { ts.classList.add('today-side'); tsSide = ts; ts = null; }
     if (ts) { board.classList.add('has-news'); board.insertBefore(ts, board.firstChild); }
     if (nw) { board.classList.add('has-news'); board.insertBefore(nw, board.firstChild); }
-    if (sum) { board.classList.add('has-sum'); board.insertBefore(h('div', { class: 'ai-sum', 'data-fit-skip': '1' }, h('span', { class: 'ai-sum-ico' }, ui.icon('sparkle', 18)), h('p', null, sum)), board.firstChild); }
+    if (sum) {
+      board.classList.add('has-sum');
+      board.insertBefore(h('button', { type: 'button', class: 'ai-sum', 'data-fit-skip': '1', onclick: function () {
+        ui.modal({ title: t('ai.summaryTitle'), body: h('p', { class: 'lead' }, sum), focus: false });
+      } }, h('span', { class: 'ai-sum-ico' }, ui.icon('sparkle', 18)), h('p', null, sum)), board.firstChild);
+    }
 
     var rr = rightRail(today, left.firstChild);
     if (tsSide) left.firstChild.appendChild(tsSide); /* below "coming up" on wide screens */

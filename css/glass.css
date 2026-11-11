@@ -796,3 +796,120 @@ body.lite::before { transition: none; }
   .ptile small { font-size: 12px; font-weight: 600; color: var(--ink-2); max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding: 0 4px; }
   .ptile.pt-ac.on b { color: #0A84FF; }
 }
+
+/* =====================================================================================
+   LAYOUT V2 — readable everywhere (revert point: branch backup-layout-v1)
+   rules: text ≥ 13px (wall tablet ≥ 15px), nothing hides behind anything, overflow → "+N"
+   ===================================================================================== */
+/* "+N more" chip at the end of a capped chore list */
+.more-chip { grid-column: 1 / -1; justify-self: center; padding: 8px 18px; border: 0; border-radius: 999px; font-size: 15px; font-weight: 700; color: #0A84FF; background: var(--g-fill); box-shadow: var(--g-shine); }
+/* readable minimums */
+.wx-hn { font-size: 13px; }
+.wx-hr { font-size: 12.5px; }
+.wx-ht { font-size: 16px; }
+.rr > h3, .ups-head, .ts-lbl, .rail h3 { font-size: 13px !important; letter-spacing: .05em; }
+.chore-who-av small { font-size: 14px; }
+.chore-meta { font-size: 14px; }
+.wx-hr { font-size: 13px !important; }
+.ac-col small, .ac-pill { font-size: 13px; }
+.cd-num small { font-size: 13px; }
+.shop-mini small, .note-mini small { font-size: 13px; }
+.wx-next { font-size: 15px; font-weight: 600; color: var(--ink-2); margin: 2px 0 6px; }
+button.ai-sum { width: 100%; text-align: left; color: var(--ink); font: inherit; cursor: pointer; }
+
+/* ---------- E. landscape tablets & iPads: wider side columns, nothing shrunk ---------- */
+@media (orientation: landscape) and (min-width: 900px) {
+  .home { grid-template-columns: minmax(270px, 23vw) minmax(0, 1fr) minmax(270px, 23vw) !important; }
+  .rail { padding-left: 18px !important; padding-right: 18px !important; }
+  .rail-left .wx-strip { display: none; }
+  .rail-left .wx-meta { display: none; }
+  .wx-hours { gap: 2px; }
+  .rail-right .shop-mini { padding: 8px 12px; }
+  .rail-right .shop-mini span { font-size: 16px; }
+  .rail-right .note-mini span { font-size: 15px; }
+  .rail-right .ac-tile { padding: 12px 14px !important; gap: 8px !important; }
+  .rail-right .ac-col b { font-size: 30px; }
+  .ev { font-size: 16px; }
+  .today-side .ts-ev { font-size: 15px; }
+}
+/* the wall tablet is read from a distance */
+@media (orientation: landscape) and (min-width: 900px) {
+  body.lite .chore-meta, body.lite .ev, body.lite .shop-mini span { font-size: 16px; }
+}
+
+/* ---------- D. portrait tablets (iPad / Tab A upright) ---------- */
+@media (min-width: 700px) and (orientation: portrait) {
+  .home { grid-template-rows: auto minmax(0, 1fr) minmax(0, 30vh) !important; }
+  .rail-left { padding: 14px 20px 6px !important; }
+  .rail-left .rail-in { display: grid !important; grid-template-columns: auto minmax(0, 1fr) minmax(200px, 30%) !important; column-gap: 18px !important; align-items: start !important; }
+  .rail-left .wx { display: contents; }
+  .rail-left .clock-row { grid-column: 1; grid-row: 1; }
+  .rail-left .dateline { grid-column: 1; grid-row: 2; }
+  .rail-left .wx-now { grid-column: 1; grid-row: 3; justify-self: start; margin-top: 6px; }
+  .rail-left .wx-desc { grid-column: 1; grid-row: 4; justify-self: start; text-align: left; font-size: 16px; }
+  .rail-left .wx-next { grid-column: 1; grid-row: 5; }
+  .rail-left .wx-meta, .rail-left .wx-strip { display: none !important; }
+  .rail-left .wx-hours { grid-column: 2; grid-row: 1 / 6; align-self: center; margin: 0; grid-template-columns: repeat(6, 1fr); }
+  .rail-left .ac-tile { grid-column: 3; grid-row: 1 / 6; align-self: center; margin: 0 !important; }
+  .rail-left .wx-stale, .rail-left .wx-empty { grid-column: 1 / 3; }
+  .sleep-btn { position: absolute !important; right: 14px; top: 10px; }
+  .board { overflow: hidden !important; }
+  .rail-right { max-height: none !important; overflow: hidden !important; padding: 6px 20px 8px !important; }
+  .rail-right .rail-in { display: grid !important; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr) !important; gap: 14px !important; align-items: start !important; height: 100%; zoom: 1 !important; }
+  .rail-right .rail-in > * { min-width: 0; max-height: 100%; overflow: hidden; }
+  .rail-right .rr-shop .shop-mini:nth-of-type(n+4), .rail-right .rr-notes .note-mini:nth-of-type(n+3) { display: none; }
+  .rail-right .rr-ups .ev-group:nth-of-type(n+4) { display: none; }
+}
+
+/* ---------- C. phones ---------- */
+@media (max-width: 699px) and (orientation: portrait) {
+  /* weather: one line in the header (hourly strip is one tap away) */
+  .home .rail-left .wx-hours { display: none !important; }
+  .home .rail-left .wx-next { grid-column: 2; grid-row: 3; justify-self: end; margin: 0; font-size: 14px; }
+  .home .rail-left .dateline { font-size: 16px !important; }
+  /* summary: 3 lines, tap for the rest */
+  .home .ai-sum p { font-size: 15px !important; -webkit-line-clamp: 3; }
+  /* the today strip only holds name days and holidays now */
+  .home .today-strip { flex-wrap: wrap !important; }
+  .home .today-strip .ts-ev { white-space: normal !important; }
+  /* tiles: two-line labels instead of "…" */
+  .ptile small { white-space: normal !important; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; text-align: center; line-height: 1.2; font-size: 12.5px !important; min-height: 2.4em; }
+  .ptile { min-height: 92px !important; }
+  .home .chore-title { font-size: 16px !important; }
+  .home .chore-meta { font-size: 13px !important; }
+  .more-chip { padding: 6px 16px; font-size: 14px; }
+}
+
+/* ---------- F. other screens on phones ---------- */
+@media (max-width: 699px) and (orientation: portrait) {
+  /* calendar: dots + count in the cells, names in the day list */
+  .view-calendar .day-evs { display: flex !important; flex-direction: row !important; flex-wrap: wrap; gap: 3px; justify-content: center; }
+  .view-calendar .day-ev { width: 8px; height: 8px; min-height: 0; padding: 0 !important; border-radius: 50% !important; font-size: 0 !important; line-height: 0 !important; -webkit-line-clamp: unset !important; overflow: hidden; flex: none; }
+  .view-calendar .day-ev img.emoji { display: none; }
+  /* chores page: compact rows */
+  .chore-grid .row.chore-row { min-height: 0; padding: 10px 12px; gap: 10px; }
+  .chore-row .row-emoji { font-size: 22px; width: 30px; }
+  .chore-row .row-title { font-size: 16px; }
+  .chore-row .mini-dots i { width: 17px; height: 17px; font-size: 10px; }
+  .chore-row .who-pill { font-size: 12px; }
+  .chore-row .row-sub { font-size: 12.5px; }
+  /* lists: tidy button under the title instead of past the edge */
+  .pane-shop .pane-head { flex-wrap: wrap; }
+  .pane-shop .pane-head .ai-tidy { margin-left: 0; flex-basis: 100%; justify-content: flex-start; padding: 2px 0 0; }
+}
+/* v2 fixes after the first audit pass */
+@media (orientation: landscape) and (min-width: 900px) {
+  .rail-left .clock { font-size: min(86px, 34cqw) !important; top: 4px !important; }
+}
+@media (min-width: 700px) and (orientation: portrait) {
+  .home .list-grid { grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)) !important; }
+  .sleep-btn { position: static !important; margin-left: 8px; align-self: center; }
+  .rail-left .clock-row { display: flex; align-items: center; }
+}
+@media (max-width: 699px) and (orientation: portrait) and (max-height: 700px) {
+  .home .ai-sum p { -webkit-line-clamp: 2 !important; font-size: 14px !important; }
+  .home .ai-sum { padding: 6px 10px; margin: 2px 0 6px; }
+  .home .today-strip { margin-bottom: 2px; }
+  .home .list-head { padding-top: 2px !important; padding-bottom: 2px !important; }
+  .ptile { min-height: 80px !important; }
+}

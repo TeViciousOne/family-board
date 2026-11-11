@@ -139,9 +139,27 @@
       if (phone) max = Math.min(max, 1); /* never enlarge on a phone: it would push rows past the screen edge */
       z = max;
       el.style.zoom = max === 1 ? '' : String(max);
+      if (phone && el.hasAttribute('data-cap')) min = 1;
       while (box.scrollHeight > box.clientHeight + 1 && z > min + 0.001) { z = Math.max(min, z - 0.04); el.style.zoom = String(z); }
+      if (el.hasAttribute('data-cap')) cap(el, box);
     });
   };
+  /* rule: never squeeze text below readable size; what does not fit becomes "+N more" */
+  function cap(el, box) {
+    var old = el.querySelector('.more-chip'); if (old) old.parentNode.removeChild(old);
+    var kids = [].slice.call(el.children);
+    kids.forEach(function (k) { k.style.display = ''; });
+    if (box.scrollHeight <= box.clientHeight + 1) return;
+    var soft = el.getAttribute('data-cap') === 'soft'; /* side columns: drop the last sections quietly */
+    var more = soft ? null : h('button', { type: 'button', class: 'more-chip', onclick: function () { app.go('chores'); } });
+    if (more) el.appendChild(more);
+    var hidden = 0;
+    for (var i = kids.length - 1; i >= (soft ? 2 : 0) && box.scrollHeight > box.clientHeight + 1; i--) {
+      kids[i].style.display = 'none'; hidden++;
+      if (more) more.textContent = '+' + hidden + ' ' + t('home.more');
+    }
+    if (more && !hidden) more.parentNode.removeChild(more);
+  }
 
 
   /* ================================================================ */
