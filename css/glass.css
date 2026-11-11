@@ -763,3 +763,32 @@ body.lite::before { transition: none; }
   .list-grid.few .chore { min-height: 96px; padding: 14px 16px; }
   .list-grid.few .chore-who-av .avatar { width: 46px !important; height: 46px !important; font-size: 22px !important; }
 }
+
+/* ===== phones (portrait): one calm scrolling column, nothing squeezed side by side =====
+   order: clock + date (+ weather) · summary · news · today · chores · shopping · coming up · countdown · AC · notes */
+@media (max-width: 699px) and (orientation: portrait) {
+  .home { display: block !important; height: 100% !important; overflow-y: auto !important; overflow-x: hidden; -webkit-overflow-scrolling: touch; padding-bottom: 96px; }
+  .home .rail-left, .home .board, .home .rail-right { max-height: none !important; height: auto !important; overflow: visible !important; }
+  .home .board { padding: 4px 12px 0 !important; }
+  .home .list-body { overflow: visible !important; }
+  .home .rail-right { padding: 6px 16px 12px !important; }
+  .home .rail-right .rail-in { display: flex !important; flex-direction: column; gap: 14px; align-items: stretch; }
+  .home .rail-right .rr { margin: 0; }
+  .home .rail-right .rr-cd, .home .rail-right .rr-notes, .home .rail-right .rr-ups .link-btn { display: flex !important; }
+  .home .rail-right .rr-notes, .home .rail-right .rr-ups { flex-direction: column; }
+  .home .rail-right .rr-ups .ev-group { display: block !important; }
+  .home .rail-right .rr-ups .link-btn { align-self: flex-start; }
+  .home .rail-right h3 { margin: 0 0 6px !important; font-size: 15px; }
+  .home .rail-right.has-shop .shop-tile { display: none; }
+  .home .rail-right .rr-shop { display: flex; flex-direction: column; gap: 6px; }
+  .home .rail-right .shop-mini { width: 100%; }
+  .home .rail-right .shop-tile { width: 100%; min-height: 52px; white-space: normal; }
+  .home .rail-right .ac-tile { margin: 0 !important; }
+  .home .ev { font-size: 16px; align-items: baseline; }
+  .home .ev-when { flex: none; min-width: 64px; }
+  .home .ups-head { font-size: 15px; }
+  .home .ai-sum { margin: 6px 0 10px; }
+  .home .ai-sum p { font-size: 16px; }
+  .home .today-strip { margin: 0 0 10px; }
+  .home .today-strip .ts-ev { font-size: 15px; }
+}

@@ -181,10 +181,11 @@
   }
 
   /* wide landscape (iPad / wall tablet): events and countdown live in the left column, shopping at the top right */
+  function isPhone() { return !!(root.matchMedia && root.matchMedia('(max-width: 699px) and (orientation: portrait)').matches); }
   function isWide() { return !!(root.matchMedia && root.matchMedia('(orientation: landscape) and (min-width: 900px)').matches); }
 
   function rightRail(today, leftIn) {
-    var wide = isWide() && leftIn;
+    var wide = isWide() && leftIn, phone = isPhone();
     var rail = h('aside', { class: 'rail rail-right', 'data-scroll': 'rail-right' });
     var inner = h('div', { class: 'rail-in', 'data-fit': '1', 'data-fit-min': '0.6' });
     rail.appendChild(inner);
@@ -219,7 +220,7 @@
       inner.appendChild(secCd);
     }
 
-    if (wide && FB.ac && FB.showW('ac')) { var act = FB.ac.tile(); if (act) inner.appendChild(act); }
+    if ((wide || phone) && FB.ac && FB.showW('ac')) { var act = FB.ac.tile(); if (act) inner.appendChild(act); }
     var notes = FB.showW('notes') ? L.notesSorted().slice(0, 2) : [];
     if (notes.length) {
       var secN = h('section', { class: 'rr rr-notes' }, h('h3', null, t('home.notes')));
@@ -244,7 +245,7 @@
           h('span', null, it.title), m ? h('small', null, m.name) : null));
       });
       if (open > 4) secS.appendChild(h('button', { type: 'button', class: 'link-btn', onclick: function () { FB.actions.openShopping(); } }, t('home.shopMore', { n: open - 4 })));
-      if (wide) inner.insertBefore(secS, inner.firstChild); else inner.appendChild(secS);
+      if (wide || phone) inner.insertBefore(secS, inner.firstChild); else inner.appendChild(secS);
       if (wide) rail.classList.add('wide-shop');
     }
     if (showShop) inner.appendChild(h('button', { type: 'button', class: 'shop-tile', onclick: function () { FB.actions.openShopping(); } },
@@ -265,7 +266,7 @@
           h('button', { type: 'button', class: 'icon-btn sleep-btn', 'aria-label': t('home.sleep'), onclick: function () { FB.night.sleepNow(); } }, ui.icon('moon'))),
         h('div', { class: 'dateline' }, FB.i18n.dateLong(today)),
         FB.showW('weather') ? weatherBlock() : null,
-        FB.ac && FB.showW('ac') && !isWide() ? FB.ac.tile() : null));
+        FB.ac && FB.showW('ac') && !isWide() && !isPhone() ? FB.ac.tile() : null));
 
     var board = h('main', { class: 'board' });
     if (!FB.state.chores.length) {
