@@ -162,13 +162,11 @@
   function allDone() {
     var tm = U.addDays(U.today(), 1);
     var next = L.choresDue(tm, '00:00').filter(function (x) { return !x.done; }).slice(0, 5);
-    /* pop in only the first time it appears today, not on every minute's redraw */
-    var key = U.today(), fresh = FB.allDoneSeen !== key; FB.allDoneSeen = key;
-    return h('div', { class: 'col-allDone all-done' + (fresh ? ' pop' : '') },
-      h('span', { class: 'ad-ico' }, ui.icon('check', 30)),
-      h('div', { class: 'ad-txt' },
-        h('b', null, t('board.allDone')),
-        next.length ? h('span', null, t('home.tomorrow') + ': ' + next.map(function (x) { return (x.chore.emoji ? x.chore.emoji + ' ' : '') + x.chore.title; }).join(' · ')) : null));
+    /* deliberately plain markup (grid + paragraphs, no animation): iPad Safari left the old flex version blank */
+    return h('div', { class: 'done-card' },
+      h('div', { class: 'dc-ico' }, ui.icon('check', 30)),
+      h('p', { class: 'dc-title' }, t('board.allDone')),
+      next.length ? h('p', { class: 'dc-next' }, t('home.tomorrow') + ': ' + next.map(function (x) { return (x.chore.emoji ? x.chore.emoji + ' ' : '') + x.chore.title; }).join(' · ')) : null);
   }
 
   /* today's events as a strip above the chores */

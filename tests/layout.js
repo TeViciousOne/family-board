@@ -42,7 +42,7 @@ async function audit(page) {
     const nav = document.querySelector('#nav'); const navTop = nav ? nav.getBoundingClientRect().top : vh;
     const vis = (el) => { const r = el.getBoundingClientRect(); const cs = getComputedStyle(el); return r.width > 2 && r.height > 2 && cs.visibility !== 'hidden' && cs.display !== 'none' && +cs.opacity > 0.05; };
     const name = (el) => (el.className && typeof el.className === 'string' ? '.' + el.className.trim().split(/\s+/).slice(0, 2).join('.') : el.tagName) + ' "' + (el.innerText || '').trim().slice(0, 28).replace(/\s+/g, ' ') + '"';
-    const SEL = '.clock-row, .dateline, .wx-now, .wx-desc, .wx-hours, .wx-strip, .ai-sum, .news-strip, .today-strip, .list-head, .chore, .all-done, .empty-state, .rr > h3, .ev, .ev-day, .cd-card, .shop-mini, .note-mini, .shop-tile, .ac-tile, .ptile, .rr .link-btn';
+    const SEL = '.clock-row, .dateline, .wx-now, .wx-desc, .wx-hours, .wx-strip, .ai-sum, .news-strip, .today-strip, .list-head, .chore, .done-card, .empty-state, .rr > h3, .ev, .ev-day, .cd-card, .shop-mini, .note-mini, .shop-tile, .ac-tile, .ptile, .rr .link-btn';
     const els = [...document.querySelectorAll('#view ' + SEL.split(', ').join(', #view '))].filter(vis);
     // 1. overlaps between unrelated blocks
     for (let i = 0; i < els.length; i++) for (let j = i + 1; j < els.length; j++) {
