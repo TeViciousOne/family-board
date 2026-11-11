@@ -24,17 +24,32 @@
     pending = setTimeout(function () { pending = null; doRender(); }, 0);
   };
 
-  /* remember where chore cards were, so they can glide to their new place after a re-render */
+  /* remember where chore cards were inside their list, so that when the ORDER changes (a chore ticked moves to
+     the end) they glide to their new place. Nothing animates when only something above the list moved. */
   function flipFirst(view) {
-    var m = {};
-    [].forEach.call(view.querySelectorAll('[data-flip]'), function (el) { m[el.getAttribute('data-flip')] = el.getBoundingClientRect(); });
+    var m = { order: '' }, grid = view.querySelector('.list-grid');
+    if (!grid) return m;
+    var g = grid.getBoundingClientRect(), keys = [];
+    [].forEach.call(grid.querySelectorAll('[data-flip]'), function (el) {
+      var r = el.getBoundingClientRect(), k = el.getAttribute('data-flip');
+      keys.push(k); m[k] = { x: r.left - g.left, y: r.top - g.top };
+    });
+    m.order = keys.join(',');
     return m;
   }
   function flipPlay(view, first) {
-    if (FB.device.lite || (root.matchMedia && root.matchMedia('(prefers-reduced-motion: reduce)').matches)) return;
-    [].forEach.call(view.querySelectorAll('[data-flip]'), function (el) {
+    if (!first.order || FB.device.lite || (root.matchMedia && root.matchMedia('(prefers-reduced-motion: reduce)').matches)) return;
+    var grid = view.querySelector('.list-grid');
+    if (!grid) return;
+    var els = [].slice.call(grid.querySelectorAll('[data-flip]'));
+    var order = els.map(function (el) { return el.getAttribute('data-flip'); }).join(',');
+    if (order === first.order) return;
+    var g = grid.getBoundingClientRect();
+    /* the board may be zoomed to fit (data-fit): convert screen pixels back to layout pixels */
+    var zoom = grid.offsetWidth ? g.width / grid.offsetWidth : 1;
+    els.forEach(function (el) {
       var a = first[el.getAttribute('data-flip')]; if (!a) return;
-      var b = el.getBoundingClientRect(), dx = a.left - b.left, dy = a.top - b.top;
+      var b = el.getBoundingClientRect(), dx = (a.x - (b.left - g.left)) / zoom, dy = (a.y - (b.top - g.top)) / zoom;
       if (Math.abs(dx) < 2 && Math.abs(dy) < 2) return;
       el.style.transition = 'none'; el.style.transform = 'translate(' + dx + 'px,' + dy + 'px)';
       requestAnimationFrame(function () { requestAnimationFrame(function () {
