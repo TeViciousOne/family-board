@@ -934,3 +934,20 @@ button.ai-sum { width: 100%; text-align: left; color: var(--ink); font: inherit;
 .nc-btn { width: 36px; height: 36px; padding: 0; border: 0; border-radius: 50%; display: grid; place-items: center; color: var(--ink-3); background: transparent; flex: none; }
 .nc-btn:active, .nc-btn.on { color: #B58900; background: rgba(255, 204, 0, .18); }
 .nc-body { margin: 0; font-size: 18px; line-height: 1.4; font-weight: 500; color: var(--ink); white-space: pre-wrap; overflow-wrap: anywhere; }
+
+/* phones: tidy header — clock + date on the left, weather stacked on the right, every line on the same right edge */
+@media (max-width: 699px) and (orientation: portrait) {
+  .home .rail-left { position: relative; padding: 10px 52px 4px 16px !important; }
+  .home .rail-left .rail-in { display: grid !important; grid-template-columns: auto minmax(0, 1fr) !important; grid-template-rows: auto auto auto; column-gap: 12px !important; row-gap: 0; align-items: end !important; }
+  .home .rail-left .clock-row { grid-column: 1; grid-row: 1; align-self: end; }
+  .home .rail-left .dateline { grid-column: 1; grid-row: 2 / 4; align-self: start; margin: 2px 0 0 !important; }
+  .home .rail-left .wx-now { grid-column: 2; grid-row: 1; justify-self: end; align-self: end; margin: 0 !important; gap: 6px; }
+  .home .rail-left .wx-desc, .home .rail-left .wx-next { grid-column: 2; justify-self: stretch; text-align: right; margin: 0 !important; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+  .home .rail-left .wx-desc { grid-row: 2; font-size: 15px !important; font-weight: 700; }
+  .home .rail-left .wx-next { grid-row: 3; font-size: 14px !important; color: var(--ink-2); }
+  .home .rail-left .wx-meta, .home .rail-left .wx-hours, .home .rail-left .wx-strip { display: none !important; }
+  .home .rail-left .wx-temp { font-size: 40px !important; line-height: 1; }
+  .home .rail-left .wx-now .wx-icon, .home .rail-left .wx-now svg { width: 42px; height: 42px; }
+  .home .rail-left .clock { line-height: .9; }
+  .home .sleep-btn { position: absolute !important; right: 8px; top: 12px; opacity: .7; }
+}
