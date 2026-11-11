@@ -31,7 +31,7 @@
     var cls = 'day' + (inMonth ? '' : ' out') + (date === today ? ' today' : '') + (date === cal.sel ? ' sel' : '') + (off ? ' holiday' : '');
     var spShow = sp.filter(function (x) { return x.type === 'holiday' || x.type === 'off' || x.type === 'celebrant'; }).slice(0, 1);
     var labels = h('span', { class: 'day-evs' },
-      spShow.map(function (x) { return h('span', { class: 'day-ev day-hol' + (x.type === 'celebrant' ? ' cel' : '') }, x.icon + ' ' + (x.type === 'off' ? t('hol.off') : x.label)); }),
+      spShow.map(function (x) { return h('span', { class: 'day-ev day-hol' + (x.type === 'celebrant' ? ' cel' : '') }, x.type === 'off' ? t('hol.off') : x.type === 'celebrant' ? t('hol.cellCongrats', { name: x.label }) : x.label); }),
       evs.slice(0, 3 - spShow.length).map(function (x) {
         var m = L.member(x.event.member_id);
         return h('span', { class: 'day-ev', style: { '--c': m ? m.color : '#5A6B8C' } }, eventChipLabel(x));

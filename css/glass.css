@@ -715,3 +715,13 @@ body.lite::before { transition: none; }
 .today-strip.today-side { flex-direction: column; align-items: stretch; gap: 6px; margin: 14px 0 0; }
 .today-side .ts-lbl { margin: 0; }
 .today-side .ts-ev { justify-content: flex-start; text-align: left; font-size: 15px; white-space: normal; }
+/* calendar chips: full names on up to two lines, no tiny icons */
+.day-evs { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.day-ev { display: -webkit-box !important; -webkit-box-orient: vertical; -webkit-line-clamp: 2; white-space: normal !important; overflow: hidden; text-overflow: clip;
+  font-size: 12px !important; line-height: 1.2 !important; overflow-wrap: anywhere; hyphens: auto; }
+.day-ev img.emoji { width: .95em; height: .95em; }
+@media (min-width: 1100px) { .day-ev { font-size: 13px !important; } }
+.day-evs { overflow: hidden; }
+.day-ev { flex-shrink: 0; }
+.day-evs > .day-ev ~ .day-ev { -webkit-line-clamp: 1; }
+.day-ev.day-hol.cel { color: #fff !important; }
