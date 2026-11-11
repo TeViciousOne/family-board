@@ -75,7 +75,7 @@ const stub = () => {
   ok((await p.locator('.ai-sum').innerText()).includes('Dentist at 16:30'), 'daily summary line shows');
   /* air conditioner */
   await p.waitForSelector('.ac-tile', { state: 'visible', timeout: 8000 });
-  ok((await p.locator('.ac-tile .ac-st').innerText()) === 'Off' && (await p.locator('.ac-tile .ac-deg').innerText()) === '21°', 'AC tile shows off and the room temperature');
+  ok((await p.locator('.ac-tile .ac-pill').innerText()) === 'Off' && (await p.locator('.ac-tile .ac-col b').first().innerText()) === '21°', 'AC tile shows off and the room temperature');
   if (process.env.SHOTS) await p.screenshot({ path: process.env.SHOTS + '/ac-home.png' });
   await p.waitForSelector('.news-strip', { state: 'visible', timeout: 8000 });
   const clk = await p.evaluate(() => { const c = document.querySelector('.clock'), r = document.querySelector('.rail-left').getBoundingClientRect(); const rg = document.createRange(); rg.selectNodeContents(c); return { fs: getComputedStyle(c).fontSize, textRight: rg.getBoundingClientRect().right, railRight: r.right, rail: r.width }; });
