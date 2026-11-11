@@ -524,6 +524,7 @@
         var st = FB.state;
         st.household = d.household;
         Object.keys(TABLES).forEach(function (tb) { st[TABLES[tb]] = d[TABLES[tb]]; });
+        app.syncedAt = Date.now();
         touch();
       });
     }).catch(function () { /* offline */ });
@@ -557,7 +558,7 @@
       st.household = d.household;
       Object.keys(TABLES).forEach(function (tb) { st[TABLES[tb]] = d[TABLES[tb]]; });
       st.me = FB.store.me();
-      st.ready = true; L.touch();
+      st.ready = true; app.syncedAt = Date.now(); L.touch();
       if (FB.store.saveSnapshot) FB.store.saveSnapshot(st);
 
       U.clear(a); a.className = '';

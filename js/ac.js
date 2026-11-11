@@ -18,8 +18,8 @@
     if (!AC.enabled() || busy || (!force && Date.now() - st.at < 20000)) return Promise.resolve();
     busy = true;
     return FB.store.ac({ action: 'status' }).then(function (d) {
-      st.loaded = true; st.online = d.online !== false; st.s = toMap(d.status); st.at = Date.now(); busy = false; changed();
-    }, function () { busy = false; st.at = Date.now() - 10000; });
+      st.loaded = true; st.err = false; st.online = d.online !== false; st.s = toMap(d.status); st.at = Date.now(); busy = false; changed();
+    }, function () { busy = false; st.err = true; st.at = Date.now() - 10000; });
   };
 
   var pending = {}, timer = null;

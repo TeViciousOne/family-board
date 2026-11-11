@@ -205,8 +205,26 @@ function ok(cond, msg) { console.log((cond ? 'PASS ' : 'FAIL ') + msg); if (!con
   ok((await p.locator('.set .row', { hasText: 'Dritan' }).count()) === 1, 'family member added in settings');
 
   /* ---------------- language ---------------- */
-  await p.locator('.set-page .page-head .btn.ghost').click(); await p.waitForSelector('.set-menu');
-  await p.locator('.set-menu .row', { hasText: 'This device' }).click(); await p.waitForSelector('.set-one .set');
+  ok((await p.locator('.set-split .set-right .set').count()) >= 1, 'tablet settings: list and detail side by side');
+  ok((await p.locator('.set-menu .row', { hasText: 'Family' }).locator('.row-sub').innerText()).includes('members'), 'menu rows show their current value');
+  /* PIN lock */
+  await p.locator('.set-menu .row', { hasText: 'This device' }).click(); await p.waitForTimeout(200);
+  await p.locator('.set-right .btn', { hasText: 'Set a PIN' }).click();
+  for (const d of '1234') await p.locator('.sheet .pin-key', { hasText: d }).first().click();
+  await p.waitForTimeout(250);
+  for (const d of '1234') await p.locator('.sheet .pin-key', { hasText: d }).first().click();
+  await p.waitForTimeout(400);
+  ok(await p.evaluate(() => FB.device.pin === '1234'), 'a settings PIN can be set');
+  await p.locator('#nav button[data-route=home]').click(); await p.waitForTimeout(150);
+  await p.evaluate(() => FB.actions.lockSettings());
+  await p.locator('#nav button[data-route=settings]').click(); await p.waitForSelector('.pin-page');
+  for (const d of '1234') await p.locator('.pin-page .pin-key', { hasText: d }).first().click();
+  await p.waitForSelector('.set-menu');
+  ok(true, 'settings open only after the PIN');
+  await p.locator('.set-menu .row', { hasText: 'This device' }).click(); await p.waitForTimeout(200);
+  await p.locator('.set-right .btn', { hasText: 'Remove PIN' }).click(); await p.waitForTimeout(150);
+  ok(await p.evaluate(() => !FB.device.pin), 'PIN can be removed');
+  await p.locator('.set-menu .row', { hasText: 'Look and language' }).click(); await p.waitForSelector('.set-one .set');
   await p.locator('.seg-b', { hasText: 'Shqip' }).click();
   await p.waitForTimeout(200);
   await p.locator('#nav button[data-route=home]').click();

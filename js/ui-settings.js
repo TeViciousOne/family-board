@@ -65,6 +65,20 @@
     });
     s.appendChild(list);
     s.appendChild(h('button', { class: 'btn', onclick: function () { FB.actions.openMember(null); } }, ui.icon('plus', 20), ' ', t('member.add')));
+    var hh = FB.state.household || {};
+    if (FB.store.mode !== 'demo') {
+      var nameIn = h('input', { type: 'text', value: hh.name || '', maxlength: '40', onchange: function () {
+        var v = nameIn.value.trim(); if (v) FB.data.updateHousehold({ name: v });
+      } });
+      s.appendChild(ui.field(t('set.household'), nameIn));
+      s.appendChild(h('div', { class: 'invite' },
+        h('div', null, h('div', { class: 'hint' }, t('set.inviteCode')), h('div', { class: 'code' }, hh.code || '—')),
+        h('button', { class: 'btn ghost', onclick: function () {
+          var done = function () { ui.toast(t('set.copied')); };
+          if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(hh.code || '').then(done, done); else done();
+        } }, ui.icon('copy', 20), ' ', t('set.copy'))));
+      s.appendChild(h('p', { class: 'hint' }, t('set.inviteHint')));
+    }
     return s;
   }
 
@@ -140,6 +154,31 @@
     return s;
   }
 
+  /* ---------- home screen ---------- */
+  function homeSection() {
+    var s = section(t('set.homeTitle'), t('home.showHint'));
+    FB.widgets.forEach(function (w) {
+      if (w === 'ac' && !(FB.ac && FB.ac.enabled())) return;
+      s.appendChild(toggle(t('w.' + w), FB.showW(w), function (v) { FB.device.show[w] = v; saveDevice(); }));
+    });
+    s.appendChild(h('h3', { class: 'set-sub' }, t('set.homeMore')));
+    s.appendChild(toggle(t('set.namedays'), FB.device.namedays !== false, function (v) { FB.device.namedays = v; saveDevice(); }, t('set.namedaysHint')));
+    s.appendChild(toggle(t('set.calm'), FB.device.calm, function (v) { FB.device.calm = v; saveDevice(); }, t('set.calmHint')));
+    s.appendChild(toggle(t('set.homeIdle'), FB.device.homeIdle, function (v) { FB.device.homeIdle = v; saveDevice(); }, t('set.homeIdleHint')));
+    return s;
+  }
+
+  /* ---------- look ---------- */
+  function lookSection() {
+    var s = section(t('set.look'));
+    s.appendChild(ui.field(t('set.language'), ui.seg([{ v: 'en', label: 'English' }, { v: 'sq', label: 'Shqip' }], FB.device.lang, function (v) {
+      FB.device.lang = v; saveDevice(); FB.app.render();
+    })));
+    s.appendChild(toggle(t('set.lite'), !!FB.device.lite, function (v) { FB.device.lite = v; saveDevice(); FB.app.ambience(new Date()); }, t('set.liteHint')));
+    s.appendChild(toggle(t('set.twemoji'), !FB.device.nativeEmoji, function (v) { FB.device.nativeEmoji = !v; saveDevice(); location.reload(); }, t('set.twemojiHint')));
+    return s;
+  }
+
   /* ---------- this device ---------- */
   function deviceSection() {
     var s = section(t('set.device'));
@@ -151,22 +190,101 @@
     s.appendChild(ui.field(t('set.askWho'), ui.seg([
       { v: 'always', label: t('set.ask.always') }, { v: 'unassigned', label: t('set.ask.unassigned') }, { v: 'never', label: t('set.ask.never') }
     ], FB.device.askWho, function (v) { FB.device.askWho = v; saveDevice(); }), t('set.askWhoHint')));
-    s.appendChild(toggle(t('set.namedays'), FB.device.namedays !== false, function (v) { FB.device.namedays = v; saveDevice(); }, t('set.namedaysHint')));
-    s.appendChild(toggle(t('set.lite'), !!FB.device.lite, function (v) { FB.device.lite = v; saveDevice(); FB.app.ambience(new Date()); }, t('set.liteHint')));
-    s.appendChild(toggle(t('set.twemoji'), !FB.device.nativeEmoji, function (v) { FB.device.nativeEmoji = !v; saveDevice(); location.reload(); }, t('set.twemojiHint')));
-    s.appendChild(toggle(t('set.calm'), FB.device.calm, function (v) { FB.device.calm = v; saveDevice(); }, t('set.calmHint')));
-    s.appendChild(toggle(t('set.homeIdle'), FB.device.homeIdle, function (v) { FB.device.homeIdle = v; saveDevice(); }, t('set.homeIdleHint')));
     s.appendChild(toggle(t('set.reload4'), FB.device.reload4, function (v) { FB.device.reload4 = v; saveDevice(); }, t('set.reload4Hint')));
-    s.appendChild(h('h3', { class: 'set-sub' }, t('home.show')));
-    s.appendChild(h('p', { class: 'muted' }, t('home.showHint')));
-    FB.widgets.forEach(function (w) {
-      if (w === 'ac' && !(FB.ac && FB.ac.enabled())) return;
-      s.appendChild(toggle(t('w.' + w), FB.showW(w), function (v) { FB.device.show[w] = v; saveDevice(); }));
-    });
-    s.appendChild(ui.field(t('set.language'), ui.seg([{ v: 'en', label: 'English' }, { v: 'sq', label: 'Shqip' }], FB.device.lang, function (v) {
-      FB.device.lang = v; saveDevice(); FB.app.render();
-    })));
+    /* PIN lock for the settings on this device */
+    s.appendChild(h('h3', { class: 'set-sub' }, t('pin.title')));
+    s.appendChild(h('p', { class: 'hint' }, t('pin.hint')));
+    s.appendChild(FB.device.pin
+      ? h('div', { class: 'btn-row' },
+          h('button', { class: 'btn ghost', onclick: function () { setPin(); } }, t('pin.change')),
+          h('button', { class: 'btn ghost danger', onclick: function () { delete FB.device.pin; saveDevice(); FB.app.render(); ui.toast(t('pin.removed')); } }, t('pin.remove')))
+      : h('button', { class: 'btn', onclick: function () { setPin(); } }, ui.icon('lock', 20), ' ', t('pin.set')));
     return s;
+  }
+
+  /* ---------- connections: weather, air conditioner, AI ---------- */
+  function connectionsSection() {
+    var s = weatherSection();
+    s.querySelector('h2').textContent = t('set.connections');
+    s.insertBefore(h('h3', { class: 'set-sub' }, '🌤️ ' + t('set.weather')), s.children[1]);
+    if (FB.ac && FB.ac.enabled()) {
+      var st = FB.ac.state();
+      s.appendChild(h('h3', { class: 'set-sub' }, '❄️ ' + t('ac.title')));
+      s.appendChild(h('p', { class: 'lead' }, st.err ? '⚠️ ' + t('about.acErr') : !st.loaded ? '…' : st.online ? '✅ ' + t('about.acOk') : '⚠️ ' + t('ac.offline')));
+      s.appendChild(h('button', { class: 'btn ghost', onclick: function () { FB.ac.open(); } }, ui.icon('snow', 20), ' ', t('about.acOpen')));
+    }
+    if (FB.ai) {
+      s.appendChild(h('h3', { class: 'set-sub' }, '✨ ' + t('about.ai')));
+      s.appendChild(h('p', { class: 'lead' }, FB.ai.enabled() ? '✅ ' + t('about.aiOk') : t('about.aiOff')));
+    }
+    return s;
+  }
+
+  /* ---------- about ---------- */
+  function aboutSection() {
+    var s = section(t('about.title'));
+    var w = FB.app.weather || {}, st = FB.ac && FB.ac.enabled() ? FB.ac.state() : null;
+    var warn = [];
+    if (st && (st.err || (st.loaded && !st.online))) warn.push(t('about.acWarn'));
+    if (w.stale || (w.fetchedAt && Date.now() - w.fetchedAt > 3 * 3600e3)) warn.push(t('about.wxWarn'));
+    if (FB.store.sync && FB.store.sync().dropped) warn.push(t('sync.dropped'));
+    warn.forEach(function (x) { s.appendChild(h('p', { class: 'about-warn' }, '⚠️ ' + x)); });
+    if (!warn.length) s.appendChild(h('p', { class: 'about-ok' }, '✅ ' + t('about.allOk')));
+    function line(k, v) { s.appendChild(h('div', { class: 'about-row' }, h('span', null, k), h('b', null, v))); }
+    line(t('about.version'), FB.VERSION || '2026.11');
+    line(t('about.sync'), FB.app.syncedAt ? FB.i18n.timeOf(new Date(FB.app.syncedAt).toISOString()) : (FB.store.mode === 'demo' ? t('about.demo') : '—'));
+    line(t('about.weather'), w.fetchedAt ? FB.i18n.timeOf(new Date(w.fetchedAt).toISOString()) : '—');
+    line(t('about.device'), t('dev.' + (FB.device.kind || 'tablet')));
+    return s;
+  }
+
+  /* ---------- PIN ---------- */
+  var unlockedUntil = 0;
+  FB.actions.lockSettings = function () { unlockedUntil = 0; };
+  function pinPad(title, onDone, extra) {
+    var val = '', dots = h('div', { class: 'pin-dots' }), err = h('p', { class: 'form-err', role: 'alert' });
+    function paint() { U.clear(dots); for (var i = 0; i < 4; i++) dots.appendChild(h('i', { class: i < val.length ? 'on' : '' })); }
+    function press(d) {
+      if (d === 'del') val = val.slice(0, -1); else if (val.length < 4) val += d;
+      paint();
+      if (val.length === 4) { var v = val; setTimeout(function () { var bad = onDone(v); if (bad) { err.textContent = bad; val = ''; paint(); } }, 120); }
+    }
+    paint();
+    var keys = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '', '0', 'del'].map(function (k) {
+      return k === '' ? h('span') : h('button', { type: 'button', class: 'pin-key', onclick: function () { press(k); } }, k === 'del' ? ui.icon('left', 22) : k);
+    });
+    return h('div', { class: 'pin-pad' }, h('h2', null, title), dots, err, h('div', { class: 'pin-keys' }, keys), extra || null);
+  }
+  function setPin() {
+    var first = null, modal;
+    var holder = h('div');
+    function step() {
+      U.clear(holder);
+      holder.appendChild(pinPad(first ? t('pin.again') : t('pin.new'), function (v) {
+        if (!first) { first = v; step(); return null; }
+        if (v !== first) { first = null; step(); return t('pin.mismatch'); }
+        FB.device.pin = v; saveDevice(); unlockedUntil = Date.now() + 10 * 60e3; modal.close(); FB.app.render(); ui.toast(t('pin.saved'));
+        return null;
+      }));
+    }
+    step();
+    modal = ui.modal({ title: t('pin.title'), body: holder, focus: false });
+  }
+  function lockedView() {
+    var forgot = h('button', { type: 'button', class: 'link-btn', onclick: function () {
+      var hh = FB.state.household || {};
+      var input = h('input', { type: 'text', placeholder: t('set.inviteCode'), maxlength: '12', autocapitalize: 'characters' });
+      var m = ui.modal({ title: t('pin.forgot'), body: h('div', { class: 'form' }, h('p', { class: 'hint' }, t('pin.forgotHint')), input), actions: [
+        h('button', { class: 'btn ghost', onclick: function () { m.close(); } }, t('common.cancel')),
+        h('button', { class: 'btn', onclick: function () {
+          if (input.value.trim().toUpperCase() === String(hh.code || 'DEMO').toUpperCase()) { delete FB.device.pin; saveDevice(); m.close(); FB.app.render(); ui.toast(t('pin.removed')); }
+          else ui.toast(t('pin.wrongCode'), { kind: 'error' });
+        } }, t('pin.unlock'))] });
+    } }, t('pin.forgot'));
+    return h('div', { class: 'page settings pin-page' }, pinPad(t('pin.enter'), function (v) {
+      if (v !== FB.device.pin) return t('pin.wrong');
+      unlockedUntil = Date.now() + 10 * 60e3; FB.app.render(); return null;
+    }, forgot));
   }
 
   /* ---------- account ---------- */
@@ -180,17 +298,6 @@
       } }, t('set.reset')));
       return s;
     }
-    var nameIn = h('input', { type: 'text', value: hh.name || '', maxlength: '40', onchange: function () {
-      var v = nameIn.value.trim(); if (v) FB.data.updateHousehold({ name: v });
-    } });
-    s.appendChild(ui.field(t('set.household'), nameIn));
-    s.appendChild(h('div', { class: 'invite' },
-      h('div', null, h('div', { class: 'hint' }, t('set.inviteCode')), h('div', { class: 'code' }, hh.code || '—')),
-      h('button', { class: 'btn ghost', onclick: function () {
-        var done = function () { ui.toast(t('set.copied')); };
-        if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(hh.code || '').then(done, done); else done();
-      } }, ui.icon('copy', 20), ' ', t('set.copy'))));
-    s.appendChild(h('p', { class: 'hint' }, t('set.inviteHint')));
     s.appendChild(h('p', { class: 'lead' }, t('set.signedInAs', { email: FB.store.userEmail() })));
     s.appendChild(h('div', { class: 'btn-row' },
       h('button', { class: 'btn ghost', onclick: function () { FB.auth.openChangePassword(); } }, t('pw.change')),
@@ -200,20 +307,48 @@
     return s;
   }
 
-  /* settings: a menu of topics; each opens on its own page */
+  /* settings: grouped topics with their current value; tablets show list + detail side by side */
   var page = null;
   function topics() {
+    var d = FB.device, place = d.place || FB.weather.DEFAULT_PLACE;
+    var shown = FB.widgets.filter(function (w) { return FB.showW(w) && (w !== 'ac' || (FB.ac && FB.ac.enabled())); }).length;
+    var total = FB.widgets.filter(function (w) { return w !== 'ac' || (FB.ac && FB.ac.enabled()); }).length;
     var out = [
-      ['family', 'home', t('set.family'), familySection],
-      ['account', 'user', t('set.account'), accountSection],
-      ['weather', 'sun', t('set.weather'), weatherSection]
+      ['family', 'home', t('set.family'), familySection, t('set.nMembers', { n: FB.state.members.length })],
+      ['home', 'grid', t('set.homeTitle'), homeSection, t('set.nBlocks', { n: shown, total: total })],
+      ['notify', 'bell', t('set.notify'), function () {
+        var box = h('div');
+        if (FB.push && FB.push.supported()) box.appendChild(pushSection());
+        box.appendChild(soundSection());
+        return box;
+      }, [FB.push && FB.push.supported() ? (FB.push.wanted() ? t('set.on') : t('set.off')) : null, t('set.sound') + ': ' + (d.sound ? t('set.on') : t('set.off'))].filter(Boolean).join(' · ')],
+      ['night', 'moon', t('set.night'), nightSection, d.nightOn ? d.nightFrom + '–' + d.nightTo : t('set.off')],
+      ['look', 'sparkle', t('set.look'), lookSection, (d.lang === 'sq' ? 'Shqip' : 'English') + (d.lite ? ' · ' + t('set.liteShort') : '')],
+      ['device', 'phone', t('set.device'), deviceSection, t('dev.' + (d.kind || 'tablet')) + (d.pin ? ' · 🔒' : '')],
+      ['connections', 'sun', t('set.connections'), connectionsSection, place.name + (FB.ac && FB.ac.enabled() ? ' · ' + t('ac.title') : '')],
+      ['account', 'user', t('set.account'), accountSection, FB.store.mode === 'demo' ? t('about.demo') : (FB.store.userEmail() || '')],
+      ['about', 'info', t('about.title'), aboutSection, '']
     ];
-    if (FB.push && FB.push.supported()) out.push(['push', 'bell', t('push.title'), pushSection]);
-    out.push(['sound', 'sound', t('set.sound'), soundSection], ['night', 'moon', t('set.night'), nightSection], ['device', 'phone', t('set.device'), deviceSection]);
     return out;
   }
+  function wideNow() { return !!(root.matchMedia && root.matchMedia('(min-width: 900px)').matches); }
+  function menu(list, cur) {
+    return h('div', { class: 'list set-menu' }, list.map(function (x) {
+      return h('button', { type: 'button', class: 'row' + (cur && cur[0] === x[0] ? ' sel' : ''), 'data-topic': x[0], onclick: function () { page = x[0]; FB.app.render(); } },
+        h('span', { class: 'row-ico' }, ui.icon(x[1], 24)),
+        h('span', { class: 'row-main' }, h('span', { class: 'row-title' }, x[2]), x[4] ? h('span', { class: 'row-sub' }, x[4]) : null),
+        ui.icon('right', 20));
+    }));
+  }
   FB.views.settings = function () {
-    var list = topics(), cur = list.filter(function (x) { return x[0] === page; })[0];
+    if (FB.device.pin && Date.now() > unlockedUntil) return lockedView();
+    var list = topics(), wide = wideNow();
+    var cur = list.filter(function (x) { return x[0] === page; })[0] || (wide ? list[0] : null);
+    if (wide) {
+      return h('div', { class: 'page settings set-split', 'data-scroll': 'page-settings' },
+        h('div', { class: 'set-left' }, h('div', { class: 'page-head' }, h('h1', null, t('nav.settings'))), menu(list, cur)),
+        h('div', { class: 'set-right', 'data-scroll': 'page-settings-' + cur[0] }, h('h1', { class: 'set-right-title' }, cur[2]), h('div', { class: 'set-one' }, cur[3]())));
+    }
     if (cur) {
       return h('div', { class: 'page settings set-page', 'data-scroll': 'page-settings-' + cur[0] },
         h('div', { class: 'page-head' },
@@ -222,12 +357,6 @@
         h('div', { class: 'set-one' }, cur[3]()));
     }
     return h('div', { class: 'page settings', 'data-scroll': 'page-settings' },
-      h('div', { class: 'page-head' }, h('h1', null, t('nav.settings'))),
-      h('div', { class: 'list set-menu' }, list.map(function (x) {
-        return h('button', { type: 'button', class: 'row', onclick: function () { page = x[0]; FB.app.render(); } },
-          h('span', { class: 'row-ico' }, ui.icon(x[1], 24)),
-          h('span', { class: 'row-main' }, h('span', { class: 'row-title' }, x[2])),
-          ui.icon('right', 20));
-      })));
+      h('div', { class: 'page-head' }, h('h1', null, t('nav.settings'))), menu(list, null));
   };
 })(typeof window !== 'undefined' ? window : globalThis);
