@@ -151,7 +151,7 @@
     kids.forEach(function (k) { k.style.display = ''; });
     if (box.scrollHeight <= box.clientHeight + 1) return;
     var soft = el.getAttribute('data-cap') === 'soft'; /* side columns: drop the last sections quietly */
-    var more = soft ? null : h('button', { type: 'button', class: 'more-chip', onclick: function () { app.go('chores'); } });
+    var more = soft ? null : h('button', { type: 'button', class: 'more-chip', onclick: function () { if (FB.actions.openTodayChores) FB.actions.openTodayChores(); else app.go('chores'); } });
     if (more) el.appendChild(more);
     var hidden = 0;
     for (var i = kids.length - 1; i >= (soft ? 2 : 0) && box.scrollHeight > box.clientHeight + 1; i--) {

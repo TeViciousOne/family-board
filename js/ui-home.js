@@ -108,6 +108,47 @@
     return row;
   }
 
+  FB.actions = FB.actions || {};
+  /* all of today's chores in a popup ("+N more"): tick them right there */
+  FB.actions.openTodayChores = function () {
+    var box = h('div', { class: 'list-grid pop-chores' }), modal, sig = '';
+    function draw() {
+      var items = L.choresDue(U.today(), U.hhmm(new Date()));
+      var s = items.map(function (x) { return x.chore.id + (x.done ? '1' : '0'); }).join();
+      if (s === sig) return;
+      sig = s;
+      U.clear(box);
+      items.slice().sort(function (a, b) { return (a.done ? 1 : 0) - (b.done ? 1 : 0); }).forEach(function (x) { box.appendChild(choreRow(x)); });
+      ui.emojify(box);
+    }
+    draw();
+    var poll = setInterval(draw, 400);
+    modal = ui.modal({ title: t('nav.chores'), body: box, size: 'wide', focus: false, onClose: function () { clearInterval(poll); } });
+  };
+
+  /* read-only details of an event (tiles on phones): full info, editing is one extra tap */
+  FB.actions.showEvent = function (e, date) {
+    var m = L.member(e.member_id), today = U.today(), modal;
+    var d = date || e.on_date;
+    var rows = [];
+    function row(ico, txt) { rows.push(h('div', { class: 'evi-row' }, h('span', { class: 'evi-ico' }, ico), h('span', null, txt))); }
+    var title = e.title;
+    if (e.kind === 'birthday') {
+      var age = Number(d.slice(0, 4)) - Number(e.on_date.slice(0, 4));
+      title = '🎂 ' + (age > 0 ? t('event.turns', { name: e.title, n: age }) : e.title);
+    }
+    row('📅', FB.i18n.relDay(d) + (d !== today ? ' · ' + FB.i18n.dateLong(d) : ''));
+    row('🕒', e.all_day || !e.start_time ? t('event.allDay') : e.start_time + (e.end_time ? ' – ' + e.end_time : ''));
+    if (e.kind === 'countdown') { var n = U.daysBetween(today, d); row('⏳', n + ' ' + (n === 1 ? t('unit.day') : t('unit.days'))); }
+    if (e.rule && e.rule.freq && e.rule.freq !== 'once') row('🔁', FB.recur.describe(e.rule, FB.i18n.L));
+    if (m) rows.push(h('div', { class: 'evi-row' }, ui.avatar(m, 28), h('span', null, m.name)));
+    if (e.notes) row('📝', e.notes);
+    var body = h('div', { class: 'evi' }, h('h3', { class: 'evi-title' }, title), rows);
+    modal = ui.modal({ title: '', body: body, focus: false, actions: [
+      h('button', { class: 'btn ghost', onclick: function () { modal.close(); FB.actions.openEvent(e); } }, ui.icon('edit', 18), ' ', t('common.edit')),
+      h('button', { class: 'btn', onclick: function () { modal.close(); } }, t('common.close'))] });
+  };
+
   /* progress ring: fills as chores get done */
   function ring(done, total) {
     var r = 22, c = 2 * Math.PI * r, f = total ? done / total : 0;
@@ -202,13 +243,13 @@
       var nx = L.upcoming(today, 14).filter(function (x) { var e = x.event; return x.date > today || e.all_day || !e.start_time || e.start_time >= now; })[0];
       if (nx) {
         var e = nx.event, when = nx.date === today ? (e.start_time && !e.all_day ? e.start_time : t('rel.today')) : nx.date === U.addDays(today, 1) ? t('rel.tomorrow') : FB.i18n.dayShort(U.weekday(nx.date)) + ' ' + U.parts(nx.date).d;
-        tile('pt-ev', e.kind === 'birthday' ? '🎂' : '📅', when, e.title, function () { FB.actions.openEvent(e); });
+        tile('pt-ev', e.kind === 'birthday' ? '🎂' : '📅', when, e.title, function () { FB.actions.showEvent(e, nx.date); });
       } else tile('pt-ev', '📅', '—', t('pt.noEvents'), function () { FB.app.go('calendar'); });
     }
     if (FB.ac && FB.showW('ac') && FB.ac.mini) { var ac = FB.ac.mini(); if (ac) tiles.push(ac); }
     if (FB.showW('countdown')) {
       var cd = L.countdowns(today)[0];
-      if (cd) tile('pt-cd', '⏳', String(cd.days), (cd.days === 1 ? t('unit.day') : t('unit.days')) + ' · ' + cd.event.title, function () { FB.actions.openEvent(cd.event); });
+      if (cd) tile('pt-cd', '⏳', String(cd.days), (cd.days === 1 ? t('unit.day') : t('unit.days')) + ' · ' + cd.event.title, function () { FB.actions.showEvent(cd.event, cd.date); });
     }
     if (!tiles.length) return null;
     return h('nav', { class: 'ptiles', style: { gridTemplateColumns: 'repeat(' + tiles.length + ', minmax(0, 1fr))' } }, tiles);
@@ -306,7 +347,7 @@
     } else board.appendChild(list(due));
     var sum = FB.ai && FB.ai.enabled() && FB.showW('summary') ? FB.ai.summary() : '';
     var nw = FB.news && FB.showW('news') ? FB.news.strip() : null;
-    var ts = FB.showW('events') ? todayStrip(today) : null;
+    var ts = FB.showW('events') && !isPhone() ? todayStrip(today) : null;
     var tsSide = null;
     if (ts && isWide()) { ts.classList.add('today-side'); tsSide = ts; ts = null; }
     if (ts) { board.classList.add('has-news'); board.insertBefore(ts, board.firstChild); }
