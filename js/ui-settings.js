@@ -228,7 +228,7 @@
     })), t('look.themeHint')));
     /* accent colour */
     var names = ['orange', 'blue', 'green', 'purple', 'pink'], hexes = names.map(function (n) { return FB.app.ACCENTS[n][dark ? 'dark' : 'light'][0]; });
-    s.appendChild(ui.field(t('look.accent'), ui.swatches(hexes, hexes[Math.max(0, names.indexOf(d.accent || 'orange'))], function (c) { d.accent = names[hexes.indexOf(c)]; relook(); })));
+    s.appendChild(ui.field(t('look.accent'), ui.swatches(hexes, hexes[Math.max(0, names.indexOf(d.accent || 'pink'))], function (c) { d.accent = names[hexes.indexOf(c)]; relook(); })));
     /* glass intensity */
     var solidTheme = d.theme === 'dark' || d.theme === 'black';
     var gval = h('b', { class: 'look-val' }, Number(d.glass) === 0 ? t('look.solid') : d.glass + '%');

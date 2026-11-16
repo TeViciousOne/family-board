@@ -34,8 +34,8 @@
   if (FB.device.lite == null) FB.device.lite = FB.device.kind === 'wall';
   /* look: theme (auto follows the device), accent colour, glass intensity 0-100, colour glow, status chips */
   if (!FB.device.theme) FB.device.theme = 'auto';
-  if (!FB.device.accent) FB.device.accent = 'orange';
-  if (FB.device.glass == null) FB.device.glass = 30;
+  if (!FB.device.accent) FB.device.accent = 'pink';
+  if (FB.device.glass == null) FB.device.glass = 0;
   if (FB.device.glow == null) FB.device.glow = true;
   if (FB.device.chips == null) FB.device.chips = true;
   FB.showW = function (w) { return !FB.device.show || FB.device.show[w] !== false; };

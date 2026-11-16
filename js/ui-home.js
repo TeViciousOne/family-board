@@ -35,7 +35,23 @@
     ui.modal({ title: (FB.device.place || FB.weather.DEFAULT_PLACE).name, body: body, size: 'wide', focus: false });
   }
 
-  function weatherBlock() {
+  /* wide screens: the current weather sits in the "Today" header; tap = hourly and daily forecast */
+  function headWeather() {
+    var w = FB.app.weather || {};
+    if (!FB.showW('weather') || !w.data) return null;
+    var place = FB.device.place || FB.weather.DEFAULT_PLACE, cur = w.data.current, today = w.data.days[0] || {};
+    var rainAt = FB.weather.hoursFrom(w.data, 14).filter(function (x, i) { return i > 0 && (x.rain >= 50 || /rain|storm|snow|drizzle/.test(FB.weather.kindOf(x.code, 1))); })[0];
+    var second = rainAt ? '☔ ' + t('wx.rainAt', { time: FB.i18n.hm(rainAt.time.slice(11, 16)) }) : (today.max != null ? t('wx.hiLo', { hi: Math.round(today.max), lo: Math.round(today.min) }) : '');
+    return h('button', { type: 'button', class: 'hh-wx', onclick: openWeather },
+      h('span', { class: 'hh-wx-ico', html: FB.weather.icon(FB.weather.kindOf(cur.code, cur.isDay), 56) }),
+      h('span', { class: 'hh-wx-t wx-temp' }, Math.round(cur.temp) + '°'),
+      h('span', { class: 'hh-wx-txt' },
+        h('span', null, t(FB.weather.labelKey(cur.code)) + ' · ' + place.name),
+        second ? h('small', null, second) : null),
+      w.stale ? h('small', { class: 'hh-wx-stale' }, t('wx.stale')) : null);
+  }
+
+  function weatherBlock(compact) {
     var w = FB.app.weather || {};
     var place = FB.device.place || FB.weather.DEFAULT_PLACE;
     if (!w.data) {
@@ -64,6 +80,9 @@
     var rainAt = FB.weather.hoursFrom(w.data, 14).filter(function (x, i) { return i > 0 && (x.rain >= 50 || /rain|storm|snow|drizzle/.test(FB.weather.kindOf(x.code, 1))); })[0];
     var next = h('div', { class: 'wx-next' }, rainAt ? '☔ ' + t('wx.rainAt', { time: FB.i18n.hm(rainAt.time.slice(11, 16)) }) : (today.max != null ? t('wx.hiLo', { hi: Math.round(today.max), lo: Math.round(today.min) }) : ''));
     var hourly = hrs.length ? h('div', { class: 'wx-hours' }, hrs.map(function (x, i) { return hourCell(x, i === 0); })) : null;
+    if (compact) {
+      return h('div', { class: 'wx wx-compact', role: 'button', tabindex: '0', 'aria-label': t('wx.hourly'), onclick: openWeather, onkeydown: function (e) { if (e.key === 'Enter') openWeather(); } }, hourly);
+    }
     return h('div', { class: 'wx', role: 'button', tabindex: '0', onclick: openWeather, onkeydown: function (e) { if (e.key === 'Enter') openWeather(); } },
       nowEl,
       h('div', { class: 'wx-desc' }, t(FB.weather.labelKey(cur.code)) + ' · ' + place.name),
@@ -192,14 +211,13 @@
     return h('button', { type: 'button', class: 'btn add-pill', onclick: function () { FB.actions.openTemplates(); } }, ui.icon('plus', 18), h('span', null, t('board.addChores')));
   }
   /* wide screens: page header with the day, the date and week, today's progress and the add button */
-  function homeHead(today, due) {
-    var doneN = due.filter(function (x) { return x.done; }).length;
+  function homeHead(today) {
     return h('header', { class: 'home-head', 'data-fit-skip': '1' },
       h('div', { class: 'hh-txt' },
         h('h1', null, t('rel.today')),
-        h('p', null, FB.i18n.dateLong(today) + ' · ' + t('home.week', { n: U.isoWeek(today) }))),
-      due.length ? ring(doneN, due.length) : null,
-      h('div', { class: 'list-actions' }, addBtn()),
+        h('p', null, FB.i18n.dateLong(today))),
+      headWeather(),
+      h('span', { class: 'hh-gap' }),
       /* kiosk mode hides the side rail on this screen: these two keep sleep and settings in reach (shown by look.css) */
       h('button', { type: 'button', class: 'icon-btn kiosk-btn', 'aria-label': t('home.sleep'), onclick: function () { FB.night.sleepNow(); } }, ui.icon('moon')),
       h('button', { type: 'button', class: 'icon-btn kiosk-btn', 'aria-label': t('nav.settings'), onclick: function () { FB.app.go('settings'); } }, ui.icon('gear')));
@@ -233,15 +251,19 @@
     var doneN = items.filter(function (x) { return x.done; }).length;
     var pct = items.length ? Math.round((doneN / items.length) * 100) : 0;
     /* wide screens: the ring and the add button live in the "Today" header above; here only the title and what is left */
-    var head = isWide()
-      ? h('div', { class: 'list-head' },
+    var bar = h('div', { class: 'list-bar' }, h('i', { style: { width: pct + '%' } }));
+    var wide = isWide();
+    var head = wide
+      ? h('div', { class: 'list-head lh-wide' },
           h('div', { class: 'list-title' }, t('nav.chores')),
-          items.length ? h('span', { class: 'list-n', 'aria-hidden': 'true' }, String(items.length - doneN)) : null)
+          items.length ? h('span', { class: 'list-n' }, t('home.left', { n: items.length - doneN })) : null,
+          items.length ? bar : h('span', { class: 'lh-gap' }),
+          items.length ? ring(doneN, items.length) : null,
+          h('div', { class: 'list-actions' }, addBtn()))
       : h('div', { class: 'list-head' },
           h('div', { class: 'list-title' }, t('nav.chores')),
           items.length ? ring(doneN, items.length) : null,
           h('div', { class: 'list-actions' }, addBtn()));
-    var bar = h('div', { class: 'list-bar' }, h('i', { style: { width: pct + '%' } }));
     var body = h('div', { class: 'list-body', 'data-scroll': 'chores-list' });
     if (!items.length) body.appendChild(ui.empty('🌤️', t('board.nothingToday'), t('empty.choresHint')));
     else {
@@ -249,7 +271,7 @@
       var size = sorted.length <= 4 ? ' few' : sorted.length <= 8 ? ' mid' : '';
       body.appendChild(h('div', { class: 'list-grid' + size, 'data-fit': '1', 'data-fit-min': '0.86', 'data-fit-max': '1', 'data-cap': '1' }, sorted.map(function (x) { return choreRow(x); })));
     }
-    return h('section', { class: 'col' }, head, bar, body);
+    return h('section', { class: 'col' }, head, wide ? null : bar, body);
   }
 
   /* ---------- right rail ---------- */
@@ -378,7 +400,7 @@
           h('div', { class: 'clock' }, clk.t, clk.ap ? h('small', { class: 'ampm' }, clk.ap) : null),
           h('button', { type: 'button', class: 'icon-btn sleep-btn', 'aria-label': t('home.sleep'), onclick: function () { FB.night.sleepNow(); } }, ui.icon('moon'))),
         isWide() ? null : h('div', { class: 'dateline' }, FB.i18n.dateLong(today)), /* wide: the date is in the "Today" header */
-        FB.showW('weather') ? weatherBlock() : null,
+        FB.showW('weather') ? weatherBlock(isWide()) : null,
         FB.ac && FB.showW('ac') && !isWide() && !isPhone() ? FB.ac.tile() : null));
 
     var board = h('main', { class: 'board' });
@@ -403,10 +425,12 @@
       } }, h('span', { class: 'ai-sum-ico' }, ui.icon('sparkle', 18)), h('p', null, sum)), board.firstChild);
     }
 
-    if (isWide()) { board.classList.add('has-news'); board.insertBefore(homeHead(today, due), board.firstChild); }
+    if (isWide()) { board.classList.add('has-news'); board.insertBefore(homeHead(today), board.firstChild); }
 
     var rr = rightRail(today, left.firstChild);
     if (tsSide) left.firstChild.appendChild(tsSide); /* below "coming up" on wide screens */
+    var cdSec = isWide() ? rr.querySelector('.rr-cd') : null;
+    if (cdSec) left.firstChild.appendChild(cdSec); /* wide: the countdown closes the clock panel */
     return h('div', { class: 'home' }, left, board, rr);
   };
 })(typeof window !== 'undefined' ? window : globalThis);

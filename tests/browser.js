@@ -57,7 +57,11 @@ function ok(cond, msg) { console.log((cond ? 'PASS ' : 'FAIL ') + msg); if (!con
   await p.evaluate(() => { FB.calm.after = 5 * 60 * 1000; }); await p.mouse.click(600, 400); await p.waitForTimeout(400);
   ok((await p.locator('#calm.on').count()) === 0, 'a touch closes the calm screen');
   ok((await p.locator('.wx-temp').innerText()).startsWith('15'), 'weather shows rounded current temperature');
-  ok((await p.locator('.wx-day').count()) === 5, 'weather shows 5 forecast days');
+  /* wide screens keep the daily forecast in the popup the weather opens (the old 5-day strip was hidden there anyway) */
+  await p.locator('.hh-wx').click(); await p.waitForSelector('.wx-drow');
+  ok((await p.locator('.wx-drow').count()) >= 5, 'weather shows the forecast days');
+  await p.keyboard.press('Escape'); await p.waitForTimeout(300);
+  if (await p.locator('#layer .scrim').count()) { await p.locator('#layer .scrim').first().click({ position: { x: 5, y: 5 } }); await p.waitForTimeout(300); }
   /* chore templates */
   await p.evaluate(() => location.hash = '#/chores'); await p.waitForSelector('.page-head');
   await p.click('.page-head .btn:not(.seg)'); await p.waitForSelector('.sheet .tpl');

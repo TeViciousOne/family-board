@@ -396,12 +396,12 @@
     if (th === 'auto') de.removeAttribute('data-theme'); else de.setAttribute('data-theme', dark ? 'dark' : 'light');
     de.setAttribute('data-look', th);
     st.colorScheme = th === 'auto' ? '' : dark ? 'dark' : 'light';
-    var a = (ACCENTS[d.accent] || ACCENTS.orange)[dark ? 'dark' : 'light'];
+    var a = (ACCENTS[d.accent] || ACCENTS.pink)[dark ? 'dark' : 'light'];
     st.setProperty('--brand', a[0]); st.setProperty('--brand-d', a[0]); st.setProperty('--brand-rgb', a[1]);
     st.setProperty('--on-brand', dark ? '#10131C' : '#FFFFFF');
     LOOK_VARS.forEach(function (v) { st.removeProperty(v); });
     function put(o) { Object.keys(o).forEach(function (k) { st.setProperty(k, o[k]); }); }
-    var g = Math.max(0, Math.min(100, d.glass == null ? 30 : Number(d.glass))), solid = th === 'dark' || th === 'black';
+    var g = Math.max(0, Math.min(100, d.glass == null ? 0 : Number(d.glass))), solid = th === 'dark' || th === 'black';
     put({ '--sheet-solid': dark ? 'rgba(28, 30, 40, .97)' : 'rgba(250, 251, 255, .97)' });
     if (th === 'dark') {
       put({ '--g-fill': '#1A2136', '--g-fill-2': '#161C30', '--card': '#1A2136', '--g-edge': 'rgba(255, 255, 255, .14)', '--g-edge-2': 'rgba(255, 255, 255, .09)',
