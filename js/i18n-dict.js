@@ -248,6 +248,7 @@
       'common.retry': 'Try again',
       'common.save': 'Save',
       'common.undo': 'Undo',
+      'common.deleted': '{what} deleted',
       'common.yes': 'Yes',
 
       'err.code': 'That code was not found. Check it and try again.',
@@ -795,6 +796,7 @@
       'common.retry': 'Provo përsëri',
       'common.save': 'Ruaj',
       'common.undo': 'Zhbëj',
+      'common.deleted': '{what} u fshi',
       'common.yes': 'Po',
 
       'err.code': 'Ky kod nuk u gjet. Kontrolloje dhe provo përsëri.',

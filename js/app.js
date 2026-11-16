@@ -235,6 +235,13 @@
       return FB.store.remove(table, id).then(function () { return true; })
         .catch(function (e) { return fail(table, e).then(function () { return null; }); });
     },
+    /* delete now, offer "Undo" for a few seconds (forgiveness instead of a confirmation dialog) */
+    delUndo: function (table, row, label) {
+      var copy = JSON.parse(JSON.stringify(row));
+      var p = FB.data.del(table, row.id);
+      FB.ui.toast(FB.i18n.t('common.deleted', { what: label }), { action: { label: FB.i18n.t('common.undo'), fn: function () { FB.data.add(table, copy); } } });
+      return p;
+    },
     updateHousehold: function (patch) {
       Object.assign(FB.state.household, patch); touch();
       return FB.store.updateHousehold(patch).then(function (h2) { FB.state.household = h2; touch(); return h2; })

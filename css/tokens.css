@@ -1,0 +1,61 @@
+/* Design tokens: the one place for type, spacing, corners, colour roles and motion.
+   Loaded first; every other stylesheet uses these names instead of raw numbers.
+   Modelled on Apple's Dynamic Type and system colours, tuned for a wall screen read from 2-3 m. */
+:root {
+  /* type: system font stack (Inter is downloaded for Android, where the Apple fonts do not exist) */
+  --font-display: -apple-system, "SF Pro Display", "SF Pro Text", Inter, system-ui, sans-serif;
+  --font-body: -apple-system, "SF Pro Display", "SF Pro Text", Inter, system-ui, sans-serif;
+  --t-caption2: 12px;   /* badges, tiny counters */
+  --t-caption: 13px;    /* tab labels, fine print */
+  --t-subhead: 15px;    /* secondary text: times, names, "deri në 19:00" (the smallest for reading text) */
+  --t-body: 17px;       /* body, list rows, chore titles on small cards */
+  --t-title3: 20px;     /* card titles */
+  --t-title2: 22px;     /* section titles ("Detyrat") */
+  --t-title1: 28px;     /* page sub-titles */
+  --t-large: 34px;      /* page titles */
+  --tracking-display: -0.02em;
+  --tracking-body: -0.01em;
+
+  /* spacing: 8-pt grid, 4-pt for fine adjustments */
+  --sp-1: 4px; --sp-2: 8px; --sp-3: 12px; --sp-4: 16px; --sp-5: 20px; --sp-6: 24px; --sp-8: 32px;
+  --section-gap: var(--sp-6);
+
+  /* corners: one scale; nested corner = outer corner minus padding */
+  --r-sm: 10px; --r-md: 14px; --r-lg: 20px; --r-xl: 28px; --r-pill: 999px;
+
+  /* touch */
+  --hit: 44px;          /* the minimum for anything you can tap */
+  --hit-wall: 52px;     /* main actions on the wall */
+
+  /* motion */
+  --ease-out: cubic-bezier(.2, .8, .2, 1);
+  --spring: cubic-bezier(.3, 1.3, .5, 1);
+  --dur-1: .2s; --dur-2: .3s; --dur-3: .45s;
+
+  /* colour roles (light) */
+  --label: #000000;
+  --label-2: rgba(60, 60, 67, .78);     /* secondary text, AA on every light surface */
+  --label-3: rgba(60, 60, 67, .55);     /* placeholders, disabled */
+  --separator: rgba(60, 60, 67, .2);
+  --fill-quiet: rgba(118, 118, 128, .12);
+  --fill-strong: rgba(118, 118, 128, .2);
+  --sys-red: #D70015; --sys-green: #248A3D; --sys-orange: #C93400; --sys-blue: #0040DD;
+  --red-tint: rgba(255, 59, 48, .12);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --label: #FFFFFF;
+    --label-2: rgba(235, 235, 245, .78);
+    --label-3: rgba(235, 235, 245, .5);
+    --separator: rgba(255, 255, 255, .14);
+    --fill-quiet: rgba(255, 255, 255, .07);
+    --fill-strong: rgba(255, 255, 255, .13);
+    --sys-red: #FF6961; --sys-green: #30D158; --sys-orange: #FF9F0A; --sys-blue: #64B5FF;
+    --red-tint: rgba(255, 69, 58, .16);
+  }
+}
+:root[data-theme="dark"] {
+  --label: #FFFFFF; --label-2: rgba(235, 235, 245, .78); --label-3: rgba(235, 235, 245, .5);
+  --separator: rgba(255, 255, 255, .14); --fill-quiet: rgba(255, 255, 255, .07); --fill-strong: rgba(255, 255, 255, .13);
+  --sys-red: #FF6961; --sys-green: #30D158; --sys-orange: #FF9F0A; --sys-blue: #64B5FF; --red-tint: rgba(255, 69, 58, .16);
+}

@@ -51,6 +51,16 @@
       w.stale ? h('small', { class: 'hh-wx-stale' }, t('wx.stale')) : null);
   }
 
+  /* wide screens: the next hours sit right beside the current weather (one place for the weather) */
+  function headHours() {
+    var w = FB.app.weather || {};
+    if (!FB.showW('weather') || !w.data) return null;
+    var hrs = FB.weather.hoursFrom(w.data, 6).slice(1);
+    if (!hrs.length) return null;
+    return h('button', { type: 'button', class: 'hh-hours', 'aria-label': t('wx.hourly'), onclick: openWeather },
+      hrs.map(function (x) { return hourCell(x, false); }));
+  }
+
   function weatherBlock(compact) {
     var w = FB.app.weather || {};
     var place = FB.device.place || FB.weather.DEFAULT_PLACE;
@@ -96,13 +106,12 @@
   /* ---------- one chore row ---------- */
   function choreRow(entry, color) {
     var c = entry.chore, done = entry.done;
-    var meta = [];
+    var meta = [], lateTxt = '';
     if (done) {
       var by = L.member(done.done_by);
       meta.push(t('chore.doneBy', { name: by ? by.name : t('chore.someone'), time: FB.i18n.timeOf(done.done_at) }));
     } else {
-      if (entry.carried) meta.push(t('chore.overdueSince', { when: FB.i18n.relDay(c.rule.start) }));
-      else if (entry.overdue) meta.push(t('chore.overdue'));
+      lateTxt = entry.carried ? t('chore.overdueSince', { when: FB.i18n.relDay(c.rule.start) }) : entry.overdue ? t('chore.overdue') : '';
       if (c.due_time && !entry.carried) meta.push(t('chore.by', { time: FB.i18n.hm(c.due_time) }));
       if (entry.last) {
         var lm = L.member(entry.last.done_by);
@@ -122,7 +131,10 @@
       h('span', { class: 'tick' }, done ? ui.icon('check', 22) : null),
       h('span', { class: 'chore-txt' },
         h('span', { class: 'chore-title' }, (c.emoji ? c.emoji + ' ' : '') + c.title),
-        meta.map(function (m) { return h('span', { class: 'chore-meta' }, m); })),
+        /* overdue: a red label with an icon, on the same line as the due time */
+        !done && lateTxt
+          ? h('span', { class: 'chore-meta late-line' }, h('span', { class: 'late-tag' }, ui.icon('clock', 14), h('span', null, lateTxt)), meta.length ? h('span', null, ' · ' + meta.join(' · ')) : null)
+          : meta.map(function (m) { return h('span', { class: 'chore-meta' }, m); })),
       who ? h('span', { class: 'chore-who-av' }, ui.avatar(who, 44), h('small', null, who.name)) : null);
     return row;
   }
@@ -217,6 +229,7 @@
         h('h1', null, t('rel.today')),
         h('p', null, FB.i18n.dateLong(today))),
       headWeather(),
+      headHours(),
       h('span', { class: 'hh-gap' }),
       /* kiosk mode hides the side rail on this screen: these two keep sleep and settings in reach (shown by look.css) */
       h('button', { type: 'button', class: 'icon-btn kiosk-btn', 'aria-label': t('home.sleep'), onclick: function () { FB.night.sleepNow(); } }, ui.icon('moon')),
@@ -227,37 +240,38 @@
     var open = due.filter(function (x) { return !x.done; });
     var late = open.filter(function (x) { return x.overdue || x.carried; }).length;
     var now = U.hhmm(new Date());
-    var nx = FB.showW('events') ? L.upcoming(today, 14).filter(function (x) { var e = x.event; return x.date > today || e.all_day || !e.start_time || e.start_time >= now; })[0] : null;
+    var nx = null;
     var row = h('div', { class: 'chips-row', 'data-fit-skip': '1' });
     function chip(big, small, cls, fn) {
       row.appendChild(h('button', { type: 'button', class: 'stat-chip' + (cls ? ' ' + cls : ''), onclick: fn }, h('b', null, big), h('span', null, small)));
     }
-    chip(String(open.length), t('chip.left'), '', function () { FB.actions.openTodayChores(); });
-    if (late) chip(String(late), t('chip.overdue'), 'bad', function () { FB.actions.openTodayChores(); });
-    if (FB.showW('shopping')) chip(String(FB.state.shopping.filter(function (x) { return !x.done; }).length), t('chip.buy'), '', function () { FB.actions.openShopping(); });
+    /* only what is not already on this screen: the ring shows progress and overdue chores sort first,
+       so a chip appears only for a block that is switched off here (shopping, events) */
+    var toBuy = FB.state.shopping.filter(function (x) { return !x.done; }).length;
+    if (!FB.showW('shopping') && toBuy) chip(String(toBuy), t('chip.buy'), '', function () { FB.actions.openShopping(); });
+    if (FB.showW('events')) nx = null;
+    else nx = L.upcoming(today, 14).filter(function (x) { var e = x.event; return x.date > today || e.all_day || !e.start_time || e.start_time >= now; })[0];
     if (nx) {
       var e = nx.event;
-      chip(nx.date === today ? (e.start_time && !e.all_day ? FB.i18n.hm(e.start_time) : t('rel.today')) : FB.i18n.relDay(nx.date), e.title, 'acc', function () { FB.actions.showEvent(e, nx.date); });
+      chip(nx.date === today ? (e.start_time && !e.all_day ? FB.i18n.hm(e.start_time) : t('rel.today')) : FB.i18n.relDay(nx.date), e.title, '', function () { FB.actions.showEvent(e, nx.date); });
     }
-    return row;
+    return row.children.length ? row : null;
   }
 
   /* one shared list: to-do first, finished at the bottom; the person shows as a small coloured tag */
   function list(items) {
     var sorted = items.map(function (x, i) { return { x: x, i: i }; }).sort(function (a, b) {
       var da = a.x.done ? 1 : 0, db = b.x.done ? 1 : 0;
-      return da - db || a.i - b.i;
+      var la = !a.x.done && (a.x.overdue || a.x.carried) ? 0 : 1, lb = !b.x.done && (b.x.overdue || b.x.carried) ? 0 : 1;
+      return da - db || la - lb || a.i - b.i; /* overdue first, so it is never hidden under "+N" */
     }).map(function (o) { return o.x; });
     var doneN = items.filter(function (x) { return x.done; }).length;
-    var pct = items.length ? Math.round((doneN / items.length) * 100) : 0;
-    /* wide screens: the ring and the add button live in the "Today" header above; here only the title and what is left */
-    var bar = h('div', { class: 'list-bar' }, h('i', { style: { width: pct + '%' } }));
+    /* progress is shown once, by the ring */
     var wide = isWide();
     var head = wide
       ? h('div', { class: 'list-head lh-wide' },
           h('div', { class: 'list-title' }, t('nav.chores')),
-          items.length ? h('span', { class: 'list-n' }, t('home.left', { n: items.length - doneN })) : null,
-          items.length ? bar : h('span', { class: 'lh-gap' }),
+          h('span', { class: 'lh-gap' }),
           items.length ? ring(doneN, items.length) : null,
           h('div', { class: 'list-actions' }, addBtn()))
       : h('div', { class: 'list-head' },
@@ -271,7 +285,7 @@
       var size = sorted.length <= 4 ? ' few' : sorted.length <= 8 ? ' mid' : '';
       body.appendChild(h('div', { class: 'list-grid' + size, 'data-fit': '1', 'data-fit-min': '0.86', 'data-fit-max': '1', 'data-cap': '1' }, sorted.map(function (x) { return choreRow(x); })));
     }
-    return h('section', { class: 'col' }, head, wide ? null : bar, body);
+    return h('section', { class: 'col' }, head, body);
   }
 
   /* ---------- right rail ---------- */
@@ -361,7 +375,7 @@
       var secN = h('section', { class: 'rr rr-notes' }, h('h3', null, t('home.notes')));
       notes.forEach(function (n) {
         var m = L.member(n.author);
-        secN.appendChild(h('button', { type: 'button', class: 'note-mini', style: { borderColor: m ? m.color : 'var(--ink-3)' }, onclick: function () { FB.app.go('lists'); } },
+        secN.appendChild(h('button', { type: 'button', class: 'note-mini', onclick: function () { FB.app.go('lists'); } },
           h('span', null, n.body), m ? h('small', null, m.name) : null));
       });
       inner.appendChild(secN);
@@ -376,7 +390,7 @@
       var secS = h('section', { class: 'rr rr-shop' }, h('h3', null, t('shop.title')));
       openItems.slice(0, 4).forEach(function (it) {
         var m = L.member(it.added_by);
-        secS.appendChild(h('button', { type: 'button', class: 'note-mini shop-mini', style: { borderColor: m ? m.color : 'var(--ink-3)' }, onclick: function () { FB.actions.openShopping(); } },
+        secS.appendChild(h('button', { type: 'button', class: 'note-mini shop-mini', onclick: function () { FB.actions.openShopping(); } },
           h('span', null, it.title), m ? h('small', null, m.name) : null));
       });
       if (open > 4) secS.appendChild(h('button', { type: 'button', class: 'link-btn', onclick: function () { FB.actions.openShopping(); } }, t('home.shopMore', { n: open - 4 })));
@@ -401,7 +415,7 @@
           h('div', { class: 'clock' }, clk.t, clk.ap ? h('small', { class: 'ampm' }, clk.ap) : null),
           h('button', { type: 'button', class: 'icon-btn sleep-btn', 'aria-label': t('home.sleep'), onclick: function () { FB.night.sleepNow(); } }, ui.icon('moon'))),
         isWide() ? null : h('div', { class: 'dateline' }, FB.i18n.dateLong(today)), /* wide: the date is in the "Today" header */
-        FB.showW('weather') ? weatherBlock(isWide()) : null,
+        FB.showW('weather') && !isWide() ? weatherBlock(false) : null, /* wide: the weather lives in the "Today" header */
         FB.ac && FB.showW('ac') && !isWide() && !isPhone() ? FB.ac.tile() : null));
 
     var board = h('main', { class: 'board' });
@@ -410,7 +424,8 @@
         h('button', { class: 'btn', onclick: function () { FB.actions.openTemplates(); } }, t('board.addChores'))));
     } else {
       board.appendChild(list(due));
-      if (FB.device.chips !== false && due.length && !isPhone()) { board.classList.add('has-news'); board.insertBefore(statChips(today, due), board.firstChild); }
+      var chipsEl = FB.device.chips !== false && due.length && !isPhone() ? statChips(today, due) : null;
+      if (chipsEl) { board.classList.add('has-news'); board.insertBefore(chipsEl, board.firstChild); }
     }
     var sum = FB.ai && FB.ai.enabled() && FB.showW('summary') ? FB.ai.summary() : '';
     var nw = FB.news && FB.showW('news') ? FB.news.strip() : null;

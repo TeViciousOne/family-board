@@ -67,7 +67,7 @@
           h('span', { class: 'shop-title' }, s.title),
           h('span', { class: 'shop-sub' }, (m ? m.name : '') + (m && when ? ' · ' : '') + when)),
         s.done ? h('span', { class: 'shop-again' }, ui.icon('plus', 16), ' ', t('shop.again')) :
-          h('button', { type: 'button', class: 'shop-x', 'aria-label': t('common.delete') + ': ' + s.title, onclick: function (e) { e.stopPropagation(); FB.data.del('shopping_items', s.id).then(after); } }, ui.icon('x', 16)));
+          h('button', { type: 'button', class: 'shop-x', 'aria-label': t('common.delete') + ': ' + s.title, onclick: function (e) { e.stopPropagation(); FB.data.delUndo('shopping_items', s, s.title).then(after); } }, ui.icon('x', 18)));
     }
 
     var list;
@@ -126,7 +126,7 @@
           h('span', { class: 'grow' }),
           h('button', { type: 'button', class: 'nc-btn' + (n.pinned ? ' on' : ''), 'aria-label': n.pinned ? t('notes.unpin') : t('notes.pin'), 'aria-pressed': n.pinned ? 'true' : 'false',
             onclick: function () { FB.data.edit('notes', n.id, { pinned: !n.pinned }); } }, ui.icon('pin', 18)),
-          h('button', { type: 'button', class: 'nc-btn', 'aria-label': t('common.delete'), onclick: function () { FB.data.del('notes', n.id); } }, ui.icon('trash', 18))),
+          h('button', { type: 'button', class: 'nc-btn', 'aria-label': t('common.delete'), onclick: function () { FB.data.delUndo('notes', n, t('notes.title')); } }, ui.icon('trash', 18))),
         h('p', { class: 'nc-body' }, n.body));
     }));
     if (!FB.state.notes.length) list = ui.empty('📝', t('notes.empty'), t('empty.notesHint'));

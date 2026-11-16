@@ -16,8 +16,8 @@
   var DOTS = [1, 2, 3, 4, 5, 6, 0];
   /* mini day dots for daily / weekly rules, plain text for the rest */
   function ruleView(r) {
-    if (r && (r.interval || 1) === 1 && (r.freq === 'daily' || r.freq === 'weekly')) {
-      var on = r.freq === 'daily' ? DOTS : (r.weekdays && r.weekdays.length ? r.weekdays : [U.weekday(r.start)]);
+    if (r && (r.interval || 1) === 1 && r.freq === 'weekly') {
+      var on = r.weekdays && r.weekdays.length ? r.weekdays : [U.weekday(r.start)];
       return h('span', { class: 'mini-dots', 'aria-label': FB.recur.describe(r, FB.i18n.L) }, DOTS.map(function (d) {
         return h('i', { class: on.indexOf(d) !== -1 ? 'on' : '' }, FB.i18n.dayShort(d).charAt(0));
       }));

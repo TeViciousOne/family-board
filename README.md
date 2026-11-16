@@ -91,3 +91,6 @@ All icons are made from `brand/chore-family-logo-sheet.jpg` (the Chore Family lo
 the install icon (`icon-512.png`, `icon-192.png`, `icon-maskable-512.png`), the iPhone home screen icon (`apple-touch-icon.png`),
 the browser tab (`favicon-*.png`, `icon.svg`), and for notifications the colour picture (`icon-notify-192.png`) and Android's
 status bar badge (`badge-96.png`, a white shape on transparent; an opaque picture there shows as a white square).
+
+## Design tokens
+`css/tokens.css` (loaded first) holds the type scale, 8-pt spacing, corner radii, colour roles (label, secondary label, separator, system red/green/blue) and motion. The other style sheets use these names instead of raw numbers. `css/refine.css` (loaded last) applies the 16 Nov 2026 design review: the accent marks only the main action and the selection, person colours only on avatars, 15 px secondary text, 44 px touch targets, labels under the rail icons, the next hours beside the current weather, and support for "reduce transparency" and "reduce motion". Font: the system stack (`-apple-system`, SF Pro, then Inter, downloaded for Android).
