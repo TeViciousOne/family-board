@@ -9,7 +9,7 @@
   /* ---------- weather block ---------- */
   function hourCell(x, first) {
     return h('div', { class: 'wx-h' },
-      h('span', { class: 'wx-hn' }, first ? t('wx.now') : x.time.slice(11, 13) + ':00'),
+      h('span', { class: 'wx-hn' }, first ? t('wx.now') : FB.i18n.hour(x.time.slice(11, 13))),
       h('span', { html: FB.weather.icon(FB.weather.kindOf(x.code, x.isDay), 30) }),
       h('span', { class: 'wx-ht' }, Math.round(x.temp) + '°'),
       h('span', { class: 'wx-hr' }, x.rain >= 20 ? x.rain + '%' : ''));
@@ -62,7 +62,7 @@
     }));
     var hrs = FB.weather.hoursFrom(w.data, 6);
     var rainAt = FB.weather.hoursFrom(w.data, 14).filter(function (x, i) { return i > 0 && (x.rain >= 50 || /rain|storm|snow|drizzle/.test(FB.weather.kindOf(x.code, 1))); })[0];
-    var next = h('div', { class: 'wx-next' }, rainAt ? '☔ ' + t('wx.rainAt', { time: rainAt.time.slice(11, 16) }) : (today.max != null ? t('wx.hiLo', { hi: Math.round(today.max), lo: Math.round(today.min) }) : ''));
+    var next = h('div', { class: 'wx-next' }, rainAt ? '☔ ' + t('wx.rainAt', { time: FB.i18n.hm(rainAt.time.slice(11, 16)) }) : (today.max != null ? t('wx.hiLo', { hi: Math.round(today.max), lo: Math.round(today.min) }) : ''));
     var hourly = hrs.length ? h('div', { class: 'wx-hours' }, hrs.map(function (x, i) { return hourCell(x, i === 0); })) : null;
     return h('div', { class: 'wx', role: 'button', tabindex: '0', onclick: openWeather, onkeydown: function (e) { if (e.key === 'Enter') openWeather(); } },
       nowEl,
@@ -84,7 +84,7 @@
     } else {
       if (entry.carried) meta.push(t('chore.overdueSince', { when: FB.i18n.relDay(c.rule.start) }));
       else if (entry.overdue) meta.push(t('chore.overdue'));
-      if (c.due_time && !entry.carried) meta.push(t('chore.by', { time: c.due_time }));
+      if (c.due_time && !entry.carried) meta.push(t('chore.by', { time: FB.i18n.hm(c.due_time) }));
       if (entry.last) {
         var lm = L.member(entry.last.done_by);
         meta.push(t('chore.last', { name: lm ? lm.name : t('chore.someone'), when: FB.i18n.relDay(entry.last.on_date) }));
@@ -138,7 +138,7 @@
       title = '🎂 ' + (age > 0 ? t('event.turns', { name: e.title, n: age }) : e.title);
     }
     row('📅', FB.i18n.relDay(d) + (d !== today ? ' · ' + FB.i18n.dateLong(d) : ''));
-    row('🕒', e.all_day || !e.start_time ? t('event.allDay') : e.start_time + (e.end_time ? ' – ' + e.end_time : ''));
+    row('🕒', e.all_day || !e.start_time ? t('event.allDay') : FB.i18n.hm(e.start_time) + (e.end_time ? ' – ' + FB.i18n.hm(e.end_time) : ''));
     if (e.kind === 'countdown') { var n = U.daysBetween(today, d); row('⏳', n + ' ' + (n === 1 ? t('unit.day') : t('unit.days'))); }
     if (e.rule && e.rule.freq && e.rule.freq !== 'once') row('🔁', FB.recur.describe(e.rule, FB.i18n.L));
     if (m) rows.push(h('div', { class: 'evi-row' }, ui.avatar(m, 28), h('span', null, m.name)));
@@ -184,7 +184,7 @@
         var e = x.event, m = L.member(e.member_id);
         var title = e.kind === 'birthday' ? '🎂 ' + (x.age && x.age > 0 ? t('event.turns', { name: e.title, n: x.age }) : e.title) : e.title;
         return h('button', { type: 'button', class: 'ts-ev', style: { '--c': m ? m.color : 'var(--ink-3)' }, onclick: function () { FB.actions.openEvent(e); } },
-          e.all_day || !e.start_time ? null : h('b', null, e.start_time), h('span', null, title));
+          e.all_day || !e.start_time ? null : h('b', null, FB.i18n.hm(e.start_time)), h('span', null, title));
       }));
   }
 
@@ -199,7 +199,29 @@
         h('h1', null, t('rel.today')),
         h('p', null, FB.i18n.dateLong(today) + ' · ' + t('home.week', { n: U.isoWeek(today) }))),
       due.length ? ring(doneN, due.length) : null,
-      h('div', { class: 'list-actions' }, addBtn()));
+      h('div', { class: 'list-actions' }, addBtn()),
+      /* kiosk mode hides the side rail on this screen: these two keep sleep and settings in reach (shown by look.css) */
+      h('button', { type: 'button', class: 'icon-btn kiosk-btn', 'aria-label': t('home.sleep'), onclick: function () { FB.night.sleepNow(); } }, ui.icon('moon')),
+      h('button', { type: 'button', class: 'icon-btn kiosk-btn', 'aria-label': t('nav.settings'), onclick: function () { FB.app.go('settings'); } }, ui.icon('gear')));
+  }
+  /* a row of small counts above the chores: left to do, overdue, to buy, the next event (Settings > Look) */
+  function statChips(today, due) {
+    var open = due.filter(function (x) { return !x.done; });
+    var late = open.filter(function (x) { return x.overdue || x.carried; }).length;
+    var now = U.hhmm(new Date());
+    var nx = FB.showW('events') ? L.upcoming(today, 14).filter(function (x) { var e = x.event; return x.date > today || e.all_day || !e.start_time || e.start_time >= now; })[0] : null;
+    var row = h('div', { class: 'chips-row', 'data-fit-skip': '1' });
+    function chip(big, small, cls, fn) {
+      row.appendChild(h('button', { type: 'button', class: 'stat-chip' + (cls ? ' ' + cls : ''), onclick: fn }, h('b', null, big), h('span', null, small)));
+    }
+    chip(String(open.length), t('chip.left'), '', function () { FB.actions.openTodayChores(); });
+    if (late) chip(String(late), t('chip.overdue'), 'bad', function () { FB.actions.openTodayChores(); });
+    if (FB.showW('shopping')) chip(String(FB.state.shopping.filter(function (x) { return !x.done; }).length), t('chip.buy'), '', function () { FB.actions.openShopping(); });
+    if (nx) {
+      var e = nx.event;
+      chip(nx.date === today ? (e.start_time && !e.all_day ? FB.i18n.hm(e.start_time) : t('rel.today')) : FB.i18n.relDay(nx.date), e.title, 'acc', function () { FB.actions.showEvent(e, nx.date); });
+    }
+    return row;
   }
 
   /* one shared list: to-do first, finished at the bottom; the person shows as a small coloured tag */
@@ -233,7 +255,7 @@
   /* ---------- right rail ---------- */
   function eventLine(x) {
     var e = x.event, m = L.member(e.member_id);
-    var when = e.all_day || !e.start_time ? t('event.allDay') : e.start_time;
+    var when = e.all_day || !e.start_time ? t('event.allDay') : FB.i18n.hm(e.start_time);
     var title = e.title;
     if (e.kind === 'birthday') title = '🎂 ' + (x.age && x.age > 0 ? t('event.turns', { name: e.title, n: x.age }) : e.title);
     return h('button', { type: 'button', class: 'ev', onclick: function () { FB.actions.openEvent(e); } },
@@ -260,7 +282,7 @@
       var now = U.hhmm(new Date());
       var nx = L.upcoming(today, 14).filter(function (x) { var e = x.event; return x.date > today || e.all_day || !e.start_time || e.start_time >= now; })[0];
       if (nx) {
-        var e = nx.event, when = nx.date === today ? (e.start_time && !e.all_day ? e.start_time : t('rel.today')) : nx.date === U.addDays(today, 1) ? t('rel.tomorrow') : FB.i18n.dayShort(U.weekday(nx.date)) + ' ' + U.parts(nx.date).d;
+        var e = nx.event, when = nx.date === today ? (e.start_time && !e.all_day ? FB.i18n.hm(e.start_time) : t('rel.today')) : nx.date === U.addDays(today, 1) ? t('rel.tomorrow') : FB.i18n.dayShort(U.weekday(nx.date)) + ' ' + U.parts(nx.date).d;
         tile('pt-ev', e.kind === 'birthday' ? '🎂' : '📅', when, e.title, function () { FB.actions.showEvent(e, nx.date); });
       } else tile('pt-ev', '📅', '—', t('pt.noEvents'), function () { FB.app.go('calendar'); });
     }
@@ -348,11 +370,12 @@
   FB.views.home = function (ctx) {
     var today = ctx.today;
     var due = L.choresDue(today, ctx.nowHHMM);
+    var clk = FB.i18n.clock(ctx.now);
 
     var left = h('aside', { class: 'rail rail-left', 'data-scroll': 'rail-left' },
       h('div', { class: 'rail-in', 'data-fit': '1', 'data-fit-min': '0.9', 'data-cap': 'soft' },
         h('div', { class: 'clock-row' },
-          h('div', { class: 'clock' }, U.hhmm(ctx.now)),
+          h('div', { class: 'clock' }, clk.t, clk.ap ? h('small', { class: 'ampm' }, clk.ap) : null),
           h('button', { type: 'button', class: 'icon-btn sleep-btn', 'aria-label': t('home.sleep'), onclick: function () { FB.night.sleepNow(); } }, ui.icon('moon'))),
         isWide() ? null : h('div', { class: 'dateline' }, FB.i18n.dateLong(today)), /* wide: the date is in the "Today" header */
         FB.showW('weather') ? weatherBlock() : null,
@@ -362,7 +385,10 @@
     if (!FB.state.chores.length) {
       board.appendChild(h('div', { class: 'board-hint' }, h('p', null, t('board.noChores')),
         h('button', { class: 'btn', onclick: function () { FB.actions.openTemplates(); } }, t('board.addChores'))));
-    } else board.appendChild(list(due));
+    } else {
+      board.appendChild(list(due));
+      if (FB.device.chips !== false && due.length && !isPhone()) { board.classList.add('has-news'); board.insertBefore(statChips(today, due), board.firstChild); }
+    }
     var sum = FB.ai && FB.ai.enabled() && FB.showW('summary') ? FB.ai.summary() : '';
     var nw = FB.news && FB.showW('news') ? FB.news.strip() : null;
     var ts = FB.showW('events') && !isPhone() ? todayStrip(today) : null;

@@ -32,6 +32,12 @@
   if (!FB.device.show) FB.device.show = FB.kindDefaults(FB.device.kind);
   if (FB.device.calm == null) FB.device.calm = FB.device.kind === 'wall';
   if (FB.device.lite == null) FB.device.lite = FB.device.kind === 'wall';
+  /* look: theme (auto follows the device), accent colour, glass intensity 0-100, colour glow, status chips */
+  if (!FB.device.theme) FB.device.theme = 'auto';
+  if (!FB.device.accent) FB.device.accent = 'orange';
+  if (FB.device.glass == null) FB.device.glass = 30;
+  if (FB.device.glow == null) FB.device.glow = true;
+  if (FB.device.chips == null) FB.device.chips = true;
   FB.showW = function (w) { return !FB.device.show || FB.device.show[w] !== false; };
   FB.setKind = function (k) {
     var d = FB.device;

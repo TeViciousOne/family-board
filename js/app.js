@@ -313,7 +313,7 @@
     if (!sleeping) return;
     var mins = now.getHours() * 60 + now.getMinutes();
     var clock = el.querySelector('.night-clock');
-    clock.textContent = U.hhmm(now);
+    clock.textContent = FB.i18n.clock(now).t;
     clock.style.transform = 'translate(' + ((mins * 37) % 80 - 40) + 'px,' + ((mins * 53) % 60 - 30) + 'px)';
     var w = app.weather.data;
     el.querySelector('.night-sub').textContent = FB.i18n.dateLong(U.ymd(now)) + (w ? ' · ' + Math.round(w.current.temp) + '°' : '');
@@ -347,7 +347,7 @@
       o.keys[k] = 1; dirty = true;
       if (nowMin < r.start + 5) {
         ring = 'event';
-        ui.toast(t('alert.event', { title: r.event.title, when: r.event.start_time }), { ms: 20000, kind: 'alert' });
+        ui.toast(t('alert.event', { title: r.event.title, when: FB.i18n.hm(r.event.start_time) }), { ms: 20000, kind: 'alert' });
       }
     });
     if (dirty) { try { localStorage.setItem(ALERT_KEY, JSON.stringify(o)); } catch (e) { /* ignore */ } app.render(); }
@@ -368,8 +368,76 @@
   /* wide screens: the clock panel beside the side rail can be folded away */
   app.applyPanel = function () { document.documentElement.classList.toggle('panel-off', !!FB.device.panelOff); };
   app.togglePanel = function () { FB.device.panelOff = !FB.device.panelOff; FB.saveDevice(); app.applyPanel(); app.render(); };
+  /* ---- look: theme, accent colour, glass intensity, density, glow, kiosk (all per device, see Settings > Look) ---- */
+  var ACCENTS = {
+    orange: { dark: ['#FF8A3D', '255, 138, 61'], light: ['#C2540A', '194, 84, 10'] },
+    blue: { dark: ['#5AA2FF', '90, 162, 255'], light: ['#1F5FD1', '31, 95, 209'] },
+    green: { dark: ['#3DD68C', '61, 214, 140'], light: ['#0F7A45', '15, 122, 69'] },
+    purple: { dark: ['#B690FF', '182, 144, 255'], light: ['#6B3FD4', '107, 63, 212'] },
+    pink: { dark: ['#FF7DB0', '255, 125, 176'], light: ['#B8256B', '184, 37, 107'] }
+  };
+  app.ACCENTS = ACCENTS;
+  var LOOK_VARS = ['--g-fill', '--g-fill-2', '--g-edge', '--g-edge-2', '--card', '--bg-img', '--bar', '--card-blur', '--rail-bg', '--panel-bg', '--sheet-solid'];
+  /* one colour that looks like "top" painted over "under" (both [r, g, b, alpha]) */
+  function over(under, top) {
+    var a = top[3] + under[3] * (1 - top[3]);
+    if (a <= 0) return 'rgba(0, 0, 0, 0)';
+    function ch(i) { return Math.round((top[i] * top[3] + under[i] * under[3] * (1 - top[3])) / a); }
+    return 'rgba(' + ch(0) + ', ' + ch(1) + ', ' + ch(2) + ', ' + a.toFixed(3) + ')';
+  }
+  app.isDark = function () {
+    var th = FB.device.theme || 'auto';
+    if (th === 'light') return false;
+    if (th === 'auto') return !!(root.matchMedia && root.matchMedia('(prefers-color-scheme: dark)').matches);
+    return true;
+  };
+  app.applyLook = function () {
+    var d = FB.device, de = document.documentElement, st = de.style, th = d.theme || 'auto', dark = app.isDark();
+    if (th === 'auto') de.removeAttribute('data-theme'); else de.setAttribute('data-theme', dark ? 'dark' : 'light');
+    de.setAttribute('data-look', th);
+    st.colorScheme = th === 'auto' ? '' : dark ? 'dark' : 'light';
+    var a = (ACCENTS[d.accent] || ACCENTS.orange)[dark ? 'dark' : 'light'];
+    st.setProperty('--brand', a[0]); st.setProperty('--brand-d', a[0]); st.setProperty('--brand-rgb', a[1]);
+    st.setProperty('--on-brand', dark ? '#10131C' : '#FFFFFF');
+    LOOK_VARS.forEach(function (v) { st.removeProperty(v); });
+    function put(o) { Object.keys(o).forEach(function (k) { st.setProperty(k, o[k]); }); }
+    var g = Math.max(0, Math.min(100, d.glass == null ? 30 : Number(d.glass))), solid = th === 'dark' || th === 'black';
+    put({ '--sheet-solid': dark ? 'rgba(28, 30, 40, .97)' : 'rgba(250, 251, 255, .97)' });
+    if (th === 'dark') {
+      put({ '--g-fill': '#1A2136', '--g-fill-2': '#161C30', '--card': '#1A2136', '--g-edge': 'rgba(255, 255, 255, .14)', '--g-edge-2': 'rgba(255, 255, 255, .09)',
+        '--bg-img': 'linear-gradient(180deg, #10162A, #0A0E1A)', '--bar': '#1A2136', '--rail-bg': '#0C1120', '--panel-bg': '#141A2D' });
+    } else if (th === 'black') {
+      put({ '--g-fill': '#101114', '--g-fill-2': '#0B0B0E', '--card': '#101114', '--g-edge': 'rgba(255, 255, 255, .2)', '--g-edge-2': 'rgba(255, 255, 255, .14)',
+        '--bg-img': 'linear-gradient(#000, #000)', '--bar': '#101114', '--rail-bg': '#000000', '--panel-bg': '#060607' });
+    } else if (g !== 30) {
+      /* 30 is the look the style sheets already describe; below it the cards fill in, above it they clear up and blur */
+      var lo = g < 30, k = lo ? g / 30 : (g - 30) / 70, fill, fill2;
+      if (dark) {
+        var navy = [26, 32, 50, lo ? 1 - k : 0];
+        fill = over(navy, [255, 255, 255, lo ? 0.09 : 0.09 + 0.07 * k]);
+        fill2 = over(navy, [255, 255, 255, lo ? 0.06 : 0.06 + 0.04 * k]);
+        put({ '--g-fill': fill, '--card': fill, '--g-fill-2': fill2 });
+        if (!lo) put({ '--g-edge-2': 'rgba(255, 255, 255, ' + (0.06 + 0.1 * k).toFixed(3) + ')' });
+        else put({ '--bar': over([40, 42, 54, 1 - k * 0.5], [40, 42, 54, 0.5]), '--rail-bg': 'rgba(8, 11, 22, ' + (1 - 0.45 * k).toFixed(3) + ')' });
+      } else {
+        fill = 'rgba(255, 255, 255, ' + (lo ? 1 - 0.38 * k : 0.62 - 0.22 * k).toFixed(3) + ')';
+        fill2 = 'rgba(255, 255, 255, ' + (lo ? 1 - 0.58 * k : 0.42 - 0.17 * k).toFixed(3) + ')';
+        put({ '--g-fill': fill, '--card': fill, '--g-fill-2': fill2 });
+      }
+      if (!lo) put({ '--card-blur': 'blur(' + Math.round(4 + 16 * k) + 'px) saturate(150%)' });
+    }
+    de.classList.toggle('noblur', solid || g === 0);
+    de.classList.toggle('dense', !!d.dense);
+    de.classList.toggle('glow', d.glow !== false);
+    de.classList.toggle('kiosk', !!d.kiosk);
+  };
+  if (root.matchMedia) {
+    var mq = root.matchMedia('(prefers-color-scheme: dark)'), onScheme = function () { if (FB.device) app.applyLook(); };
+    if (mq.addEventListener) mq.addEventListener('change', onScheme); else if (mq.addListener) mq.addListener(onScheme);
+  }
   app.applyDevice = function () {
     app.applyPanel();
+    app.applyLook();
     FB.i18n.set(FB.device.lang);
     FB.sound.enabled = !!FB.device.sound;
     FB.sound.volume = FB.device.volume;
@@ -441,7 +509,7 @@
     })[0];
     var fg = calm.fg;
     U.clear(fg);
-    fg.appendChild(h('div', { class: 'calm-clock' }, U.hhmm(new Date())));
+    fg.appendChild(h('div', { class: 'calm-clock' }, FB.i18n.clock(new Date()).t));
     fg.appendChild(h('div', { class: 'calm-date' }, FB.i18n.dateLong(today)));
     if (w && w.current) {
       fg.appendChild(h('div', { class: 'calm-wx' },
@@ -457,7 +525,7 @@
     if (next) {
       var e = next.event;
       lines.push(h('div', { class: 'calm-next' }, h('small', null, FB.i18n.relDay(next.date)),
-        h('span', null, (e.all_day || !e.start_time ? '' : e.start_time + ' · ') + e.title)));
+        h('span', null, (e.all_day || !e.start_time ? '' : FB.i18n.hm(e.start_time) + ' · ') + e.title)));
     }
     lines.push(h('div', { class: 'calm-chores' + (left ? '' : ' ok') }, left === 0 ? t('calm.none') : left === 1 ? t('calm.one') : t('calm.left', { n: left })));
     fg.appendChild(h('div', { class: 'calm-info' }, lines));
@@ -686,6 +754,7 @@
 
   app.boot = function () {
     FB.i18n.set(FB.device.lang);
+    app.applyLook(); /* before sign-in too, so the first screen already has the chosen look */
     FB.sound.enabled = !!FB.device.sound; FB.sound.volume = FB.device.volume;
     night.el = document.getElementById('night');
     night.el.appendChild(h('div', { class: 'night-clock' }));

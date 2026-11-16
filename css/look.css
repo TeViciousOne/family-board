@@ -94,3 +94,69 @@
   #toast { bottom: 24px; }
   .set-split .set-left, .set-split .set-right { padding-bottom: 24px; }
 }
+
+/* ---------- Settings > Look ---------- */
+/* solid themes and glass at 0: no blur anywhere, opaque sheets */
+html.noblur *, html.noblur *::before, html.noblur *::after { -webkit-backdrop-filter: none !important; backdrop-filter: none !important; }
+html.noblur .sheet { background-color: var(--sheet-solid) !important; }
+html.noblur .toast, html.noblur #sync { background: rgba(30, 34, 50, .96); }
+html.noblur #layer .scrim { background: rgba(10, 20, 40, .45); }
+html[data-look=dark] body::before, html[data-look=dark] body::after, html[data-look=black] body::before, html[data-look=black] body::after { display: none; }
+html[data-look=black] { background: #000; }
+/* glass above 30%: the main cards blur what is behind them (the value comes from app.applyLook) */
+.chore, .ai-sum, .news-strip, .wx-hours, .cd-card, .ac-tile, .note-mini, .lists .pane, .day-panel, .stat-chip {
+  -webkit-backdrop-filter: var(--card-blur, none); backdrop-filter: var(--card-blur, none);
+}
+/* colour glow: an overdue chore and the running air conditioner light up their card */
+html.glow .chore.overdue:not(.done) {
+  background: linear-gradient(rgba(255, 69, 58, .13), rgba(255, 69, 58, .13)), var(--g-fill); border-color: rgba(255, 105, 97, .6);
+  box-shadow: 0 0 0 1px rgba(255, 105, 97, .45), 0 10px 30px rgba(255, 69, 58, .22) !important;
+}
+html.glow .ac-tile.on { color: #fff; background: linear-gradient(135deg, #2468D6, #173F96); box-shadow: 0 12px 36px rgba(47, 123, 234, .45), inset 0 1px 0 rgba(255, 255, 255, .25); }
+html.glow .ac-tile.on .ac-ico, html.glow .ac-tile.on .ac-pill { color: #fff; background: rgba(255, 255, 255, .22); box-shadow: none; }
+html.glow .ac-tile.on .ac-col b, html.glow .ac-tile.on .ac-col-set b { color: #fff; }
+html.glow .ac-tile.on .ac-col small { color: #E3ECFF; }
+html.glow .ac-tile.on .ac-col + .ac-col { border-left-color: rgba(255, 255, 255, .3); }
+/* 12-hour clock: the AM / PM mark */
+.clock .ampm { margin-left: 6px; font-size: .26em; font-weight: 700; letter-spacing: 0; color: var(--ink-2); }
+/* status chips */
+.chips-row { display: flex; flex-wrap: wrap; gap: 8px; flex: none; margin: 0 0 10px; padding: 0 14px; }
+.stat-chip { display: inline-flex; align-items: baseline; gap: 6px; max-width: 100%; min-height: 40px; padding: 8px 14px; border: 1px solid var(--g-edge-2); border-radius: 999px; color: var(--ink); background: var(--g-fill-2); }
+.stat-chip b { font-size: 16px; font-weight: 800; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.stat-chip span { font-size: 14px; font-weight: 600; color: var(--ink-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 22ch; }
+.stat-chip.bad b { color: var(--alert); }
+.stat-chip.acc b { color: var(--brand); }
+.kiosk-btn { display: none; }
+/* settings controls */
+.look-themes { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; }
+.look-theme { display: flex; flex-direction: column; gap: 6px; min-width: 0; padding: 8px; border: 2px solid transparent; border-radius: 16px; color: var(--ink); background: var(--g-fill); box-shadow: var(--g-shine); }
+.look-theme.on { border-color: var(--brand); background: rgba(var(--brand-rgb), .14); }
+.lt-pv { display: flex; align-items: flex-end; height: 42px; padding: 6px; border-radius: 10px; border: 1px solid rgba(128, 128, 128, .45); }
+.lt-pv i { display: block; width: 46%; height: 14px; border-radius: 5px; border: 1px solid rgba(128, 128, 128, .5); }
+.lt-name { font-size: 14px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.look-range { display: flex; align-items: center; gap: 14px; }
+.look-range input { flex: 1; min-width: 0; height: 44px; }
+.look-range input:disabled { opacity: .4; }
+.look-val { min-width: 4.5ch; text-align: right; font-variant-numeric: tabular-nums; }
+@media (max-width: 520px) { .look-themes { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+
+@media (orientation: landscape) and (min-width: 900px) {
+  .chips-row { padding: 0 20px; }
+  /* more space: three chore cards per row, slimmer side columns */
+  html.dense .home { grid-template-columns: 208px minmax(0, 1fr) 250px !important; }
+  html.dense.panel-off .home { grid-template-columns: minmax(0, 1fr) 250px !important; }
+  html.dense .rail-left .clock { font-size: min(56px, 33cqw) !important; }
+  html.dense .home .list-grid, html.dense .home .list-grid.few, html.dense .home .list-grid.mid { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; gap: 10px; }
+  html.dense .home .list-grid .chore { min-height: 80px; padding: 10px 12px; gap: 10px; border-radius: 20px; }
+  html.dense .home .list-grid .chore-title { font-size: 17px; }
+  html.dense .home .list-grid .chore-meta { font-size: 14px; }
+  html.dense .home .list-grid .tick { width: 36px; height: 36px; }
+  html.dense .home .list-grid .chore-who-av { min-width: 44px; }
+  html.dense .home .list-grid .chore-who-av .avatar { width: 38px !important; height: 38px !important; font-size: 18px !important; }
+}
+@media (orientation: landscape) and (min-width: 900px) and (min-height: 560px) {
+  /* kiosk mode: no rail on the home screen; sleep and settings move into the header */
+  html.kiosk[data-route=home] #nav { display: none; }
+  html.kiosk .home-head .kiosk-btn { display: grid; place-items: center; width: 44px; height: 44px; flex: none; color: var(--ink-2); background: var(--g-fill-2); }
+}
+.set .swatches { padding: 5px 6px; }

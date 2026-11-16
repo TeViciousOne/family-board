@@ -21,7 +21,7 @@
   function eventChipLabel(x) {
     var e = x.event;
     var pre = e.kind === 'birthday' ? '🎂 ' : e.kind === 'countdown' ? '⏳ ' : '';
-    return pre + (e.all_day || !e.start_time ? '' : e.start_time + ' ') + e.title;
+    return pre + (e.all_day || !e.start_time ? '' : FB.i18n.hm(e.start_time) + ' ') + e.title;
   }
 
   function dayCell(date, inMonth, today) {
@@ -67,7 +67,7 @@
     if (!evs.length && !sp.length) panel.appendChild(ui.empty('🗓️', t('cal.nothing'), t('empty.calHint')));
     evs.forEach(function (x) {
       var e = x.event, m = L.member(e.member_id);
-      var when = e.all_day || !e.start_time ? t('event.allDay') : e.start_time + (e.end_time ? '–' + e.end_time : '');
+      var when = e.all_day || !e.start_time ? t('event.allDay') : FB.i18n.hm(e.start_time) + (e.end_time ? '–' + FB.i18n.hm(e.end_time) : '');
       var title = e.kind === 'birthday' ? '🎂 ' + (x.age && x.age > 0 ? t('event.turns', { name: e.title, n: x.age }) : e.title) : e.title;
       panel.appendChild(h('button', { type: 'button', class: 'ev big', onclick: function () { FB.actions.openEvent(e); } },
         h('span', { class: 'ev-dot', style: { background: m ? m.color : 'var(--ink-3)' } }),

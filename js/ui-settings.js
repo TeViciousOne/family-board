@@ -215,6 +215,32 @@
     s.appendChild(ui.field(t('set.language'), ui.seg([{ v: 'en', label: 'English' }, { v: 'sq', label: 'Shqip' }], FB.device.lang, function (v) {
       FB.device.lang = v; saveDevice(); FB.app.render();
     })));
+    function relook() { FB.saveDevice(); FB.app.applyLook(); FB.app.render(); }
+    var d = FB.device, dark = FB.app.isDark();
+    /* theme: small previews */
+    var PV = { auto: ['linear-gradient(135deg, #EEF3FB 50%, #0B1020 50%)', 'rgba(140, 150, 170, .6)'], glass: ['linear-gradient(135deg, #24459A, #3B2A7A 60%, #0E3F45)', 'rgba(255, 255, 255, .3)'],
+      dark: ['#10162A', '#26304C'], black: ['#000000', '#1B1C21'], light: ['#EEF2F9', '#FFFFFF'] };
+    s.appendChild(ui.field(t('look.theme'), h('div', { class: 'look-themes', role: 'group' }, ['auto', 'glass', 'dark', 'black', 'light'].map(function (k) {
+      var on = (d.theme || 'auto') === k;
+      return h('button', { type: 'button', class: 'look-theme' + (on ? ' on' : ''), 'aria-pressed': on ? 'true' : 'false', onclick: function () { d.theme = k; relook(); } },
+        h('span', { class: 'lt-pv', style: { background: PV[k][0] } }, h('i', { style: { background: PV[k][1] } })),
+        h('span', { class: 'lt-name' }, t('look.t.' + k)));
+    })), t('look.themeHint')));
+    /* accent colour */
+    var names = ['orange', 'blue', 'green', 'purple', 'pink'], hexes = names.map(function (n) { return FB.app.ACCENTS[n][dark ? 'dark' : 'light'][0]; });
+    s.appendChild(ui.field(t('look.accent'), ui.swatches(hexes, hexes[Math.max(0, names.indexOf(d.accent || 'orange'))], function (c) { d.accent = names[hexes.indexOf(c)]; relook(); })));
+    /* glass intensity */
+    var solidTheme = d.theme === 'dark' || d.theme === 'black';
+    var gval = h('b', { class: 'look-val' }, Number(d.glass) === 0 ? t('look.solid') : d.glass + '%');
+    var grange = h('input', { type: 'range', min: '0', max: '100', step: '5', value: String(d.glass), disabled: solidTheme, 'aria-label': t('look.glass'),
+      oninput: function () { d.glass = Number(grange.value); gval.textContent = d.glass === 0 ? t('look.solid') : d.glass + '%'; FB.app.applyLook(); },
+      onchange: function () { FB.saveDevice(); } });
+    s.appendChild(ui.field(t('look.glass'), h('div', { class: 'look-range' }, grange, gval), solidTheme ? t('look.glassOff') : t('look.glassHint')));
+    s.appendChild(ui.field(t('look.space'), ui.seg([{ v: 'def', label: t('look.space.def') }, { v: 'more', label: t('look.space.more') }], d.dense ? 'more' : 'def', function (v) { d.dense = v === 'more'; relook(); }), t('look.spaceHint')));
+    s.appendChild(ui.field(t('look.glow'), ui.seg([{ v: 'on', label: t('look.glow.on') }, { v: 'off', label: t('look.glow.off') }], d.glow !== false ? 'on' : 'off', function (v) { d.glow = v === 'on'; relook(); }), t('look.glowHint')));
+    s.appendChild(ui.field(t('look.time'), ui.seg([{ v: '24', label: t('look.time.24') }, { v: '12', label: t('look.time.12') }], d.time12 ? '12' : '24', function (v) { d.time12 = v === '12'; relook(); })));
+    s.appendChild(toggle(t('look.chips'), d.chips !== false, function (v) { d.chips = v; relook(); }, t('look.chipsHint')));
+    s.appendChild(toggle(t('look.kiosk'), !!d.kiosk, function (v) { d.kiosk = v; relook(); }, t('look.kioskHint')));
     s.appendChild(toggle(t('set.lite'), !!FB.device.lite, function (v) { FB.device.lite = v; saveDevice(); FB.app.ambience(new Date()); }, t('set.liteHint')));
     s.appendChild(toggle(t('set.twemoji'), !FB.device.nativeEmoji, function (v) { FB.device.nativeEmoji = !v; saveDevice(); location.reload(); }, t('set.twemojiHint')));
     return s;

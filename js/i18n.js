@@ -63,7 +63,22 @@
   /* local HH:MM of an ISO timestamp */
   I.timeOf = function (iso) {
     var d = new Date(iso);
-    return isNaN(d) ? '' : U.hhmm(d);
+    return isNaN(d) ? '' : I.hm(U.hhmm(d));
+  };
+  /* show a stored "HH:MM" the way this device wants it (24-hour, or 12-hour with AM / PM) */
+  function t12() { return !!(FB.device && FB.device.time12); }
+  I.hm = function (s) {
+    if (!s || !t12()) return s || '';
+    var p = String(s).split(':'), hh = Number(p[0]);
+    return ((hh + 11) % 12 + 1) + ':' + p[1] + (hh < 12 ? ' AM' : ' PM');
+  };
+  /* a whole hour for narrow places: "15:00" or "3 PM" */
+  I.hour = function (hh) { hh = Number(hh); return t12() ? ((hh + 11) % 12 + 1) + (hh < 12 ? ' AM' : ' PM') : U.pad(hh) + ':00'; };
+  /* the big clocks: digits and, in 12-hour mode, the AM / PM mark separately */
+  I.clock = function (d) {
+    if (!t12()) return { t: U.hhmm(d), ap: '' };
+    var hh = d.getHours();
+    return { t: ((hh + 11) % 12 + 1) + ':' + U.pad(d.getMinutes()), ap: hh < 12 ? 'AM' : 'PM' };
   };
 
   /* what recur.describe() needs */

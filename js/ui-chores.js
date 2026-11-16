@@ -32,7 +32,7 @@
     var meta = h('span', { class: 'row-meta' },
       h('span', { class: 'who-pill', style: { '--c': m ? m.color : 'var(--ink-3)' } }, m ? ui.avatar(m, 22) : null, m ? m.name : t('board.everyone')),
       ruleView(c.rule),
-      c.due_time ? h('span', { class: 'meta-txt' }, t('chore.by', { time: c.due_time })) : null,
+      c.due_time ? h('span', { class: 'meta-txt' }, t('chore.by', { time: FB.i18n.hm(c.due_time) })) : null,
       next && next !== today ? h('span', { class: 'meta-txt' }, '→ ' + FB.i18n.relDay(next)) : null);
     var sw = h('button', { type: 'button', class: 'mini-sw' + (c.active ? ' on' : ''), role: 'switch', 'aria-checked': c.active ? 'true' : 'false', 'aria-label': t('chore.active'),
       onclick: function (e) { e.stopPropagation(); FB.data.edit('chores', c.id, { active: !c.active }); } }, h('i'));
@@ -195,7 +195,7 @@
           onkeydown: function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.target.click(); } } },
           h('span', { class: 'tpl-emoji' }, it.emoji || '•'),
           h('span', { class: 'tpl-name' }, FB.templates.label(it)),
-          h('span', { class: 'tpl-sub' }, exists ? t('tpl.have') : (repeat[it.id] ? FB.recur.describe(suggested(it), FB.i18n.L) : t('rule.f.once')) + (it.due_time ? ' · ' + it.due_time : '')),
+          h('span', { class: 'tpl-sub' }, exists ? t('tpl.have') : (repeat[it.id] ? FB.recur.describe(suggested(it), FB.i18n.L) : t('rule.f.once')) + (it.due_time ? ' · ' + FB.i18n.hm(it.due_time) : '')),
           on ? h('span', { class: 'tpl-check' }, ui.icon('check', 14)) : null,
           on ? h('button', { type: 'button', class: 'tpl-rep' + (repeat[it.id] ? ' on' : ''), 'aria-label': t('tpl.repeat'), 'aria-pressed': repeat[it.id] ? 'true' : 'false',
             onclick: function (e) { e.stopPropagation(); repeat[it.id] = !repeat[it.id]; draw(); } }, ui.icon('repeat', 16)) : null,

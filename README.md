@@ -44,6 +44,7 @@ On phones: open the site in Chrome > menu > "Install app" / "Add to Home screen"
 
     node --test tests/recur.test.js      # repeat rules
     node scripts/keys.js check           # English/Albanian keys match
+    node scripts/dark-css.js check       # css/dark.css matches the dark blocks (run without "check" to rebuild it)
     NODE_PATH=<playwright> node tests/browser.js   # browser smoke test (needs Chrome)
 
 ## Notes
