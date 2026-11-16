@@ -17,6 +17,13 @@
   U.weekday = function (s) { var p = s.split('-').map(Number); return new Date(Date.UTC(p[0], p[1] - 1, p[2])).getUTCDay(); }; /* 0 = Sunday */
   U.daysInMonth = function (y, m1) { return new Date(Date.UTC(y, m1, 0)).getUTCDate(); }; /* m1 = 1..12 */
   U.parts = function (s) { var p = s.split('-').map(Number); return { y: p[0], m: p[1], d: p[2] }; };
+  /* ISO week number (weeks start on Monday; week 1 holds the year's first Thursday) */
+  U.isoWeek = function (s) {
+    var p = s.split('-').map(Number), d = new Date(Date.UTC(p[0], p[1] - 1, p[2]));
+    d.setUTCDate(d.getUTCDate() + 3 - ((d.getUTCDay() + 6) % 7));
+    var jan4 = new Date(Date.UTC(d.getUTCFullYear(), 0, 4));
+    return 1 + Math.round(((d - jan4) / 864e5 - 3 + ((jan4.getUTCDay() + 6) % 7)) / 7);
+  };
   /* Monday-based start of week, returned as a day number */
   U.weekStartNum = function (s) { return U.dayNum(s) - ((U.weekday(s) + 6) % 7); };
   U.monthStart = function (s) { var p = U.parts(s); return p.y + '-' + U.pad(p.m) + '-01'; };

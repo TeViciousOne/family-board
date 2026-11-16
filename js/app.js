@@ -101,12 +101,16 @@
       setTimeout(function () { node.classList.remove('page-in', 'page-in-fwd', 'page-in-back'); }, 460);
     }
     lastRoute = name;
-    [].forEach.call(document.querySelectorAll('#nav button'), function (b) {
+    [].forEach.call(document.querySelectorAll('#nav button[data-route]'), function (b) {
       var on = b.getAttribute('data-route') === name;
       b.lastChild.textContent = t(b.getAttribute('data-label'));
+      b.setAttribute('aria-label', t(b.getAttribute('data-label')));
       b.classList.toggle('on', on);
       if (on) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current');
     });
+    var sleepB = document.querySelector('#nav [data-tool=sleep]'), panelB = document.querySelector('#nav [data-tool=panel]');
+    if (sleepB) sleepB.setAttribute('aria-label', t('home.sleep'));
+    if (panelB) panelB.setAttribute('aria-label', t(FB.device.panelOff ? 'home.showPanel' : 'home.hidePanel'));
     document.documentElement.setAttribute('data-route', name);
     app.fit(view);
     movePill(true);
@@ -361,7 +365,11 @@
       wakeLock = l; l.addEventListener('release', function () { wakeLock = null; });
     }).catch(function () { /* not allowed right now */ });
   }
+  /* wide screens: the clock panel beside the side rail can be folded away */
+  app.applyPanel = function () { document.documentElement.classList.toggle('panel-off', !!FB.device.panelOff); };
+  app.togglePanel = function () { FB.device.panelOff = !FB.device.panelOff; FB.saveDevice(); app.applyPanel(); app.render(); };
   app.applyDevice = function () {
+    app.applyPanel();
     FB.i18n.set(FB.device.lang);
     FB.sound.enabled = !!FB.device.sound;
     FB.sound.volume = FB.device.volume;
@@ -607,9 +615,16 @@
       if (FB.store.saveSnapshot) FB.store.saveSnapshot(st);
 
       U.clear(a); a.className = '';
-      var nav = h('nav', { id: 'nav', 'aria-label': 'Main' }, h('span', { class: 'nav-pill', 'aria-hidden': 'true' }), NAV.map(function (n) {
-        return h('button', { type: 'button', 'data-route': n[0], 'data-label': n[2], onclick: function () { app.go(n[0]); } }, ui.icon(n[1], 28), h('span', null, t(n[2])));
-      }));
+      /* one nav for both shapes: a pill tab bar at the bottom, or (wide screens, see look.css) a slim icon rail on the left
+         that also carries the app mark, the sleep button and the fold-panel arrow */
+      var nav = h('nav', { id: 'nav', 'aria-label': 'Main' }, h('span', { class: 'nav-pill', 'aria-hidden': 'true' }),
+        h('span', { class: 'nav-brand', 'aria-hidden': 'true' }, h('img', { src: 'icon.svg', alt: '' })),
+        NAV.map(function (n) {
+          return h('button', { type: 'button', 'data-route': n[0], 'data-label': n[2], onclick: function () { app.go(n[0]); } }, ui.icon(n[1], 28), h('span', null, t(n[2])));
+        }),
+        h('span', { class: 'nav-tools' },
+          h('button', { type: 'button', class: 'nav-tool', 'data-tool': 'sleep', 'aria-label': t('home.sleep'), onclick: function () { FB.night.sleepNow(); } }, ui.icon('moon', 24)),
+          h('button', { type: 'button', class: 'nav-tool', 'data-tool': 'panel', 'aria-label': t('home.hidePanel'), onclick: function () { app.togglePanel(); } }, ui.icon('left', 24))));
       a.appendChild(h('div', { id: 'view', class: 'view' }));
       a.appendChild(nav);
 

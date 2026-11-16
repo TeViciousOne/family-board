@@ -43,7 +43,7 @@ function ok(cond, msg) { console.log((cond ? 'PASS ' : 'FAIL ') + msg); if (!con
   await p.waitForTimeout(300);
   await p.screenshot({ path: OUT + '/01-home.png' });
   ok((await p.locator('.list-grid .chore').count()) >= 3 && (await p.locator('.col').count()) === 1, 'home shows one shared chore list with person tags');
-  ok((await p.locator('.list-head .ring svg').count()) === 1, 'progress ring shows in the chores header');
+  ok((await p.locator('.home-head .ring svg, .list-head .ring svg').count()) === 1, 'progress ring shows in the chores header');
   { const moved = await p.evaluate(() => new Promise(res => {
       document.querySelector('.board').insertBefore(Object.assign(document.createElement('div'), { style: 'height:80px' }), document.querySelector('.board').firstChild);
       FB.app.render(); setTimeout(() => res([...document.querySelectorAll('.list-grid [data-flip]')].some(e => e.style.transform)), 60);
@@ -231,14 +231,14 @@ function ok(cond, msg) { console.log((cond ? 'PASS ' : 'FAIL ') + msg); if (!con
   await p.waitForSelector('.home .col');
   await p.waitForTimeout(200);
   await p.screenshot({ path: OUT + '/11-home-sq.png' });
-  ok((await p.locator('#nav').innerText()).includes('Kryefaqja'), 'switching to Albanian translates the app');
+  ok((await p.locator('#nav').textContent()).includes('Kryefaqja'), 'switching to Albanian translates the app');
   await p.locator('#nav button[data-route=calendar]').click();
   await p.waitForTimeout(200);
   await p.screenshot({ path: OUT + '/12-calendar-sq.png' });
 
   /* ---------------- night screen ---------------- */
   await p.locator('#nav button[data-route=home]').click();
-  await p.locator('.sleep-btn').click();
+  await p.locator('.sleep-btn:visible, #nav [data-tool=sleep]:visible').first().click(); /* in the side rail on wide screens */
   await p.waitForTimeout(250);
   ok(await p.locator('#night.on').count() === 1, 'sleep screen shows');
   await p.screenshot({ path: OUT + '/13-night.png' });

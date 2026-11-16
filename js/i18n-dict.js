@@ -337,6 +337,9 @@
       'home.shopMore': '+{n} more',
       'home.shoppingEmpty': 'Shopping list is empty',
       'home.sleep': 'Sleep screen',
+      'home.week': 'Week {n}',
+      'home.hidePanel': 'Hide the side panel',
+      'home.showPanel': 'Show the side panel',
 
       'member.add': 'Add family member',
       'member.color': 'Colour',
@@ -845,6 +848,9 @@
       'home.shopMore': '+{n} të tjera',
       'home.shoppingEmpty': 'Lista e blerjeve është bosh',
       'home.sleep': 'Ekrani i gjumit',
+      'home.week': 'Java {n}',
+      'home.hidePanel': 'Fshih panelin anësor',
+      'home.showPanel': 'Shfaq panelin anësor',
 
       'member.add': 'Shto anëtar të familjes',
       'member.color': 'Ngjyra',

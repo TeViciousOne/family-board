@@ -188,6 +188,20 @@
       }));
   }
 
+  function addBtn() {
+    return h('button', { type: 'button', class: 'btn add-pill', onclick: function () { FB.actions.openTemplates(); } }, ui.icon('plus', 18), h('span', null, t('board.addChores')));
+  }
+  /* wide screens: page header with the day, the date and week, today's progress and the add button */
+  function homeHead(today, due) {
+    var doneN = due.filter(function (x) { return x.done; }).length;
+    return h('header', { class: 'home-head', 'data-fit-skip': '1' },
+      h('div', { class: 'hh-txt' },
+        h('h1', null, t('rel.today')),
+        h('p', null, FB.i18n.dateLong(today) + ' · ' + t('home.week', { n: U.isoWeek(today) }))),
+      due.length ? ring(doneN, due.length) : null,
+      h('div', { class: 'list-actions' }, addBtn()));
+  }
+
   /* one shared list: to-do first, finished at the bottom; the person shows as a small coloured tag */
   function list(items) {
     var sorted = items.map(function (x, i) { return { x: x, i: i }; }).sort(function (a, b) {
@@ -196,11 +210,15 @@
     }).map(function (o) { return o.x; });
     var doneN = items.filter(function (x) { return x.done; }).length;
     var pct = items.length ? Math.round((doneN / items.length) * 100) : 0;
-    var head = h('div', { class: 'list-head' },
-      h('div', { class: 'list-title' }, t('nav.chores')),
-      items.length ? ring(doneN, items.length) : null,
-      h('div', { class: 'list-actions' },
-        h('button', { type: 'button', class: 'btn add-pill', onclick: function () { FB.actions.openTemplates(); } }, ui.icon('plus', 18), h('span', null, t('board.addChores')))));
+    /* wide screens: the ring and the add button live in the "Today" header above; here only the title and what is left */
+    var head = isWide()
+      ? h('div', { class: 'list-head' },
+          h('div', { class: 'list-title' }, t('nav.chores')),
+          items.length ? h('span', { class: 'list-n', 'aria-hidden': 'true' }, String(items.length - doneN)) : null)
+      : h('div', { class: 'list-head' },
+          h('div', { class: 'list-title' }, t('nav.chores')),
+          items.length ? ring(doneN, items.length) : null,
+          h('div', { class: 'list-actions' }, addBtn()));
     var bar = h('div', { class: 'list-bar' }, h('i', { style: { width: pct + '%' } }));
     var body = h('div', { class: 'list-body', 'data-scroll': 'chores-list' });
     if (!items.length) body.appendChild(ui.empty('🌤️', t('board.nothingToday'), t('empty.choresHint')));
@@ -336,7 +354,7 @@
         h('div', { class: 'clock-row' },
           h('div', { class: 'clock' }, U.hhmm(ctx.now)),
           h('button', { type: 'button', class: 'icon-btn sleep-btn', 'aria-label': t('home.sleep'), onclick: function () { FB.night.sleepNow(); } }, ui.icon('moon'))),
-        h('div', { class: 'dateline' }, FB.i18n.dateLong(today)),
+        isWide() ? null : h('div', { class: 'dateline' }, FB.i18n.dateLong(today)), /* wide: the date is in the "Today" header */
         FB.showW('weather') ? weatherBlock() : null,
         FB.ac && FB.showW('ac') && !isWide() && !isPhone() ? FB.ac.tile() : null));
 
@@ -358,6 +376,8 @@
         ui.modal({ title: t('ai.summaryTitle'), body: h('p', { class: 'lead' }, sum), focus: false });
       } }, h('span', { class: 'ai-sum-ico' }, ui.icon('sparkle', 18)), h('p', null, sum)), board.firstChild);
     }
+
+    if (isWide()) { board.classList.add('has-news'); board.insertBefore(homeHead(today, due), board.firstChild); }
 
     var rr = rightRail(today, left.firstChild);
     if (tsSide) left.firstChild.appendChild(tsSide); /* below "coming up" on wide screens */
