@@ -1,4 +1,4 @@
-# Family Board
+# Chore Family
 
 A wall-tablet household board: chores per person, shared calendar, weather, shopping list, notes, countdowns, night screen and sounds. English and Albanian. Works in any modern browser; installs as an app (PWA). No build step.
 

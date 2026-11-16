@@ -1,6 +1,6 @@
 {
-  "name": "Family Board",
-  "short_name": "Family",
+  "name": "Chore Family",
+  "short_name": "Chore Family",
   "description": "Chores, calendar and weather for the home.",
   "start_url": "./",
   "scope": "./",

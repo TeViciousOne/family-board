@@ -3,7 +3,7 @@
   'use strict';
   var D = {
     en: {
-      'app.name': 'Family Board',
+      'app.name': 'Chore Family',
       'app.demoNote': 'Demo mode: your data stays on this device. Connect Supabase to share it with phones.',
 
       'alert.event': '{title} starts at {when}',
@@ -550,7 +550,7 @@
     },
 
     sq: {
-      'app.name': 'Tabela e Familjes',
+      'app.name': 'Chore Family',
       'app.demoNote': 'Modaliteti demo: të dhënat mbeten vetëm në këtë pajisje. Lidhe Supabase për t\'i ndarë me telefonat.',
 
       'alert.event': '{title} fillon në {when}',
