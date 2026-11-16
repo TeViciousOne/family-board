@@ -301,3 +301,10 @@ html.text-big .ai-sum p { -webkit-line-clamp: 2 !important; }
   html.text-big .home .rail-left .clock { font-size: min(calc(56px * var(--fs, 1)), 21cqw) !important; }
   html.text-big .home .rail-left .wx-temp { font-size: min(calc(40px * var(--fs, 1)), 10cqw) !important; }
 }
+
+/* "Coming up" in the side columns: the time on the first line, the title under it with the full width
+   (a long title next to "All day" was squeezed into a narrow column) */
+.rail .ev { display: grid; grid-template-columns: 12px minmax(0, 1fr); column-gap: 10px; row-gap: 1px; align-items: center; padding: 6px 0; }
+.rail .ev-dot { grid-column: 1; grid-row: 1; top: 0; }
+.rail .ev-when { grid-column: 2; grid-row: 1; min-width: 0; }
+.rail .ev-title { grid-column: 2; grid-row: 2; min-width: 0; overflow-wrap: anywhere; }
