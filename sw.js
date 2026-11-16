@@ -28,7 +28,10 @@ self.addEventListener('fetch', function (e) {
 /* phone notifications */
 self.addEventListener('push', function (e) {
   var d = {}; try { d = e.data ? e.data.json() : {}; } catch (x) { d = { title: 'Family Board', body: e.data && e.data.text() }; }
-  e.waitUntil(self.registration.showNotification(d.title || 'Family Board', { body: d.body || '', tag: d.tag, icon: 'icon-192.png', badge: 'icon-192.png' }));
+  e.waitUntil(self.registration.showNotification(d.title || 'Family Board', { body: d.body || '', tag: d.tag,
+    /* icon: the colour picture in the notification; badge: Android's status bar icon, which must be a white
+       shape on transparent (an opaque picture there shows as a plain white square) */
+    icon: 'icon-notify-192.png', badge: 'badge-96.png' }));
 });
 self.addEventListener('notificationclick', function (e) {
   e.notification.close();

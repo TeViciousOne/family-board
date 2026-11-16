@@ -83,3 +83,11 @@ The previous layout is kept on the branch `backup-layout-v1`.
 
 ## Calm screen photos
 Settings → Home screen → *Calm screen photos*. Photos are shrunk on the device (longest side 1920 px, JPEG) and stored in the private Supabase Storage bucket `photos`, in a folder named after the household, so every screen in the family sees the same set. The calm screen cross-fades a new one every 20 seconds and checks for new or deleted photos every 3 minutes, with the clock moved to the bottom-left. The tap that wakes the calm or night screen is swallowed, so it never presses the button underneath. Test: `node tests/calm.js`.
+
+
+## App icons
+
+All icons are made from `brand/chore-family-logo-sheet.jpg` (the Chore Family logo sheet) by `python3 scripts/make-icons.py`:
+the install icon (`icon-512.png`, `icon-192.png`, `icon-maskable-512.png`), the iPhone home screen icon (`apple-touch-icon.png`),
+the browser tab (`favicon-*.png`, `icon.svg`), and for notifications the colour picture (`icon-notify-192.png`) and Android's
+status bar badge (`badge-96.png`, a white shape on transparent; an opaque picture there shows as a white square).
