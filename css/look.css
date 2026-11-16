@@ -5,14 +5,18 @@
    Phones and upright tablets keep the bottom tab bar and their own layout. Nothing is removed. */
 
 /* ---------- 1. accent ---------- */
-:root { --brand: #C2540A; --brand-d: #C2540A; --brand-rgb: 194, 84, 10; --on-brand: #FFFFFF; --rail-bg: rgba(255, 255, 255, .6); --panel-bg: rgba(255, 255, 255, .35); }
+:root { --brand: #C2540A; --brand-d: #C2540A; --brand-rgb: 194, 84, 10; --on-brand: #FFFFFF; --rail-bg: rgba(255, 255, 255, .6); --panel-bg: rgba(255, 255, 255, .35);
+  /* cards are flat with a thin edge: a blurred drop shadow showed as dark smudges outside the round corners */
+  --g-shadow: 0 0 0 0 transparent; }
 @media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) { --brand: #FF8A3D; --brand-d: #FF8A3D; --brand-rgb: 255, 138, 61; --on-brand: #10131C; --rail-bg: rgba(8, 11, 22, .55); --panel-bg: rgba(255, 255, 255, .045); }
+  :root:not([data-theme="light"]) { --brand: #FF8A3D; --brand-d: #FF8A3D; --brand-rgb: 255, 138, 61; --on-brand: #10131C; --rail-bg: rgba(8, 11, 22, .55); --panel-bg: rgba(255, 255, 255, .045);
+    --g-shadow: 0 0 0 0 transparent; }
 }
-.btn { color: var(--on-brand); box-shadow: 0 6px 18px rgba(var(--brand-rgb), .3), inset 0 1px 0 rgba(255, 255, 255, .4); }
-.btn.danger { box-shadow: 0 6px 18px rgba(255, 59, 48, .3), inset 0 1px 0 rgba(255, 255, 255, .5); }
+/* buttons are flat: a drop shadow showed as smudges outside their round corners on dark panels */
+.btn { color: var(--on-brand); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .35); }
+.btn.danger { box-shadow: inset 0 1px 0 rgba(255, 255, 255, .35); }
 .btn.ghost, .btn.danger.ghost { box-shadow: var(--g-shine); }
-.shop-tile { color: var(--on-brand); box-shadow: 0 8px 22px rgba(var(--brand-rgb), .3), inset 0 1px 0 rgba(255, 255, 255, .4); }
+.shop-tile { color: var(--on-brand); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .35); }
 .ring-fg { stroke: var(--brand); }
 .more-chip, .shop-again, .tpl-rep { color: var(--brand); }
 .row-ico { background: rgba(var(--brand-rgb), .18); color: var(--brand); }
@@ -129,9 +133,9 @@ html[data-look=black] { background: #000; }
 /* colour glow: an overdue chore and the running air conditioner light up their card */
 html.glow .chore.overdue:not(.done) {
   background: linear-gradient(rgba(255, 69, 58, .13), rgba(255, 69, 58, .13)), var(--g-fill); border-color: rgba(255, 105, 97, .6);
-  box-shadow: 0 0 0 1px rgba(255, 105, 97, .45), 0 10px 30px rgba(255, 69, 58, .22) !important;
+  box-shadow: 0 0 0 1px rgba(255, 105, 97, .45), 0 0 22px -4px rgba(255, 69, 58, .45) !important;
 }
-html.glow .ac-tile.on { color: #fff; background: linear-gradient(135deg, #2468D6, #173F96); box-shadow: 0 12px 36px rgba(47, 123, 234, .45), inset 0 1px 0 rgba(255, 255, 255, .25); }
+html.glow .ac-tile.on { color: #fff; background: linear-gradient(135deg, #2468D6, #173F96); box-shadow: 0 0 24px -4px rgba(47, 123, 234, .6), inset 0 1px 0 rgba(255, 255, 255, .25); }
 html.glow .ac-tile.on .ac-ico, html.glow .ac-tile.on .ac-pill { color: #fff; background: rgba(255, 255, 255, .22); box-shadow: none; }
 html.glow .ac-tile.on .ac-col b, html.glow .ac-tile.on .ac-col-set b { color: #fff; }
 html.glow .ac-tile.on .ac-col small { color: #E3ECFF; }

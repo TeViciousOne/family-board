@@ -7,4 +7,4 @@
 :root[data-theme="dark"] .seg-b.on {background-color: rgba(255, 255, 255, .22); background-image: none;}
 :root[data-theme="dark"] .sheet {background-color: rgba(30, 32, 44, .7);}
 :root[data-theme="dark"] body.lite #nav, :root[data-theme="dark"] body.lite .sheet {background: rgba(28, 30, 40, .97) !important;}
-:root[data-theme="dark"] {--brand: #FF8A3D; --brand-d: #FF8A3D; --brand-rgb: 255, 138, 61; --on-brand: #10131C; --rail-bg: rgba(8, 11, 22, .55); --panel-bg: rgba(255, 255, 255, .045);}
+:root[data-theme="dark"] {--brand: #FF8A3D; --brand-d: #FF8A3D; --brand-rgb: 255, 138, 61; --on-brand: #10131C; --rail-bg: rgba(8, 11, 22, .55); --panel-bg: rgba(255, 255, 255, .045); --g-shadow: 0 0 0 0 transparent;}

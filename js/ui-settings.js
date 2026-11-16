@@ -217,6 +217,18 @@
     })));
     function relook() { FB.saveDevice(); FB.app.applyLook(); FB.app.render(); }
     var d = FB.device, dark = FB.app.isDark();
+    /* sizes: text only, or the whole interface */
+    function sizeRow(label, hint, key, min, max, auto) {
+      var cur = function () { return d[key] ? d[key] + '%' : auto ? t('look.auto') + ' · ' + Math.round(FB.app.autoZoom() * 100) + '%' : '100%'; };
+      var val = h('b', { class: 'look-val' }, cur());
+      var rng = h('input', { type: 'range', min: String(min), max: String(max), step: '5', value: String(d[key] || (auto ? Math.round(FB.app.autoZoom() * 100) : 100)), 'aria-label': label,
+        oninput: function () { d[key] = Number(rng.value); val.textContent = cur(); FB.app.applySize(); },
+        onchange: function () { FB.saveDevice(); FB.app.render(); } });
+      var reset = h('button', { type: 'button', class: 'btn ghost look-reset', onclick: function () { d[key] = auto ? null : 100; FB.saveDevice(); FB.app.applySize(); FB.app.render(); } }, auto ? t('look.auto') : t('look.reset'));
+      return ui.field(label, h('div', { class: 'look-range' }, rng, val, reset), hint);
+    }
+    s.appendChild(sizeRow(t('look.text'), t('look.textHint'), 'textSize', 80, 150, false));
+    s.appendChild(sizeRow(t('look.ui'), t('look.uiHint'), 'uiScale', 70, 160, true));
     /* theme: small previews */
     var PV = { auto: ['linear-gradient(135deg, #EEF3FB 50%, #0B1020 50%)', 'rgba(140, 150, 170, .6)'], glass: ['linear-gradient(135deg, #24459A, #3B2A7A 60%, #0E3F45)', 'rgba(255, 255, 255, .3)'],
       dark: ['#10162A', '#26304C'], black: ['#000000', '#1B1C21'], light: ['#EEF2F9', '#FFFFFF'] };
@@ -236,18 +248,6 @@
       oninput: function () { d.glass = Number(grange.value); gval.textContent = d.glass === 0 ? t('look.solid') : d.glass + '%'; FB.app.applyLook(); },
       onchange: function () { FB.saveDevice(); } });
     s.appendChild(ui.field(t('look.glass'), h('div', { class: 'look-range' }, grange, gval), solidTheme ? t('look.glassOff') : t('look.glassHint')));
-    /* sizes: text only, or the whole interface */
-    function sizeRow(label, hint, key, min, max, auto) {
-      var cur = function () { return d[key] ? d[key] + '%' : auto ? t('look.auto') + ' · ' + Math.round(FB.app.autoZoom() * 100) + '%' : '100%'; };
-      var val = h('b', { class: 'look-val' }, cur());
-      var rng = h('input', { type: 'range', min: String(min), max: String(max), step: '5', value: String(d[key] || (auto ? Math.round(FB.app.autoZoom() * 100) : 100)), 'aria-label': label,
-        oninput: function () { d[key] = Number(rng.value); val.textContent = cur(); FB.app.applySize(); },
-        onchange: function () { FB.saveDevice(); FB.app.render(); } });
-      var reset = h('button', { type: 'button', class: 'btn ghost look-reset', onclick: function () { d[key] = auto ? null : 100; FB.saveDevice(); FB.app.applySize(); FB.app.render(); } }, auto ? t('look.auto') : t('look.reset'));
-      return ui.field(label, h('div', { class: 'look-range' }, rng, val, reset), hint);
-    }
-    s.appendChild(sizeRow(t('look.text'), t('look.textHint'), 'textSize', 80, 150, false));
-    s.appendChild(sizeRow(t('look.ui'), t('look.uiHint'), 'uiScale', 70, 160, true));
     s.appendChild(ui.field(t('look.space'), ui.seg([{ v: 'def', label: t('look.space.def') }, { v: 'more', label: t('look.space.more') }], d.dense ? 'more' : 'def', function (v) { d.dense = v === 'more'; relook(); }), t('look.spaceHint')));
     s.appendChild(ui.field(t('look.glow'), ui.seg([{ v: 'on', label: t('look.glow.on') }, { v: 'off', label: t('look.glow.off') }], d.glow !== false ? 'on' : 'off', function (v) { d.glow = v === 'on'; relook(); }), t('look.glowHint')));
     s.appendChild(ui.field(t('look.time'), ui.seg([{ v: '24', label: t('look.time.24') }, { v: '12', label: t('look.time.12') }], d.time12 ? '12' : '24', function (v) { d.time12 = v === '12'; relook(); })));
