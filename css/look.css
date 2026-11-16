@@ -104,7 +104,9 @@
   #nav button[data-route] svg { width: 24px; height: 24px; }
   #nav button.on svg { transform: none; }
   .nav-pill { border-radius: 50%; background: rgba(var(--brand-rgb), .18); box-shadow: inset 0 0 0 1.5px var(--brand); }
-  .nav-brand { display: block; width: 36px; height: 36px; margin-bottom: auto; border-radius: 12px; overflow: hidden; flex: none; }
+  #nav .nav-brand { display: grid; place-items: center; flex: none; width: 40px; height: 40px; min-height: 0; margin-bottom: auto; padding: 0; border: 0; border-radius: 12px; overflow: hidden; flex: none; background: none; }
+  #nav .nav-brand.me { border-radius: 50%; box-shadow: 0 0 0 2px var(--rail-bg), 0 0 0 3.5px rgba(var(--brand-rgb), .7); }
+  .nav-brand .avatar { width: 40px !important; height: 40px !important; font-weight: 800; }
   .nav-brand img { display: block; width: 100%; height: 100%; }
   .nav-tools { display: flex; flex-direction: column; align-items: center; gap: 2px; margin-top: auto; flex: none; }
   #nav .nav-tool { flex: none; display: grid; place-items: center; width: 46px; height: 46px; padding: 0; border-radius: 50%; color: var(--ink-2); }
@@ -307,4 +309,15 @@ html.text-big .ai-sum p { -webkit-line-clamp: 2 !important; }
 .rail .ev { display: grid; grid-template-columns: 12px minmax(0, 1fr); column-gap: 10px; row-gap: 1px; align-items: center; padding: 6px 0; }
 .rail .ev-dot { grid-column: 1; grid-row: 1; top: 0; }
 .rail .ev-when { grid-column: 2; grid-row: 1; min-width: 0; }
-.rail .ev-title { grid-column: 2; grid-row: 2; min-width: 0; overflow-wrap: anywhere; }
+.rail .ev-title { grid-column: 1 / -1; grid-row: 2; min-width: 0; overflow-wrap: anywhere; }
+
+/* wide screens: one left edge and one right edge for everything in the middle column (as in the design):
+   the Today header, summary, news, status chips, the Chores title and the chore cards all line up */
+@media (orientation: landscape) and (min-width: 900px) {
+  .home .board { padding: 24px 16px 0 22px !important; }
+  .home .home-head, .home .chips-row, .home .list-head { padding-left: 0 !important; padding-right: 0 !important; }
+  .home .list-body { padding: 10px 6px 12px !important; margin: 0 -6px; }   /* room for the glow, edges still in line */
+  .home .list-grid { margin: 0; }
+  .home .rail-right { padding-left: 6px !important; padding-right: 20px !important; }
+}
+html.size-compact .home .board { padding: 16px 14px 0 16px !important; }

@@ -108,6 +108,7 @@
       b.classList.toggle('on', on);
       if (on) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current');
     });
+    brand();
     var sleepB = document.querySelector('#nav [data-tool=sleep]'), panelB = document.querySelector('#nav [data-tool=panel]');
     if (sleepB) sleepB.setAttribute('aria-label', t('home.sleep'));
     if (panelB) panelB.setAttribute('aria-label', t(FB.device.panelOff ? 'home.showPanel' : 'home.hidePanel'));
@@ -117,6 +118,18 @@
   }
 
   var lastRoute = null;
+  /* top of the side rail: the face of whoever is signed in on this device (the app logo when nobody is) */
+  var brandKey = null;
+  function brand() {
+    var el = document.querySelector('#nav .nav-brand'); if (!el) return;
+    var m = L.member(FB.state.me), key = m ? [m.id, m.name, m.emoji, m.color].join('|') : '-';
+    if (key === brandKey) return;
+    brandKey = key;
+    U.clear(el);
+    el.classList.toggle('me', !!m);
+    el.setAttribute('aria-label', m ? m.name : t('nav.settings'));
+    el.appendChild(m ? ui.avatar(m, 40) : h('img', { src: 'icon.svg', alt: '' }));
+  }
   function routeIndex(n) { for (var i = 0; i < NAV.length; i++) if (NAV[i][0] === n) return i; return 0; }
 
   /* the sliding highlight behind the active tab */
@@ -736,7 +749,7 @@
       /* one nav for both shapes: a pill tab bar at the bottom, or (wide screens, see look.css) a slim icon rail on the left
          that also carries the app mark, the sleep button and the fold-panel arrow */
       var nav = h('nav', { id: 'nav', 'aria-label': 'Main' }, h('span', { class: 'nav-pill', 'aria-hidden': 'true' }),
-        h('span', { class: 'nav-brand', 'aria-hidden': 'true' }, h('img', { src: 'icon.svg', alt: '' })),
+        h('button', { type: 'button', class: 'nav-brand', onclick: function () { var m = L.member(FB.state.me); if (m) FB.actions.openMember(m); else app.go('settings'); } }),
         NAV.map(function (n) {
           return h('button', { type: 'button', 'data-route': n[0], 'data-label': n[2], onclick: function () { app.go(n[0]); } }, ui.icon(n[1], 28), h('span', null, t(n[2])));
         }),
