@@ -24,6 +24,21 @@ const DEV = {
   'taba-land': { viewport: { width: 1280, height: 800 }, deviceScaleFactor: 1, kind: 'wall' },
   'taba-port': { viewport: { width: 800, height: 1280 }, deviceScaleFactor: 1, kind: 'wall' },
   'laptop': { viewport: { width: 1126, height: 642 }, deviceScaleFactor: 1, kind: 'tablet' },
+  /* in-between and extreme sizes: the layout must not clash or hide things when the window is stretched or squeezed */
+  'phone-tiny': { viewport: { width: 320, height: 568 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true, kind: 'phone' },
+  'phone-land': { viewport: { width: 844, height: 390 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true, kind: 'phone' },
+  'phone-land-small': { viewport: { width: 667, height: 375 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true, kind: 'phone' },
+  'tab-small-port': { viewport: { width: 600, height: 960 }, deviceScaleFactor: 2, hasTouch: true, kind: 'tablet' },
+  'ipad-mini-port': { viewport: { width: 768, height: 1024 }, deviceScaleFactor: 2, hasTouch: true, kind: 'tablet' },
+  'ipad-mini-land': { viewport: { width: 1024, height: 768 }, deviceScaleFactor: 2, hasTouch: true, kind: 'tablet' },
+  'ipad-pro-land': { viewport: { width: 1366, height: 1024 }, deviceScaleFactor: 2, hasTouch: true, kind: 'tablet' },
+  'edge-wide': { viewport: { width: 900, height: 560 }, deviceScaleFactor: 1, kind: 'tablet' },
+  'short-wide': { viewport: { width: 1280, height: 600 }, deviceScaleFactor: 1, kind: 'wall' },
+  'square': { viewport: { width: 1000, height: 900 }, deviceScaleFactor: 1, kind: 'tablet' },
+  'hd': { viewport: { width: 1366, height: 768 }, deviceScaleFactor: 1, kind: 'tablet' },
+  'fhd': { viewport: { width: 1920, height: 1080 }, deviceScaleFactor: 1, kind: 'wall' },
+  'qhd': { viewport: { width: 2560, height: 1440 }, deviceScaleFactor: 1, kind: 'wall' },
+  'narrow-desk': { viewport: { width: 700, height: 800 }, deviceScaleFactor: 1, kind: 'tablet' },
 };
 const ALL = { weather: true, ac: true, news: true, summary: true, events: true, countdown: true, shopping: true, notes: true };
 const NONE = Object.fromEntries(Object.keys(ALL).map(k => [k, false]));
@@ -43,22 +58,42 @@ async function audit(page) {
     const vis = (el) => { const r = el.getBoundingClientRect(); const cs = getComputedStyle(el); return r.width > 2 && r.height > 2 && cs.visibility !== 'hidden' && cs.display !== 'none' && +cs.opacity > 0.05; };
     const name = (el) => (el.className && typeof el.className === 'string' ? '.' + el.className.trim().split(/\s+/).slice(0, 2).join('.') : el.tagName) + ' "' + (el.innerText || '').trim().slice(0, 28).replace(/\s+/g, ' ') + '"';
     const SEL = '.hh-wx, .chips-row, .clock-row, .dateline, .wx-now, .wx-desc, .wx-hours, .wx-strip, .ai-sum, .news-strip, .today-strip, .list-head, .chore, .done-card, .empty-state, .rr > h3, .ev, .ev-day, .cd-card, .shop-mini, .note-mini, .shop-tile, .ac-tile, .ptile, .rr .link-btn';
-    const els = [...document.querySelectorAll('#view ' + SEL.split(', ').join(', #view '))].filter(vis);
+    /* the part of an element that can be seen: cut by every box above it that clips or scrolls.
+       Content scrolled out of a scrolling column is reachable, so it is not an overlap or a fold problem. */
+    const scrolls = (cs) => /(auto|scroll)/.test(cs.overflowY);
+    const seen = (el) => {
+      let r = el.getBoundingClientRect(), x0 = r.left, y0 = r.top, x1 = r.right, y1 = r.bottom, p = el.parentElement, scrolled = false;
+      while (p && p.id !== 'view') {
+        const cs = getComputedStyle(p);
+        if (cs.display !== 'contents' && (cs.overflowY !== 'visible' || cs.overflowX !== 'visible')) {
+          const q = p.getBoundingClientRect();
+          if (cs.overflowY !== 'visible') { if (y0 < q.top || y1 > q.bottom) scrolled = scrolled || scrolls(cs); y0 = Math.max(y0, q.top); y1 = Math.min(y1, q.bottom); }
+          if (cs.overflowX !== 'visible') { x0 = Math.max(x0, q.left); x1 = Math.min(x1, q.right); }
+        }
+        p = p.parentElement;
+      }
+      return { left: x0, top: y0, right: x1, bottom: y1, empty: x1 - x0 < 3 || y1 - y0 < 3, scrolled };
+    };
+    const all = [...document.querySelectorAll('#view ' + SEL.split(', ').join(', #view '))].filter(vis);
+    all.forEach(el => { const v = seen(el); if (v.empty && !v.scrolled && !el.closest('.list-grid')) issues.push(`HIDDEN ${name(el)} (clipped away)`); });
+    const els = all.filter(el => !seen(el).empty);
     // 1. overlaps between unrelated blocks
     for (let i = 0; i < els.length; i++) for (let j = i + 1; j < els.length; j++) {
       const a = els[i], b = els[j]; if (a.contains(b) || b.contains(a)) continue;
-      const r = a.getBoundingClientRect(), s = b.getBoundingClientRect();
+      const r = seen(a), s = seen(b);
       const ox = Math.min(r.right, s.right) - Math.max(r.left, s.left), oy = Math.min(r.bottom, s.bottom) - Math.max(r.top, s.top);
       if (ox > 4 && oy > 4) issues.push(`OVERLAP ${name(a)} × ${name(b)} (${Math.round(ox)}x${Math.round(oy)})`);
     }
     // 2. outside the screen / under the tab bar / cut by its column
     els.forEach(el => {
-      const r = el.getBoundingClientRect();
+      const r = seen(el);
       if (r.right > vw + 1 || r.left < -1) issues.push(`OFFSCREEN-X ${name(el)} (${Math.round(r.left)}..${Math.round(r.right)} of ${vw})`);
       if (r.top < navTop && r.bottom > navTop + 2 && !document.querySelector('.home')?.scrollHeight) issues.push(`UNDER-NAV ${name(el)}`);
       if (document.querySelector('#view .home') && r.top >= navTop - 2) issues.push(`BELOW-FOLD ${name(el)} (top ${Math.round(r.top)} ≥ nav ${Math.round(navTop)})`);
       let p = el.parentElement;
-      while (p && p.id !== 'view') { const cs = getComputedStyle(p); if (/(hidden|clip)/.test(cs.overflow + cs.overflowY)) { const q = p.getBoundingClientRect(); if (r.bottom > q.bottom + 2 && r.top < q.bottom) { issues.push(`CUT ${name(el)} by ${name(p).split(' ')[0]} (${Math.round(r.bottom - q.bottom)}px)`); } if (r.top >= q.bottom - 1) { issues.push(`HIDDEN ${name(el)} inside ${name(p).split(' ')[0]}`); } break; } p = p.parentElement; }
+      if (r.scrolled) return; /* partly scrolled out of a scrolling column: reachable */
+      const own = el.getBoundingClientRect();
+      while (p && p.id !== 'view') { const cs = getComputedStyle(p); if (cs.display !== 'contents' && /(hidden|clip)/.test(cs.overflowY)) { const q = p.getBoundingClientRect(); if (own.bottom > q.bottom + 2 && own.top < q.bottom) { issues.push(`CUT ${name(el)} by ${name(p).split(' ')[0]} (${Math.round(own.bottom - q.bottom)}px)`); } if (own.top >= q.bottom - 1) { issues.push(`HIDDEN ${name(el)} inside ${name(p).split(' ')[0]}`); } break; } p = p.parentElement; }
     });
     // 3. clipped text (ellipsis / clamp) and too small text
     document.querySelectorAll('#view *').forEach(el => {
@@ -87,12 +122,12 @@ async function audit(page) {
     const d = DEV[dn], pr = PROFILES[pn];
     const ctx = await b.newContext({ viewport: d.viewport, deviceScaleFactor: d.deviceScaleFactor, isMobile: !!d.isMobile, hasTouch: !!d.hasTouch, colorScheme: 'dark', locale: 'sq-AL', timezoneId: 'Europe/Tirane' });
     const p = await ctx.newPage(); const errs = []; p.on('pageerror', e => errs.push(e.message));
-    await p.addInitScript(([kind, show, data]) => {
+    await p.addInitScript(([kind, show, data, extra]) => {
       window.__profile = data;
-      const dev = { lang: 'sq', kind, kindAsked: true, nightOn: false, homeIdle: false, calm: false, wall: kind === 'wall', nativeEmoji: true };
+      const dev = Object.assign({ lang: 'sq', kind, kindAsked: true, nightOn: false, homeIdle: false, calm: false, wall: kind === 'wall', nativeEmoji: true }, extra);
       if (show) dev.show = show;
       try { localStorage.setItem('fb.device.v1', JSON.stringify(dev)); localStorage.removeItem('stubdb'); } catch (e) {}
-    }, [d.kind, pr.show, pr.data]);
+    }, [d.kind, pr.show, pr.data, JSON.parse(process.env.DEVICE || '{}')]);
     await p.addInitScript(stub);
     await p.route(/fonts\.g|jsdelivr/, r => r.abort());
     await p.route(/api\.open-meteo\.com/, r => r.fulfill({ contentType: 'application/json', body: JSON.stringify(wx) }));
@@ -112,7 +147,7 @@ async function audit(page) {
   }
   await b.close();
   /* serious = blocks covering each other, things off screen or under the tab bar, chores hidden without a "+N" */
-  const SERIOUS = /^(OVERLAP|OFFSCREEN|PAGE-SCROLL-X|JS-ERROR|BELOW-FOLD|CUT \.chore)/;
+  const SERIOUS = /^(OVERLAP|OFFSCREEN|PAGE-SCROLL-X|JS-ERROR|BELOW-FOLD|CUT \.(?!chore)|CUT \.chore|HIDDEN (?!\.chore))/;
   let bad = 0;
   for (const k of Object.keys(report)) {
     const s = report[k].filter(x => SERIOUS.test(x));

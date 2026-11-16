@@ -86,7 +86,7 @@
 }
 
 /* ---------- 2. wide screens: the icon rail ---------- */
-@media (orientation: landscape) and (min-width: 900px) and (min-height: 560px) {
+@media (orientation: landscape) and (min-width: 600px) {
   #app { flex-direction: row; }
   .view { min-width: 0; height: 100%; }
   #nav {
@@ -156,7 +156,8 @@ html.glow .ac-tile.on .ac-col + .ac-col { border-left-color: rgba(255, 255, 255,
 .look-range { display: flex; align-items: center; gap: 14px; }
 .look-range input { flex: 1; min-width: 0; height: 44px; }
 .look-range input:disabled { opacity: .4; }
-.look-val { min-width: 4.5ch; text-align: right; font-variant-numeric: tabular-nums; }
+.look-val { min-width: 4.5ch; text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.look-reset { flex: none; min-height: 44px; padding: 0 16px; }
 @media (max-width: 520px) { .look-themes { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 
 @media (orientation: landscape) and (min-width: 900px) {
@@ -173,9 +174,126 @@ html.glow .ac-tile.on .ac-col + .ac-col { border-left-color: rgba(255, 255, 255,
   html.dense .home .list-grid .chore-who-av { min-width: 44px; }
   html.dense .home .list-grid .chore-who-av .avatar { width: 38px !important; height: 38px !important; font-size: 18px !important; }
 }
-@media (orientation: landscape) and (min-width: 900px) and (min-height: 560px) {
+@media (orientation: landscape) and (min-width: 600px) {
   /* kiosk mode: no rail on the home screen; sleep and settings move into the header */
   html.kiosk[data-route=home] #nav { display: none; }
   html.kiosk .home-head .kiosk-btn { display: grid; place-items: center; width: 44px; height: 44px; flex: none; color: var(--ink-2); background: var(--g-fill-2); }
 }
 .set .swatches { padding: 5px 6px; }
+
+/* ======================================================================
+   Every size: nothing overlaps, nothing silently disappears, space is used.
+   ====================================================================== */
+/* side rail on short landscape screens (phones on their side): smaller buttons, no logo, so all of it fits */
+/* size-short (set by app.applySize from the screen size divided by the interface size) */
+html.size-short #nav { width: 50px; gap: 4px; padding-top: 8px; padding-bottom: 8px; }
+html.size-short #nav button[data-route], html.size-short #nav .nav-tool { width: 42px; height: 42px; }
+html.size-short .nav-brand { display: none; }
+html.size-short #nav button[data-route]:first-of-type { margin-top: auto; }
+
+
+/* compact landscape (window 600-1179 wide, or shorter than 560): two columns.
+   Clock panel and the right column share one side column, each part scrolls by itself; the chores get the rest. */
+/* size-compact (set by app.applySize from the screen size divided by the interface size) */
+html.size-compact .home { grid-template-columns: minmax(214px, 27%) minmax(0, 1fr) !important; grid-template-rows: fit-content(58%) minmax(0, 1fr) !important;
+    grid-template-areas: "left board" "right board"; }
+html.size-compact.panel-off .home { grid-template-areas: "right board" "right board"; }
+html.size-compact .home .rail-left { grid-area: left; min-height: 0; overflow-y: auto; padding: 14px 14px 10px !important; }
+html.size-compact .home .board { grid-area: board; }
+html.size-compact .home .rail-right { grid-area: right; overflow-y: auto; padding: 12px 14px 14px !important; background: var(--panel-bg); border-left: 0; border-right: 1px solid var(--g-edge-2); border-top: 1px solid var(--g-edge-2); }
+html.size-compact .home .rail-right .rail-in { zoom: 1 !important; }
+html.size-compact .home .rail-left .rail-in { zoom: 1 !important; }
+html.size-compact .home .rail-left .clock-row { height: auto; margin-bottom: 8px; }
+html.size-compact .home .rail-left .clock { font-size: 52px !important; }
+html.size-compact .home .rail-left .ac-tile { margin-top: 10px !important; }
+html.size-compact .home .board { padding: 16px 6px 0 12px !important; }
+html.size-compact .home .list-grid { grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)) !important; }
+html.size-compact.dense .home .list-grid { grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)) !important; }
+
+/* short screens: one-line news, two-line summary, chips scroll sideways instead of taking two rows */
+/* size-low (set by app.applySize from the screen size divided by the interface size) */
+html.size-low .news-strip .news-body { -webkit-line-clamp: 1 !important; }
+html.size-low .news-strip { height: auto !important; min-height: 46px !important; }
+html.size-low .ai-sum p { -webkit-line-clamp: 2 !important; }
+html.size-low .chips-row { flex-wrap: nowrap; overflow-x: auto; }
+html.size-low .stat-chip { flex: none; }
+html.size-low .home-head { padding-bottom: 10px; }
+
+/* size-short (set by app.applySize from the screen size divided by the interface size) */
+html.size-short .home-head .hh-txt h1 { font-size: 28px; }
+html.size-short .hh-wx-ico svg { width: 42px; height: 42px; }
+html.size-short .hh-wx-t { font-size: 30px; }
+html.size-short .home .board { padding-top: 10px !important; }
+html.size-short .ai-sum { min-height: 0 !important; }
+html.size-short .home .ai-sum, html.size-short .home .news-strip, html.size-short .chips-row { margin-bottom: 6px !important; }
+html.size-short .home .list-head { padding-top: 2px !important; padding-bottom: 4px !important; }
+html.size-short .home .list-head .list-title { font-size: 22px; }
+
+
+/* upright tablets: the bottom strip scrolls inside each block instead of cutting the last lines */
+@media (min-width: 700px) and (orientation: portrait) {
+  .rail-right .rail-in > * { overflow-y: auto !important; overscroll-behavior: contain; }
+  /* the chores always keep room for a row of cards; the bottom strip gives way (and scrolls) when text is large */
+  .home { grid-template-rows: auto minmax(min(280px, 34vh), 1fr) minmax(0, 30vh) !important; }
+}
+@media (min-width: 700px) and (orientation: portrait) and (max-height: 960px) {
+  /* the chores keep room for at least one row of cards; the bottom strip gives way and scrolls */
+  .home { grid-template-rows: auto minmax(min(250px, 34vh), 1fr) minmax(0, 24vh) !important; }
+  .news-strip .news-body { -webkit-line-clamp: 1 !important; }
+  .ai-sum p { -webkit-line-clamp: 2 !important; }
+  .chips-row { flex-wrap: nowrap; overflow-x: auto; }
+  .stat-chip { flex: none; }
+}
+/* small phones: two-line summary and smaller tiles so more chores fit */
+@media (max-width: 699px) and (orientation: portrait) and (max-height: 760px) {
+  .home .ai-sum p { -webkit-line-clamp: 2 !important; }
+  .ptile { min-height: 74px !important; padding: 6px 4px !important; }
+  .ptile b { font-size: 18px; }
+}
+
+/* summary clamp works in every layout (the phone and compact layouts did not set the box model) */
+.ai-sum p { display: -webkit-box; -webkit-box-orient: vertical; overflow: hidden; }
+/* compact landscape: the side column scrolls, so show a thin scroll bar as a hint */
+/* size-compact (set by app.applySize from the screen size divided by the interface size) */
+html.size-compact .home .rail-left, html.size-compact .home .rail-right { scrollbar-width: thin; scrollbar-color: rgba(var(--brand-rgb), .45) transparent; }
+html.size-compact .home .rail-left::-webkit-scrollbar, html.size-compact .home .rail-right::-webkit-scrollbar { display: block; width: 4px; }
+html.size-compact .home .rail-left::-webkit-scrollbar-thumb, html.size-compact .home .rail-right::-webkit-scrollbar-thumb { background: rgba(var(--brand-rgb), .45); border-radius: 4px; }
+
+/* upright tablets: the status chips repeat what the bottom strip already shows, so they give their room to the chores */
+@media (min-width: 700px) and (orientation: portrait) { .chips-row { display: none; } .home .board { overflow: hidden !important; } }
+
+/* big numbers follow the text size but never grow wider than their column */
+.rail-left { container-type: inline-size; }
+@media (orientation: landscape) and (min-width: 900px) { .rail-left .clock { font-size: min(calc(64px * var(--fs, 1)), 31cqw) !important; } }
+html.size-compact .home .rail-left .clock { font-size: min(calc(52px * var(--fs, 1)), 27cqw) !important; }
+html.size-compact .home .rail-left .wx-temp { font-size: min(calc(48px * var(--fs, 1)), 22cqw); }
+@media (orientation: portrait) {
+  .home .rail-left .clock { font-size: min(calc(56px * var(--fs, 1)), 24cqw) !important; }
+  .home .rail-left .wx-temp { font-size: min(calc(40px * var(--fs, 1)), 12cqw) !important; }
+}
+/* tab labels grow a little with the text size, then stop so they still fit */
+#nav button[data-route] { font-size: min(calc(11px * var(--fs, 1)), 12.5px) !important; }
+
+/* large text: the hourly strip keeps as many hours as fit (all of them are in the weather popup) */
+.wx-hours { grid-template-columns: repeat(auto-fill, minmax(calc(44px * var(--fs, 1)), 1fr)) !important; grid-template-rows: auto; grid-auto-rows: 0; overflow: hidden; row-gap: 0 !important; }
+.wx-hours .wx-h { display: flex !important; }
+html.text-big .news-strip .news-body { -webkit-line-clamp: 1 !important; }
+html.text-big .ai-sum p { -webkit-line-clamp: 2 !important; }
+@media (min-width: 700px) and (orientation: portrait) {
+  /* the bottom strip: columns as wide as the text needs; with large text they wrap and the strip scrolls */
+  .rail-right { overflow-y: auto !important; }
+  .rail-right .rail-in { grid-auto-flow: row !important; grid-template-columns: repeat(auto-fit, minmax(calc(165px * var(--fs, 1)), 1fr)); grid-auto-columns: auto !important; height: auto !important; }
+  html.text-big .home { grid-template-rows: auto minmax(min(360px, 42vh), 1fr) minmax(0, 26vh) !important; }
+}
+
+/* phones: if even one chore card does not fit (very large text), the list scrolls instead of cutting it */
+@media (max-width: 699px) and (orientation: portrait) { .home .list-body { overflow-y: auto !important; } }
+@media (max-width: 699px) and (orientation: portrait) {
+  /* large text on a phone: the chores header wraps instead of pushing the add button off the screen */
+  html.text-big .home .list-head { flex-wrap: wrap !important; row-gap: 6px; }
+  html.text-big .home .list-actions { margin-left: auto; }
+}
+@media (max-width: 699px) and (orientation: portrait) {
+  html.text-big .home .rail-left .clock { font-size: min(calc(56px * var(--fs, 1)), 21cqw) !important; }
+  html.text-big .home .rail-left .wx-temp { font-size: min(calc(40px * var(--fs, 1)), 10cqw) !important; }
+}

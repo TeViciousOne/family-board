@@ -155,10 +155,15 @@
     kids.forEach(function (k) { k.style.display = ''; });
     if (box.scrollHeight <= box.clientHeight + 1) return;
     var soft = el.getAttribute('data-cap') === 'soft'; /* side columns: drop the last sections quietly */
+    /* a side column that can scroll keeps everything: scrolling is better than sections silently missing */
+    if (soft && /auto|scroll/.test(getComputedStyle(box).overflowY)) return;
     var more = soft ? null : h('button', { type: 'button', class: 'more-chip', onclick: function () { if (FB.actions.openTodayChores) FB.actions.openTodayChores(); else app.go('chores'); } });
     if (more) el.appendChild(more);
     var hidden = 0;
-    for (var i = kids.length - 1; i >= (soft ? 2 : 0) && box.scrollHeight > box.clientHeight + 1; i--) {
+    /* chores: the first row always stays, otherwise a tight screen showed only "+N more" and an empty list */
+    var keep = soft ? 2 : 1;
+    if (!soft) { var top0 = kids.length ? kids[0].offsetTop : 0; keep = kids.filter(function (k) { return k.offsetTop === top0; }).length || 1; }
+    for (var i = kids.length - 1; i >= keep && box.scrollHeight > box.clientHeight + 1; i--) {
       kids[i].style.display = 'none'; hidden++;
       if (more) more.textContent = '+' + hidden + ' ' + t('home.more');
     }
@@ -435,8 +440,53 @@
     var mq = root.matchMedia('(prefers-color-scheme: dark)'), onScheme = function () { if (FB.device) app.applyLook(); };
     if (mq.addEventListener) mq.addEventListener('change', onScheme); else if (mq.addListener) mq.addListener(onScheme);
   }
+  /* ---- size: text size and interface size (Settings > Look), per device ---- */
+  /* text size: every font size in the app's own style sheets is multiplied by --fs (done once, on first use) */
+  var textReady = false;
+  function scaleText() {
+    if (textReady) return; textReady = true;
+    function walk(rules) {
+      for (var i = 0; i < rules.length; i++) {
+        var r = rules[i];
+        if (r.style) {
+          var fs = r.style.getPropertyValue('font-size');
+          if (fs && /px/.test(fs) && fs.indexOf('--fs') < 0) r.style.setProperty('font-size', 'calc((' + fs + ') * var(--fs, 1))', r.style.getPropertyPriority('font-size'));
+        }
+        if (r.cssRules) walk(r.cssRules);
+      }
+    }
+    [].forEach.call(document.styleSheets, function (sh) { try { walk(sh.cssRules); } catch (e) { /* fonts from another site */ } });
+  }
+  /* interface size "auto": big screens (a TV, a 24" monitor) grow so nothing looks lost; normal screens stay at 100% */
+  app.autoZoom = function () {
+    var r = Math.min(root.innerWidth / 1280, root.innerHeight / 800);
+    return r >= 1.15 ? Math.min(2, Math.round(r * 20) / 20) : 1;
+  };
+  app.layout = { z: 1, w: root.innerWidth, h: root.innerHeight, wide: false };
+  app.applySize = function () {
+    var d = FB.device, de = document.documentElement;
+    var z = d.uiScale ? Math.max(0.5, Math.min(2, d.uiScale / 100)) : app.autoZoom();
+    /* never grow past what the screen can hold (a phone on its side cannot take 150%) */
+    if (z > 1) z = Math.min(z, Math.max(1, Math.min(root.innerWidth / 340, root.innerHeight / 440)));
+    /* an upright tablet keeps its tablet layout: do not grow it into a phone-sized page */
+    if (z > 1 && root.innerHeight >= root.innerWidth && root.innerWidth >= 700) z = Math.max(1, Math.min(z, root.innerWidth / 700));
+    de.style.zoom = z === 1 ? '' : String(z);
+    de.style.height = '';
+    /* older Android WebViews use the old kind of zoom, where the page grows past the screen: hold it to one screen */
+    if (z !== 1 && de.getBoundingClientRect().height > root.innerHeight + 2) de.style.height = Math.floor(root.innerHeight / z) + 'px';
+    var fs = Math.max(0.7, Math.min(1.6, (d.textSize || 100) / 100));
+    if (fs !== 1) scaleText();
+    de.style.setProperty('--fs', String(fs));
+    de.classList.toggle('text-big', fs >= 1.2);
+    var w = root.innerWidth / z, hh = root.innerHeight / z, land = root.innerWidth > root.innerHeight;
+    app.layout = { z: z, w: w, h: hh, wide: land && w >= 900 };
+    de.classList.toggle('size-compact', land && w >= 600 && (w < 1180 || hh < 560));
+    de.classList.toggle('size-low', land && hh <= 700);
+    de.classList.toggle('size-short', land && hh <= 480);
+  };
   app.applyDevice = function () {
     app.applyPanel();
+    app.applySize();
     app.applyLook();
     FB.i18n.set(FB.device.lang);
     FB.sound.enabled = !!FB.device.sound;
@@ -622,7 +672,7 @@
       if (!typing && !document.querySelector('.sheet')) app.refreshAll();
     }, 30000);
     setInterval(checkUpdate, 10 * 60 * 1000);
-    root.addEventListener('resize', U.debounce(function () { app.render(); }, 150));
+    root.addEventListener('resize', U.debounce(function () { app.applySize(); app.render(); }, 150));
     root.addEventListener('online', function () { app.refreshAll(); app.loadWeather(true); });
     root.addEventListener('offline', function () { if (FB.store.flush) FB.store.flush(); });
     setInterval(function () {
@@ -754,7 +804,7 @@
 
   app.boot = function () {
     FB.i18n.set(FB.device.lang);
-    app.applyLook(); /* before sign-in too, so the first screen already has the chosen look */
+    app.applySize(); app.applyLook(); /* before sign-in too, so the first screen already has the chosen look */
     FB.sound.enabled = !!FB.device.sound; FB.sound.volume = FB.device.volume;
     night.el = document.getElementById('night');
     night.el.appendChild(h('div', { class: 'night-clock' }));

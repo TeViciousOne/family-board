@@ -288,7 +288,8 @@
 
   /* wide landscape (iPad / wall tablet): events and countdown live in the left column, shopping at the top right */
   function isPhone() { return !!(root.matchMedia && root.matchMedia('(max-width: 699px) and (orientation: portrait)').matches); }
-  function isWide() { return !!(root.matchMedia && root.matchMedia('(orientation: landscape) and (min-width: 900px)').matches); }
+  /* wide = landscape and at least 900 px after the interface size is applied (see FB.app.applySize) */
+  function isWide() { return FB.app.layout ? !!FB.app.layout.wide : !!(root.matchMedia && root.matchMedia('(orientation: landscape) and (min-width: 900px)').matches); }
 
   /* phones: one row of small tiles under the chores instead of the right column (tap = full view) */
   function phoneTiles(today) {
