@@ -202,10 +202,11 @@
 
   /* a quiet day leaves room under the chores: show tomorrow there, so the wall is never half empty */
   function tomorrowCard(today, count) {
-    if (isPhone() || count > 6) return null;
+    var ph = isPhone(); /* phones: only on a short day (up to 3 chores), and fewer lines */
+    if (count > (ph ? 3 : 6)) return null;
     var tm = U.addDays(today, 1);
-    var chores = L.choresDue(tm, '00:00').filter(function (x) { return !x.done; }).slice(0, 6);
-    var evs = L.upcoming(today, 2).filter(function (x) { return x.date === tm; }).slice(0, 3);
+    var chores = L.choresDue(tm, '00:00').filter(function (x) { return !x.done; }).slice(0, ph ? 3 : 6);
+    var evs = L.upcoming(today, 2).filter(function (x) { return x.date === tm; }).slice(0, ph ? 2 : 3);
     if (!chores.length && !evs.length) return null;
     return h('section', { class: 'tmr-card', 'data-fit-skip': '1', 'aria-label': t('home.tomorrow') },
       h('h3', { class: 'tmr-head' }, t('home.tomorrow')),

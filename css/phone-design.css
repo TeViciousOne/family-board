@@ -107,3 +107,32 @@
   .view-lists .pane { margin: var(--sp-3) 0 0; border-radius: var(--r-lg); }
   .view-lists .shop-grid .shop { min-height: 52px; }
 }
+
+/* ----- fixes after the first look on a real phone ----- */
+@media (max-width: 699px) and (orientation: portrait) {
+  /* every surface uses the same material: with glass on, the cards blur what is behind them (the clock card did not) */
+  .ph-card, .ptile, .home.phone .who-chip { -webkit-backdrop-filter: var(--card-blur, none); backdrop-filter: var(--card-blur, none); }
+  .ph-card, .ptile, .home.phone .who-chip, .home.phone .chore, .home.phone .ai-sum { background-color: var(--g-fill) !important; background-image: none !important; }
+  /* progress ring: drawn at the 36px it occupies, the count fits inside it */
+  .home.phone .list-head .col-count.ring, .home.phone .list-head .ring-svg, .home.phone .list-head .ring-svg svg { width: var(--ph-ctl) !important; height: var(--ph-ctl) !important; }
+  .home.phone .ring-bg, .home.phone .ring-fg { stroke-width: 5.5; }
+  .home.phone .ring-txt { font-size: 11px !important; letter-spacing: -.02em; }
+  /* the tick is a clear 2px circle, as in the design */
+  .home.phone .chore .tick { border: 2px solid var(--label-2) !important; background: transparent; }
+  .home.phone .chore.done .tick { background: var(--sys-green) !important; border-color: var(--sys-green) !important; }
+  /* summary: a plain 24px sparkle, no box */
+  .home.phone .ai-sum-ico { width: 24px !important; height: 24px !important; min-width: 0; margin: 0 !important; padding: 0 !important; background: none !important; box-shadow: none !important; border-radius: 0 !important; color: var(--brand); flex: none; align-self: center; }
+  .home.phone .ai-sum-ico svg { width: 24px; height: 24px; }
+  /* tiles: a one-word value fits ("Tomorrow") */
+  .ptile b { font-size: 15px !important; letter-spacing: -.01em; padding: 0 var(--sp-1); }
+  /* nav: the avatar fills its 44px circle, centred */
+  #nav .nav-brand { display: grid !important; place-items: center; padding: 0 !important; overflow: hidden; }
+  #nav .nav-brand .avatar { width: 44px !important; height: 44px !important; margin: 0 !important; }
+}
+@media (max-width: 699px) and (orientation: portrait) {
+  /* a short day: tomorrow under the chores, behind a hairline (as the Chores board in the design) */
+  .home.phone .tmr-card { margin-top: var(--sp-5); padding: var(--sp-4) 0 0; }
+  .home.phone .tmr-head { margin: 0 0 var(--sp-2); }
+  .home.phone .tmr-grid { grid-template-columns: minmax(0, 1fr); gap: 0; }
+  .home.phone .tmr-item { min-height: var(--hit); padding: 0; }
+}
