@@ -70,7 +70,7 @@
   AC.mini = function () {
     if (!AC.enabled()) return null;
     var big = h('b', null, '–'), small = h('small', null, t('ac.title'));
-    var btn = h('button', { type: 'button', class: 'ptile pt-ac', onclick: function () { AC.open(); } }, h('span', { class: 'pt-ico' }, '❄️'), big, small);
+    var btn = h('button', { type: 'button', class: 'ptile pt-ac', onclick: function () { AC.open(); } }, h('span', { class: 'pt-ico' }, FB.ui.icon('snow', 20)), big, small);
     function paint() {
       var s = st.s, on = AC.on() && st.online;
       btn.classList.toggle('on', on);

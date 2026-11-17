@@ -1,0 +1,178 @@
+/* Phone design (portrait, < 700px) — built from the "Chore Family phone" Design canvas, 390 x 844.
+   Spacing is on the 4/8-pt tokens from tokens.css; sizes the canvas fixes (card 84, row 50, tile 64, control 36) are tokens here.
+   Loaded after flavor.css; nothing here applies to tablets, iPads or landscape. */
+@media (max-width: 699px) and (orientation: portrait) {
+  :root {
+    --ph-edge: var(--sp-4);      /* 16: the one left/right margin of every phone screen */
+    --ph-card-h: 84px;           /* clock + weather cards */
+    --ph-ctl: 36px;              /* pills, ring, Add */
+    --ph-row: 50px;              /* chore row */
+    --ph-tile: 64px;             /* info tile */
+    --ph-top: max(env(safe-area-inset-top, 0px), var(--sp-3));
+  }
+
+  /* ----- header: two equal cards ----- */
+  .home.phone .rail-left { padding: var(--ph-top) var(--ph-edge) 0 !important; }
+  .home.phone .rail-left .rail-in { display: block !important; }
+  .ph-cards { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--sp-2); }
+  .ph-cards.solo { grid-template-columns: minmax(0, 1fr); }
+  .ph-card {
+    box-sizing: border-box; height: var(--ph-card-h); min-width: 0; margin: 0; padding: 0 var(--sp-4);
+    display: flex; flex-direction: column; justify-content: center; align-items: flex-start; gap: 0; text-align: left;
+    border: 1px solid var(--g-edge-2, rgba(255,255,255,.10)); border-radius: var(--r-lg) !important;
+    background: var(--g-fill); color: var(--ink); font: inherit; overflow: hidden;
+  }
+  .ph-big { display: flex; align-items: center; gap: var(--sp-2); height: 40px; font-size: 32px; line-height: 40px; font-weight: 700; letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+  .home.phone .rail-left .ph-big.clock { position: static !important; font-size: 32px !important; line-height: 40px !important; height: 40px; letter-spacing: -.02em; width: auto; top: auto !important; }
+  .ph-big b { font-weight: 700; }
+  .ph-ico { display: grid; place-items: center; width: 32px; height: 32px; flex: none; }
+  .ph-ico svg { width: 32px; height: 32px; }
+  .ph-l1, .ph-l2 { display: block; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .ph-l1 { font-size: var(--t-subhead); line-height: 18px; font-weight: 600; color: var(--ink); }
+  .ph-l2 { font-size: var(--t-caption); line-height: 16px; font-weight: 500; color: var(--ink-2); }
+  button.ph-card:active { transform: scale(.98); }
+
+  /* ----- summary ----- */
+  .home.phone .board { padding: 0 var(--ph-edge) 0 !important; gap: 0 !important; }
+  .home.phone .ai-sum { margin: var(--sp-2) 0 0 !important; padding: 0 var(--sp-4) !important; height: 68px; box-sizing: border-box; gap: var(--sp-3) !important; align-items: center; border-radius: var(--r-lg) !important; }
+  .home.phone .ai-sum p { font-size: 14px !important; line-height: 19px !important; font-weight: 500; -webkit-line-clamp: 3; }
+
+  /* ----- chores header: title, ring, Add ----- */
+  .home.phone .list-head { display: flex; align-items: center; gap: var(--sp-2); margin: var(--sp-5) 0 0 !important; padding: 0 !important; min-height: var(--ph-ctl); }
+  .home.phone .board > .col { margin: 0 !important; padding: 0 !important; }
+  .home.phone .list-head .list-title { flex: 1; min-width: 0; margin: 0; font-size: 28px; line-height: 36px; letter-spacing: -.02em; }
+  .home.phone .list-head .col-count { flex: none; width: var(--ph-ctl); height: var(--ph-ctl); min-width: 0; margin: 0; padding: 0; font-size: 11px; }
+  .home.phone .list-actions { margin: 0; flex: none; }
+  .home.phone .list-actions .add-pill { position: relative; width: 92px; height: var(--ph-ctl); min-height: var(--ph-ctl); padding: 0 var(--sp-3); margin: 0; justify-content: center; }
+  .home.phone .list-actions .add-pill::after { content: ''; position: absolute; inset: -4px 0; }
+
+  /* ----- who filter ----- */
+  .home.phone .who-row { display: flex; gap: 6px; margin: var(--sp-3) 0 0; padding: 0; }
+  .home.phone .who-chip { position: relative; flex: 1 1 0; min-width: 0; height: var(--ph-ctl); min-height: var(--ph-ctl); padding: 0 6px; margin: 0; display: flex; align-items: center; justify-content: center; gap: 6px; border-radius: var(--r-pill) !important; border: 1px solid var(--g-edge-2); background: var(--g-fill); box-shadow: none; color: var(--label); font: 600 13px/1 var(--font-body); transition: transform .2s ease-out, border-color .2s ease-out; }
+  .home.phone .who-chip:active { transform: scale(.97); }
+  .home.phone .who-chip.on { border-color: var(--brand); box-shadow: inset 0 0 0 .5px var(--brand); font-weight: 700; }
+  .home.phone .who-dot { flex: none; width: 9px; height: 9px; border-radius: 50%; background: var(--label-3); }
+  .home.phone .who-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .home.phone .who-chip:first-child { flex: none; padding: 0 var(--sp-3); font-weight: 700; }
+  .home.phone .who-chip::after { content: ''; position: absolute; inset: -4px 0; }
+
+  /* ----- chore rows ----- */
+  .home.phone .list-body { margin: var(--sp-3) 0 0 !important; padding: 0 !important; }
+  .home.phone .list-grid { gap: var(--sp-2) !important; }
+  .home.phone .chore { box-sizing: border-box; height: var(--ph-row) !important; min-height: var(--ph-row) !important; padding: 0 var(--sp-3) !important; gap: var(--sp-3) !important; border-radius: var(--r-md) !important; align-items: center; }
+  .home.phone .chore .tick { width: 26px !important; height: 26px !important; flex: none; }
+  .home.phone .chore-title { font-size: 15px !important; line-height: 19px; font-weight: 600; }
+  .home.phone .chore-meta { font-size: 12px !important; line-height: 15px; }
+  .home.phone .list-grid .chore-who-av .avatar { width: 30px !important; height: 30px !important; font-size: 13px !important; }
+
+  /* ----- info tiles ----- */
+  .home.phone .rail-right, .ptiles { padding: 0; }
+  .ptiles { margin: 0 var(--ph-edge) var(--sp-4); gap: var(--sp-2); }
+  .ptile { box-sizing: border-box; height: var(--ph-tile) !important; min-height: var(--ph-tile) !important; padding: 0 var(--sp-1) !important; gap: 2px; border-radius: var(--r-md) !important; border: 1px solid var(--g-edge-2, rgba(255,255,255,.10)); }
+  .ptile .pt-ico { font-size: 20px; line-height: 20px; height: 20px; }
+  .ptile .pt-ico { display: grid; place-items: center; }
+  .ptile .pt-ico svg { width: 20px; height: 20px; }
+  .ptile.pt-shop .pt-ico { color: var(--tone-green); }
+  .ptile.pt-ev .pt-ico { color: var(--tone-red); }
+  .ptile.pt-ac .pt-ico { color: var(--tone-cyan); }
+  .ptile.pt-cd .pt-ico { color: var(--tone-orange); }
+  .ptile b { font-size: 16px; line-height: 18px; font-weight: 700; }
+  .ptile small { font-size: 11px !important; line-height: 13px !important; min-height: 0 !important; -webkit-line-clamp: 1 !important; font-weight: 500; }
+
+  /* ----- bottom navigation (every phone screen) ----- */
+  #nav { box-sizing: border-box; width: calc(100% - 2 * var(--ph-edge)) !important; height: 62px !important; margin: 0 0 calc(var(--sp-4) + env(safe-area-inset-bottom, 0px)) !important; padding: 0 7px !important; gap: 3px !important; border-radius: 31px !important; }
+  #nav .nav-brand { width: 44px !important; height: 44px !important; margin: 0 3px 0 0 !important; border-radius: 50% !important; }
+  #nav button:not(.nav-brand) { flex: 1; height: 50px; padding: 0 !important; gap: 2px; border-radius: 25px; font-size: 10px; }
+  #nav button svg { width: 22px; height: 22px; }
+  #nav button.on { box-shadow: inset 0 0 0 1.5px var(--brand); }
+}
+
+/* ----- the other phone screens: same 16 edge, same controls, same nav (structure unchanged) ----- */
+@media (max-width: 699px) and (orientation: portrait) {
+  .view-chores .page { padding: var(--ph-top) var(--ph-edge) 0 !important; }
+  .view-chores .page-head { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-3) var(--sp-2); margin: 0 0 var(--sp-5); padding: 0; }
+  .view-chores .page-head h1 { order: 1; flex: 1; min-width: 0; margin: 0; font-size: 34px; line-height: 40px; letter-spacing: -.02em; }
+  .view-chores .page-head .grow { display: none; }
+  .view-chores .page-head > .btn { order: 2; position: relative; flex: none; width: auto; min-width: 92px; height: var(--ph-ctl); min-height: var(--ph-ctl); padding: 0 var(--sp-3); gap: var(--sp-1); font-size: 14px; white-space: nowrap; }
+  .view-chores .page-head > .btn::after { content: ''; position: absolute; inset: -4px 0; }
+  .view-chores .page-head .seg { order: 3; flex: 1 0 100%; height: var(--ph-ctl); }
+  .view-chores .page-head .seg-b { flex: 1; height: 28px; min-height: 28px; font-size: 13px; }
+  .view-chores .grp { margin: 0 0 var(--sp-2); font-size: 20px; line-height: 24px; letter-spacing: -.01em; }
+  .view-chores .chore-grid { gap: var(--sp-2); }
+  .view-chores .chore-grid .row.chore-row { box-sizing: border-box; min-height: 58px; padding: var(--sp-2) var(--sp-3); border-radius: var(--r-md); }
+
+  .view-lists .page.lists-phone { padding: var(--ph-top) var(--ph-edge) 0 !important; }
+  .view-lists .lists-phone > .seg { height: var(--ph-ctl); }
+  .view-lists .lists-phone > .seg .seg-b { height: 28px; min-height: 28px; font-size: 13px; }
+  .view-lists .pane { margin: var(--sp-3) 0 0; border-radius: var(--r-lg); }
+  .view-lists .shop-grid .shop { min-height: 52px; }
+}
+
+/* ----- fixes after the first look on a real phone ----- */
+@media (max-width: 699px) and (orientation: portrait) {
+  /* every surface uses the same material: with glass on, the cards blur what is behind them (the clock card did not) */
+  .ph-card, .ptile, .home.phone .who-chip { -webkit-backdrop-filter: var(--card-blur, none); backdrop-filter: var(--card-blur, none); }
+  .ph-card, .ptile, .home.phone .who-chip, .home.phone .chore, .home.phone .ai-sum { background-color: var(--g-fill) !important; background-image: none !important; }
+  /* progress ring: drawn at the 36px it occupies, the count fits inside it */
+  .home.phone .list-head .col-count.ring, .home.phone .list-head .ring-svg, .home.phone .list-head .ring-svg svg { width: var(--ph-ctl) !important; height: var(--ph-ctl) !important; }
+  .home.phone .ring-bg, .home.phone .ring-fg { stroke-width: 5.5; }
+  .home.phone .ring-txt { font-size: 11px !important; letter-spacing: -.02em; }
+  /* the tick is a clear 2px circle, as in the design */
+  .home.phone .chore .tick { border: 2px solid var(--label-2) !important; background: transparent; }
+  .home.phone .chore.done .tick { background: var(--sys-green) !important; border-color: var(--sys-green) !important; }
+  /* summary: a plain 24px sparkle, no box */
+  .home.phone .ai-sum-ico { width: 24px !important; height: 24px !important; min-width: 0; margin: 0 !important; padding: 0 !important; background: none !important; box-shadow: none !important; border-radius: 0 !important; color: var(--brand); flex: none; align-self: center; }
+  .home.phone .ai-sum-ico svg { width: 24px; height: 24px; }
+  /* tiles: a one-word value fits ("Tomorrow") */
+  .ptile b { font-size: 15px !important; letter-spacing: -.01em; padding: 0 var(--sp-1); }
+  /* nav: the avatar fills its 44px circle, centred */
+  #nav .nav-brand { display: grid !important; place-items: center; padding: 0 !important; overflow: hidden; }
+  #nav .nav-brand .avatar { width: 44px !important; height: 44px !important; margin: 0 !important; }
+}
+@media (max-width: 699px) and (orientation: portrait) {
+  /* a short day: tomorrow under the chores, behind a hairline (as the Chores board in the design) */
+  .home.phone .tmr-card { margin-top: var(--sp-5); padding: var(--sp-4) 0 0; }
+  .home.phone .tmr-head { margin: 0 0 var(--sp-2); }
+  .home.phone .tmr-grid { grid-template-columns: minmax(0, 1fr); gap: 0; }
+  .home.phone .tmr-item { min-height: var(--hit); padding: 0; }
+}
+
+/* ----- phone material = the design's: a thin 7% card with a 10% hairline, crisp text, no blur -----
+   (the glass setting still applies to tablets; on a phone the cards are small and blur only greyed them out) */
+@media (max-width: 699px) and (orientation: portrait) {
+  :root {
+    --ph-fill: var(--g-fill); --ph-line: var(--g-edge-2); --ph-ink-2: var(--label-2);
+    --ph-nav: rgba(255, 255, 255, .78); --ph-nav-line: rgba(0, 0, 0, .08); --ph-nav-ink: var(--label-2); --ph-on: rgba(0, 0, 0, .04);
+  }
+  :root[data-theme="dark"] {
+    --ph-fill: rgba(255, 255, 255, .07); --ph-line: rgba(255, 255, 255, .10); --ph-ink-2: #C7CBD6;
+    --ph-nav: rgba(255, 255, 255, .09); --ph-nav-line: rgba(255, 255, 255, .12); --ph-nav-ink: #D1D1D6; --ph-on: rgba(255, 255, 255, .06);
+  }
+  .ph-card, .ptile, .home.phone .who-chip, .home.phone .chore, .home.phone .ai-sum {
+    background: var(--ph-fill) !important; border: 1px solid var(--ph-line) !important; box-shadow: none !important;
+    -webkit-backdrop-filter: none !important; backdrop-filter: none !important;
+  }
+  .home.phone .who-chip.on { border: 1.5px solid var(--brand) !important; }
+  .ph-l2, .ptile small, .home.phone .chore-meta:not(.late):not(.overdue) { color: var(--ph-ink-2) !important; }
+  .ptile b.long { font-size: 13px !important; }
+
+  /* nav: the design's pill — 9% fill, 12% hairline, white active label inside a 1.5px accent outline */
+  #nav { background: var(--ph-nav) !important; border: 1px solid var(--ph-nav-line) !important; box-shadow: none !important; -webkit-backdrop-filter: none !important; backdrop-filter: none !important; }
+  #nav button[data-route] { color: var(--ph-nav-ink) !important; background: none !important; box-shadow: none !important; }
+  #nav button[data-route].on { color: var(--label) !important; background: var(--ph-on) !important; box-shadow: inset 0 0 0 1.5px var(--brand) !important; }
+  #nav button.on svg { transform: none !important; }
+  #nav .nav-brand, #nav .nav-brand.me { box-shadow: none !important; border: 0 !important; background: none !important; }
+}
+@media (max-width: 699px) and (orientation: portrait) and (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --ph-fill: rgba(255, 255, 255, .07); --ph-line: rgba(255, 255, 255, .10); --ph-ink-2: #C7CBD6;
+    --ph-nav: rgba(255, 255, 255, .09); --ph-nav-line: rgba(255, 255, 255, .12); --ph-nav-ink: #D1D1D6; --ph-on: rgba(255, 255, 255, .06);
+  }
+}
+@media (max-width: 699px) and (orientation: portrait) {
+  /* nav items sit on the pill's centre line (they were top-aligned), the avatar keeps its 44px circle */
+  #nav { display: flex !important; align-items: center !important; }
+  #nav .nav-brand { flex: none !important; width: 44px !important; }
+  /* the outline is drawn on the active button itself: the sliding pill would sit off-centre */
+  #nav .nav-pill { display: none !important; }
+}
