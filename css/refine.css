@@ -121,6 +121,11 @@ html.size-short #nav { width: 80px; }
 html.size-short #nav button[data-route] { width: 72px; height: 54px; }
 html.size-short #nav button[data-route] span:last-child { font-size: var(--t-caption); }
 
+/* ---------- continuous (squircle) corners on cards and sheets where the browser supports it; plain rounded corners elsewhere ---------- */
+@supports (corner-shape: squircle) {
+  .chore, .row, .shop, .invite, .who, .note-card, .note-mini, .ai-sum, .news-strip, .cd-card, .ac-tile, .ptile, .stat-chip, .pane, .day, .done-card, .tmr-card, .sheet, .modal, .hh-hours { corner-shape: squircle; }
+}
+
 /* ---------- a quiet day: tomorrow fills the space under the chores ---------- */
 .tmr-card { margin-top: auto; padding: var(--sp-4) var(--sp-2) 0; border-top: 1px solid var(--separator); }
 .tmr-head { margin: 0 0 var(--sp-3); font: 600 var(--t-subhead)/1.3 var(--font-body); color: var(--label-2); }

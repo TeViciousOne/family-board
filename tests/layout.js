@@ -49,6 +49,8 @@ const PROFILES = {
   alldone: { show: ALL, data: { chores: 6, done: 6 } },
   empty: { show: ALL, data: { chores: 0, shop: [], noEvents: true, notes: 0 } },
   defaults: { show: null, data: {} },
+  long: { show: ALL, data: { chores: 6, done: 1, long: true } },
+  many: { show: ALL, data: { chores: 24, done: 5 } },
 };
 
 async function audit(page) {

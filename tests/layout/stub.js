@@ -9,17 +9,21 @@ module.exports = () => {
     const R = (s) => ({ freq: 'daily', interval: 1, weekdays: [], monthMode: 'dom', dom: 1, nth: 1, nthDay: 1, start: s || '2026-01-01', until: null });
     const M = [['m1','Andi','#2F86D0','🦥'],['m2','Ledia','#E8573F','🦋'],['m3','Lori','#8B54B0','🥸'],['m4','Shpia','#F0A818','🏠']].map(x => ({ id: x[0], household_id: hh, user_id: x[0] === 'm1' ? 'u1' : null, name: x[1], color: x[2], emoji: x[3], created_at: new Date().toISOString() }));
     const CH = [['Fshij me fshesë elektrike','🧹','m2','09:00'],['Shtupa','🧹','m3',null],['Gatuaj darkën','🍳','m1','19:00'],['Hekuros rrobat e javës','👕','m2',null],['Laj enët','🍽️','m3','21:00'],['Lani rrobat','🧺','m2',null],['Nxirr plehrat','🗑️','m1','20:00'],['Ujit lulet në ballkon','🪴',null,null],['Pastro banjën','🛁','m4',null],['Ushqe macen','🐈','m3','08:00']].slice(0, P.chores == null ? 6 : P.chores);
+    const BASE = CH.slice(); if (P.chores > BASE.length) { for (let i = BASE.length; i < P.chores; i++) CH.push([BASE[i % 10][0] + ' ' + (i + 1), BASE[i % 10][1], BASE[i % 10][2], BASE[i % 10][3]]); }
+    const LONG = 'Shpëlaj dhe thaj të gjitha enët e mëdha pas darkës së të dielës me gjithë familjen e gjerë';
+    if (P.long) CH.forEach((c, i) => { c[0] = i % 2 ? LONG : c[0] + ' dhe pastro gjithë dyshemenë e dhomës së ndenjes'; });
+    if (P.long) M[0].name = 'Aleksandër-Konstandin'; 
     const ymd = (d) => d.toISOString().slice(0, 10), add = (n) => ymd(new Date(Date.now() + n * 864e5));
     db = { households: [{ id: hh, name: 'Home', code: 'ABC123' }], members: M,
       chores: CH.map((c, i) => ({ id: 'c' + i, household_id: hh, title: c[0], emoji: c[1], member_id: c[2], rule: R(), due_time: c[3], active: true, created_at: new Date().toISOString() })),
       chore_completions: (P.done ? CH.slice(0, P.done) : []).map((c, i) => ({ id: 'cc' + i, household_id: hh, chore_id: 'c' + i, on_date: today, done_by: 'm2', done_at: new Date().toISOString() })),
       events: P.noEvents ? [] : [
-        { id: 'e1', household_id: hh, kind: 'event', title: 'Takim me prindërit në shkollë', on_date: add(2), start_time: '16:30', all_day: false, member_id: 'm2', rule: null, remind_minutes: null, created_at: '' },
+        { id: 'e1', household_id: hh, kind: 'event', title: P.long ? 'Takim shumë i gjatë me prindërit e klasës në shkollën e mesme të qytetit' : 'Takim me prindërit në shkollë', on_date: add(2), start_time: '16:30', all_day: false, member_id: 'm2', rule: null, remind_minutes: null, created_at: '' },
         { id: 'e2', household_id: hh, kind: 'birthday', title: 'Alan', on_date: '2023-' + add(7).slice(5), start_time: null, all_day: true, member_id: null, rule: null, remind_minutes: null, created_at: '' },
         { id: 'e3', household_id: hh, kind: 'event', title: 'Dentisti', on_date: add(0), start_time: '23:30', all_day: false, member_id: 'm1', rule: null, remind_minutes: null, created_at: '' },
         { id: 'e4', household_id: hh, kind: 'countdown', title: 'GTA 6', on_date: add(8), start_time: null, all_day: true, member_id: null, rule: null, remind_minutes: null, created_at: '' },
         { id: 'e5', household_id: hh, kind: 'event', title: 'Darka familjare te gjyshja', on_date: add(4), start_time: '19:30', all_day: false, member_id: 'm4', rule: null, remind_minutes: null, created_at: '' }],
-      shopping_items: (P.shop == null ? ['Shapka leshi','Qumësht','Bukë','Vezë','Detergjent për rroba'] : P.shop).map((t, i) => ({ id: 's' + i, household_id: hh, title: t, done: false, added_by: 'm2', created_at: new Date().toISOString(), done_at: null })),
+      shopping_items: (P.shop == null ? (P.long ? ['Detergjent shumë i gjatë për larjen e rrobave të holla me aromë livande dhe limoni', 'Qumësht'] : ['Shapka leshi','Qumësht','Bukë','Vezë','Detergjent për rroba']) : P.shop).map((t, i) => ({ id: 's' + i, household_id: hh, title: t, done: false, added_by: 'm2', created_at: new Date().toISOString(), done_at: null })),
       notes: P.notes === 0 ? [] : [{ id: 'n1', household_id: hh, body: 'Kthehem në 18:00, darka është në furrë.', author: 'm2', pinned: false, created_at: new Date().toISOString() }, { id: 'n2', household_id: hh, body: 'Hidraulikun e presim të enjten në mëngjes.', author: 'm1', pinned: false, created_at: new Date().toISOString() }] };
     localStorage.setItem(KEY, JSON.stringify(db));
   }
