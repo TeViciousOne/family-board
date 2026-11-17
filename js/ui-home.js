@@ -306,7 +306,7 @@
     if (!items.length) body.appendChild(ui.empty('🌤️', t('board.nothingToday'), t('empty.choresHint')));
     else {
       if (doneN === items.length) body.appendChild(allDone(items.length));
-      var size = sorted.length <= 4 ? ' few' : sorted.length <= 8 ? ' mid' : '';
+      var size = sorted.length <= 6 ? ' few' : sorted.length <= 8 ? ' mid' : '';
       body.appendChild(h('div', { class: 'list-grid' + size, 'data-fit': '1', 'data-fit-min': '0.86', 'data-fit-max': '1', 'data-cap': '1' }, sorted.map(function (x) { return choreRow(x); })));
       var tmr = tomorrowCard(U.today(), sorted.length);
       if (tmr) body.appendChild(tmr);
