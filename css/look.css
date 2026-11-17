@@ -132,11 +132,7 @@ html[data-look=black] { background: #000; }
 .chore, .ai-sum, .news-strip, .wx-hours, .cd-card, .ac-tile, .note-mini, .lists .pane, .day-panel, .stat-chip {
   -webkit-backdrop-filter: var(--card-blur, none); backdrop-filter: var(--card-blur, none);
 }
-/* colour glow: an overdue chore and the running air conditioner light up their card */
-html.glow .chore.overdue:not(.done) {
-  background: linear-gradient(rgba(255, 69, 58, .13), rgba(255, 69, 58, .13)), var(--g-fill); border-color: rgba(255, 105, 97, .6);
-  box-shadow: 0 0 0 1px rgba(255, 105, 97, .45), 0 0 22px -4px rgba(255, 69, 58, .45) !important;
-}
+/* colour glow: the running air conditioner lights up its card (an overdue chore is a red label, not a red card: see refine.css) */
 html.glow .ac-tile.on { color: #fff; background: linear-gradient(135deg, #2468D6, #173F96); box-shadow: 0 0 24px -4px rgba(47, 123, 234, .6), inset 0 1px 0 rgba(255, 255, 255, .25); }
 html.glow .ac-tile.on .ac-ico, html.glow .ac-tile.on .ac-pill { color: #fff; background: rgba(255, 255, 255, .22); box-shadow: none; }
 html.glow .ac-tile.on .ac-col b, html.glow .ac-tile.on .ac-col-set b { color: #fff; }

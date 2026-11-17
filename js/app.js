@@ -661,6 +661,7 @@
   var SHIFT = [[0, 0], [2, 1], [3, 3], [1, 3], [-1, 2], [-3, 0], [-2, -2], [0, -3], [2, -2]];
   app.shift = function (minute) {
     var p = SHIFT[Math.floor(minute / 4) % SHIFT.length];
+    document.documentElement.classList.add('shifty'); /* leaves a 3 px margin so the drift never pushes the page wider than the screen */
     var st = document.documentElement.style;
     st.setProperty('--shift-x', p[0] + 'px'); st.setProperty('--shift-y', p[1] + 'px');
   };
