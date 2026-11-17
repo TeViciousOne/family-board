@@ -92,7 +92,7 @@ h1, h2, h3, .list-title, .clock, .wx-temp, .hh-wx-t { letter-spacing: var(--trac
   .hh-hours .wx-h { flex: none; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; width: 52px; padding: var(--sp-1) 0; }
   .hh-hours .wx-hn { font-size: var(--t-caption); font-weight: 600; color: var(--label-2); }
   .hh-hours .wx-ht { font-size: var(--t-subhead); font-weight: 700; font-variant-numeric: tabular-nums; }
-  .hh-hours .wx-hr { font-size: var(--t-caption); font-weight: 600; color: var(--sys-blue); min-height: 0; }
+  .hh-hours .wx-hr { font-size: var(--t-caption2); font-weight: 600; color: var(--sys-blue); min-height: 0; }
   .hh-hours svg { width: 26px; height: 26px; }
   /* the header no longer squeezes: date block, weather and hours share the row */
   .home-head { gap: var(--sp-3); }
@@ -109,17 +109,16 @@ h1, h2, h3, .list-title, .clock, .wx-temp, .hh-wx-t { letter-spacing: var(--trac
 
 /* labels under the rail icons (a shared screen: kids and grandparents should not have to guess) */
 @media (orientation: landscape) and (min-width: 600px) {
-  #nav { width: 88px; gap: var(--sp-1); }
-  #nav button[data-route] { width: 80px; height: 64px; flex-direction: column; justify-content: center; gap: 3px; border-radius: var(--r-md); }
-  #nav button[data-route] span:last-child { display: block; max-width: 78px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: 600 var(--t-subhead)/1.15 var(--font-body); letter-spacing: 0; color: var(--ink-2); }
-  #nav button.on[data-route] span:last-child { color: var(--label); font-weight: 700; }
+  #nav { width: 76px; gap: var(--sp-1); }
+  #nav button[data-route] { width: 66px; height: 58px; flex-direction: column; justify-content: center; gap: 3px; border-radius: var(--r-md); }
+  #nav button[data-route] span:last-child { display: block; max-width: 64px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: 600 var(--t-caption2)/1.1 var(--font-body); letter-spacing: 0; color: var(--ink-2); }
+  #nav button.on[data-route] span:last-child { color: var(--label); }
   #nav button[data-route] svg { width: 24px; height: 24px; }
   .nav-pill { border-radius: var(--r-md); }
   #nav .nav-tool { width: var(--hit); height: var(--hit); }
 }
-html.size-short #nav { width: 80px; }
-html.size-short #nav button[data-route] { width: 72px; height: 54px; }
-html.size-short #nav button[data-route] span:last-child { font-size: var(--t-caption); }
+html.size-short #nav { width: 70px; }
+html.size-short #nav button[data-route] { width: 62px; height: 50px; }
 
 /* ---------- continuous (squircle) corners on cards and sheets where the browser supports it; plain rounded corners elsewhere ---------- */
 @supports (corner-shape: squircle) {
