@@ -243,6 +243,26 @@
       }));
   }
 
+  /* wide header: "Tuesday" over "17 November" (the "Today" card) */
+  function dateTwoLines(date) {
+    var p = U.parts(date), wd = U.weekday(date), n = FB.i18n.dayLong(wd);
+    return [n.charAt(0).toUpperCase() + n.slice(1), p.d + ' ' + FB.i18n.monthLong(p.m - 1).toLowerCase()];
+  }
+  /* who filter on the chores row (wide screens): everyone, or one person. Lives in memory only. */
+  var whoSel = null;
+  function whoPills(items) {
+    var ms = L.membersSorted();
+    if (ms.length < 2) return null;
+    if (whoSel && !L.member(whoSel)) whoSel = null;
+    function pill(id, label, color) {
+      var on = (whoSel || null) === id;
+      return h('button', { type: 'button', class: 'who-chip' + (on ? ' on' : ''), 'aria-pressed': on ? 'true' : 'false', onclick: function () { whoSel = id; FB.app.render(); } },
+        color ? h('span', { class: 'who-dot', style: { background: color } }) : null, h('span', { class: 'who-name' }, label));
+    }
+    return h('div', { class: 'who-row', role: 'group', 'aria-label': t('home.who') },
+      pill(null, t('home.everyone')), ms.map(function (m) { return pill(m.id, m.name, m.color); }));
+  }
+
   function addBtn() {
     return h('button', { type: 'button', class: 'btn add-pill', onclick: function () { FB.actions.openTemplates(); } }, ui.icon('plus', 18), h('span', null, t('board.addChores')));
   }
@@ -251,7 +271,7 @@
     return h('header', { class: 'home-head', 'data-fit-skip': '1' },
       h('div', { class: 'hh-txt' },
         h('h1', null, t('rel.today')),
-        h('p', null, FB.i18n.dateLong(today))),
+        h('p', { class: 'hh-date' }, dateTwoLines(today).map(function (x) { return h('span', null, x); }))),
       headWeather(),
       headHours(),
       h('span', { class: 'hh-gap' }),
@@ -284,31 +304,34 @@
 
   /* one shared list: to-do first, finished at the bottom; the person shows as a small coloured tag */
   function list(items) {
+    var all = items, wideNow = isWide();
+    if (wideNow && whoSel) items = items.filter(function (x) { return x.chore.member_id === whoSel; });
     var sorted = items.map(function (x, i) { return { x: x, i: i }; }).sort(function (a, b) {
       var da = a.x.done ? 1 : 0, db = b.x.done ? 1 : 0;
       var la = !a.x.done && (a.x.overdue || a.x.carried) ? 0 : 1, lb = !b.x.done && (b.x.overdue || b.x.carried) ? 0 : 1;
       return da - db || la - lb || a.i - b.i; /* overdue first, so it is never hidden under "+N" */
     }).map(function (o) { return o.x; });
-    var doneN = items.filter(function (x) { return x.done; }).length;
+    var doneN = all.filter(function (x) { return x.done; }).length;
     /* progress is shown once, by the ring */
     var wide = isWide();
     var head = wide
       ? h('div', { class: 'list-head lh-wide' },
           h('div', { class: 'list-title' }, t('nav.chores')),
-          h('span', { class: 'lh-gap' }),
-          items.length ? ring(doneN, items.length) : null,
+          whoPills(all) || h('span', { class: 'lh-gap' }),
+          all.length ? ring(doneN, all.length) : null,
           h('div', { class: 'list-actions' }, addBtn()))
       : h('div', { class: 'list-head' },
           h('div', { class: 'list-title' }, t('nav.chores')),
           items.length ? ring(doneN, items.length) : null,
           h('div', { class: 'list-actions' }, addBtn()));
     var body = h('div', { class: 'list-body', 'data-scroll': 'chores-list' });
-    if (!items.length) body.appendChild(ui.empty('🌤️', t('board.nothingToday'), t('empty.choresHint')));
+    if (!all.length) body.appendChild(ui.empty('🌤️', t('board.nothingToday'), t('empty.choresHint')));
+    else if (!items.length) body.appendChild(ui.empty('🌤️', t('home.nothingFor', { name: (L.member(whoSel) || {}).name || '' }), ''));
     else {
-      if (doneN === items.length) body.appendChild(allDone(items.length));
+      if (!whoSel && doneN === all.length) body.appendChild(allDone(all.length));
       var size = sorted.length <= 6 ? ' few' : sorted.length <= 8 ? ' mid' : '';
       body.appendChild(h('div', { class: 'list-grid' + size, 'data-fit': '1', 'data-fit-min': '0.86', 'data-fit-max': '1', 'data-cap': '1' }, sorted.map(function (x) { return choreRow(x); })));
-      var tmr = tomorrowCard(U.today(), sorted.length);
+      var tmr = tomorrowCard(U.today(), all.length);
       if (tmr) body.appendChild(tmr);
     }
     return h('section', { class: 'col' }, head, body);
@@ -423,7 +446,8 @@
           h('span', null, it.title), m ? h('small', null, m.name) : null));
       });
       if (open > 4) secS.appendChild(h('button', { type: 'button', class: 'link-btn', onclick: function () { FB.actions.openShopping(); } }, t('home.shopMore', { n: open - 4 })));
-      if (wide || phone) inner.insertBefore(secS, inner.firstChild); else inner.appendChild(secS);
+      if (wide && notesEl) inner.insertBefore(secS, notesEl); /* wide: air conditioner, Spotify, shopping, notes */
+      else if (phone) inner.insertBefore(secS, inner.firstChild); else inner.appendChild(secS);
       if (wide) rail.classList.add('wide-shop');
     }
     if (showShop) inner.appendChild(h('button', { type: 'button', class: 'shop-tile', onclick: function () { FB.actions.openShopping(); } },
@@ -456,7 +480,7 @@
       var chipsEl = FB.device.chips !== false && due.length && !isPhone() ? statChips(today, due) : null;
       if (chipsEl) { board.classList.add('has-news'); board.insertBefore(chipsEl, board.firstChild); }
     }
-    var sum = FB.ai && FB.ai.enabled() && FB.showW('summary') ? FB.ai.summary() : '';
+    var sum = FB.ai && FB.ai.enabled() && FB.showW('summary') ? FB.ai.summary() : '', aiEl = null;
     var nw = FB.news && FB.showW('news') ? FB.news.strip() : null;
     var ts = FB.showW('events') && !isPhone() ? todayStrip(today) : null;
     var tsSide = null;
@@ -465,10 +489,13 @@
     if (nw) { board.classList.add('has-news'); board.insertBefore(nw, board.firstChild); }
     if (sum) {
       board.classList.add('has-sum');
-      board.insertBefore(h('button', { type: 'button', class: 'ai-sum' + (sum.length < 90 ? ' short' : ''), 'data-fit-skip': '1', onclick: function () {
+      aiEl = h('button', { type: 'button', class: 'ai-sum' + (sum.length < 90 ? ' short' : ''), 'data-fit-skip': '1', onclick: function () {
         ui.modal({ title: t('ai.summaryTitle'), body: h('p', { class: 'lead' }, sum), focus: false });
-      } }, h('span', { class: 'ai-sum-ico' }, ui.icon('sparkle', 18)), h('p', null, sum)), board.firstChild);
+      } }, h('span', { class: 'ai-sum-ico' }, ui.icon('sparkle', 18)), h('p', null, sum));
+      board.insertBefore(aiEl, board.firstChild);
     }
+    /* wide: the chores come right under the header; the summary and the news close the page */
+    if (isWide()) { if (aiEl) board.appendChild(aiEl); if (nw) board.appendChild(nw); }
 
     if (isWide()) { board.classList.add('has-news'); board.insertBefore(homeHead(today), board.firstChild); }
 
@@ -476,6 +503,6 @@
     if (tsSide) left.firstChild.appendChild(tsSide); /* below "coming up" on wide screens */
     var cdSec = isWide() ? rr.querySelector('.rr-cd') : null;
     if (cdSec) left.firstChild.appendChild(cdSec); /* wide: the countdown closes the clock panel */
-    return h('div', { class: 'home' }, left, board, rr);
+    return h('div', { class: 'home' + (isWide() ? ' wide' : '') }, left, board, rr);
   };
 })(typeof window !== 'undefined' ? window : globalThis);
