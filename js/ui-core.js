@@ -22,7 +22,7 @@
     place: FB.weather.DEFAULT_PLACE, reload4: true, homeIdle: wallGuess
   }, stored);
   /* device type + which home-screen blocks this device shows */
-  FB.widgets = ['weather', 'ac', 'spotify', 'news', 'summary', 'events', 'countdown', 'shopping', 'notes'];
+  FB.widgets = ['weather', 'morning', 'ac', 'spotify', 'news', 'summary', 'events', 'countdown', 'shopping', 'notes'];
   FB.kindDefaults = function (k) {
     var m = {}; FB.widgets.forEach(function (w) { m[w] = true; });
     if (k === 'phone') { m.news = false; m.notes = false; }
@@ -69,6 +69,8 @@
     plus: '<path d="M12 5v14M5 12h14"/>',
     minus: '<path d="M5 12h14"/>',
     power: '<path d="M12 3v8"/><path d="M7.2 6.6a7.5 7.5 0 1 0 9.6 0"/>',
+    umbrella: '<path d="M3 12a9 9 0 0 1 18 0z"/><path d="M12 12v7a2 2 0 0 0 4 0"/><path d="M12 3v0"/>',
+    thermo: '<path d="M14 14.8V5a2 2 0 0 0-4 0v9.8a4 4 0 1 0 4 0z"/><path d="M12 10v7"/>',
     hourglass: '<path d="M6 3h12M6 21h12M7 3c0 5 5 6 5 9s-5 4-5 9M17 3c0 5-5 6-5 9s5 4 5 9"/>',
     snow: '<path d="M12 3v18M4.2 7.5l15.6 9M19.8 7.5l-15.6 9"/><path d="M9.5 4.5L12 6.5l2.5-2M9.5 19.5L12 17.5l2.5 2"/>',
     trash: '<path d="M4 7h16M9 7V4h6v3M6.5 7l1 13h9l1-13"/>',

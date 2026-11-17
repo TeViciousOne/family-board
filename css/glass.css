@@ -532,7 +532,7 @@ input[type=text], input[type=email], input[type=password], input[type=number], i
 .shop-row { position: relative; display: flex; align-items: center; gap: 12px; min-height: 64px; padding: 10px 12px 10px 14px; border-left: 4px solid var(--c); border-radius: var(--r-md); text-align: left; cursor: pointer; -webkit-tap-highlight-color: transparent; }
 .shop-row .shop-tick { flex: none; width: 30px; height: 30px; }
 .shop-main { display: flex; flex-direction: column; flex: 1; min-width: 0; }
-.shop-row .shop-title { font-size: var(--t-body); font-weight: 700; line-height: 1.2; overflow-wrap: anywhere; }
+.shop-row .shop-title { font-size: var(--t-body); font-weight: 700; line-height: 1.2; overflow-wrap: break-word; }
 .shop-sub { font-size: var(--t-caption); color: var(--ink-3); }
 .shop-row .shop-x { position: static; flex: none; }
 .shop-row.done { opacity: .6; }
@@ -658,7 +658,7 @@ img.emoji { width: 1.05em; height: 1.05em; margin: 0 .05em; vertical-align: -0.1
 .cd.cd-card .cd-num b, .cd.cd-card .cd-num small { color: #fff; }
 .cd-num b { font-size: var(--t-title1); line-height: 1; font-variant-numeric: tabular-nums; }
 .cd-num small { font-size: var(--t-caption2); font-weight: 700; opacity: .9; }
-.cd-title { flex: 1; min-width: 0; font-size: var(--t-body); font-weight: 700; line-height: 1.25; overflow-wrap: anywhere; }
+.cd-title { flex: 1; min-width: 0; font-size: var(--t-body); font-weight: 700; line-height: 1.25; overflow-wrap: break-word; }
 
 /* calendar: clearer today, filled event chips */
 .day.today { outline: 3px solid #0A84FF; outline-offset: -3px; background: rgba(10, 132, 255, .1) !important; }
