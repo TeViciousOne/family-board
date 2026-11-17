@@ -540,15 +540,17 @@
     return rail;
   }
 
-  /* "Before you leave": mornings (5:00-10:00) only. Rain or snow today, what to wear, the first thing on the calendar.
+  /* "Before you leave": between the hours set in Settings (5:00-10:00 unless changed). Rain or snow today, what to wear, the first thing on the calendar.
      Hidden until tomorrow with its X. ?morning in the address shows it at any hour (for trying it out). */
   var MO_KEY = 'fb.morningHidden', noTmr = false;
   function morningCard(today, now) {
     if (!FB.showW('morning')) return null;
     var force = /[?&]morning\b/.test(root.location ? root.location.search : '');
-    var hr = now.getHours();
-    if (!force && (hr < 5 || hr >= 10)) return null;
-    try { if (!force && localStorage.getItem(MO_KEY) === today) return null; } catch (e) {}
+    var hr = now.getHours(), m = hr * 60 + now.getMinutes();
+    var a = U.minutesOf(FB.device.morningFrom || '05:00'), b = U.minutesOf(FB.device.morningTo || '10:00');
+    var inside = a <= b ? m >= a && m < b : m >= a || m < b;
+    if (!force && !inside) return null;
+    try { if (localStorage.getItem(MO_KEY) === today) return null; } catch (e) {} /* the X hides it until tomorrow, also with ?morning */
     var w = FB.app.weather && FB.app.weather.data, rows = [];
     if (w && FB.showW('weather')) {
       var hours = FB.weather.hoursFrom(w, 24).filter(function (x) { return x.time.slice(0, 10) === today && +x.time.slice(11, 13) <= 21; });

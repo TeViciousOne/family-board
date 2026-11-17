@@ -162,6 +162,7 @@
       if (w === 'spotify') return; /* its switch sits in the Spotify block below, once connected */
       s.appendChild(toggle(t('w.' + w), FB.showW(w), function (v) { FB.device.show[w] = v; saveDevice(); }));
     });
+    s.appendChild(morningBlock());
     s.appendChild(h('h3', { class: 'set-sub' }, t('set.homeMore')));
     s.appendChild(toggle(t('set.namedays'), FB.device.namedays !== false, function (v) { FB.device.namedays = v; saveDevice(); }, t('set.namedaysHint')));
     s.appendChild(toggle(t('set.calm'), FB.device.calm, function (v) { FB.device.calm = v; saveDevice(); }, t('set.calmHint')));
@@ -169,6 +170,17 @@
     s.appendChild(spotifyBlock());
     s.appendChild(photosBlock());
     return s;
+  }
+
+  /* "Before you leave": the hours it shows (the switch itself is in the list above) */
+  function morningBlock() {
+    var d = FB.device;
+    var from = h('input', { type: 'time', value: d.morningFrom || '05:00', onchange: function () { if (from.value) { d.morningFrom = from.value; saveDevice(); } } });
+    var to = h('input', { type: 'time', value: d.morningTo || '10:00', onchange: function () { if (to.value) { d.morningTo = to.value; saveDevice(); } } });
+    return h('div', { class: 'mo-set' },
+      h('h3', { class: 'set-sub' }, t('mo.title')),
+      h('p', { class: 'hint' }, t('mo.hoursHint')),
+      h('div', { class: 'row2' }, ui.field(t('set.nightFrom'), from), ui.field(t('set.nightTo'), to)));
   }
 
   /* Spotify remote: Client ID of the family's own Spotify app, sign in, and the on/off switch for the tile */
