@@ -337,6 +337,23 @@
     return h('section', { class: 'col' }, head, body);
   }
 
+  /* countdown tiles tick every second (days big, hours:minutes:seconds under the title); one timer for all of them */
+  var cdLive = [], cdTimer = null;
+  function cdTick() {
+    var now = Date.now(), alive = false;
+    cdLive.forEach(function (x) {
+      if (!x.el.isConnected) return;
+      alive = true;
+      var ms = Math.max(0, x.at - now), sec = Math.floor(ms / 1000), d = Math.floor(sec / 86400), r = sec % 86400;
+      var hh = Math.floor(r / 3600), mm = Math.floor(r % 3600 / 60), ss = r % 60, two = function (n) { return (n < 10 ? '0' : '') + n; };
+      var txt = two(hh) + ':' + two(mm) + ':' + two(ss);
+      if (x.b.textContent !== String(d)) { x.b.textContent = String(d); x.s.textContent = d === 1 ? t('unit.day') : t('unit.days'); }
+      if (x.t.textContent !== txt) { x.t.textContent = txt; x.el.setAttribute('aria-label', x.t.previousSibling.textContent + ': ' + d + ' ' + (d === 1 ? t('unit.day') : t('unit.days')) + ' ' + txt); }
+    });
+    if (!alive) { clearInterval(cdTimer); cdTimer = null; cdLive = []; }
+  }
+  function cdStart() { cdTick(); if (!cdTimer) cdTimer = setInterval(cdTick, 1000); }
+
   /* ---------- right rail ---------- */
   function eventLine(x) {
     var e = x.event, m = L.member(e.member_id);
@@ -410,14 +427,22 @@
     if (FB.showW('events')) (wide ? leftIn : inner).appendChild(secUps);
 
     var cds = FB.showW('countdown') ? L.countdowns(today).slice(0, 3) : [];
+    cdLive = [];
     if (cds.length) {
       var secCd = h('section', { class: 'rr rr-cd' }, h('h3', null, t('home.countdowns')));
       cds.forEach(function (c) {
-        secCd.appendChild(h('button', { type: 'button', class: 'cd cd-card', onclick: function () { FB.actions.openEvent(c.event); } },
-          h('span', { class: 'cd-num' }, h('b', null, String(c.days)), h('small', null, c.days === 1 ? t('unit.day') : t('unit.days'))),
-          h('span', { class: 'cd-title' }, c.event.title)));
+        var tm = (c.event.start_time && !c.event.all_day ? c.event.start_time : '00:00').split(':');
+        var dp = c.event.on_date.split('-');
+        var at = new Date(+dp[0], +dp[1] - 1, +dp[2], +tm[0] || 0, +tm[1] || 0, 0).getTime();
+        var cdB = h('b', null, String(c.days)), cdS = h('small', null, c.days === 1 ? t('unit.day') : t('unit.days')), cdT = h('small', { class: 'cd-hms' }, '');
+        var cdBtn = h('button', { type: 'button', class: 'cd cd-card', onclick: function () { FB.actions.openEvent(c.event); } },
+          h('span', { class: 'cd-num' }, cdB, cdS),
+          h('span', { class: 'cd-title' }, c.event.title, cdT));
+        cdLive.push({ el: cdBtn, at: at, b: cdB, s: cdS, t: cdT });
+        secCd.appendChild(cdBtn);
       });
       inner.appendChild(secCd);
+      setTimeout(cdStart, 0);   /* after the tiles are in the page */
     }
 
     if ((wide || phone) && FB.ac && FB.showW('ac')) { var act = FB.ac.tile(); if (act) inner.appendChild(act); }
