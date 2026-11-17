@@ -138,9 +138,11 @@ html.size-short #nav button[data-route] { width: 62px; height: 50px; }
 
 /* ---------- burn-in guard: the whole screen drifts a few pixels every few minutes (set by app.js on the wall tablet) ---------- */
 #app { translate: var(--shift-x, 0) var(--shift-y, 0); transition: translate 3s var(--ease-out); }
-/* the panels bleed 3 px past every screen edge, so the drift never shows a strip of background around the rail */
+/* landscape: the panels bleed 3 px past every screen edge, so the drift never shows a strip of background around the side rail.
+   portrait keeps a 3 px margin: there the cards run to the screen edge and must not be cut */
 html.shifty, html.shifty body { overflow: hidden; }
-html.shifty #app { width: calc(100% + 6px); height: calc(100% + 6px); margin: -3px; }
+html.shifty #app { width: calc(100% - 6px); height: calc(100% - 6px); margin: 3px; }
+@media (orientation: landscape) { html.shifty #app { width: calc(100% + 6px); height: calc(100% + 6px); margin: -3px; } }
 
 /* ---------- accessibility ---------- */
 @media (prefers-reduced-transparency: reduce) {
