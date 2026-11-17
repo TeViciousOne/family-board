@@ -97,4 +97,13 @@
   /* who filter: pills keep their size, 8px apart (a control group, like iOS filter chips) */
   .home.wide .who-row { gap: var(--sp-2); }
   .home.wide .who-chip { flex: 0 1 auto; min-width: 0; overflow: hidden; }   /* on a narrow board a name shortens to "Led…" instead of spilling over its neighbours */
+
+  /* across the left column's line: the full gap on each side (clock card | 16 | line | 16 | Today card).
+     The column grows by the extra 8px so the clock and countdown cards keep their size. */
+  .home.wide { grid-template-columns: 240px minmax(0, 1fr) clamp(250px, 20vw, 296px) !important; }
+  .home.wide .rail-left { padding-right: var(--gap) !important; }
+  .home.wide .board { padding-left: var(--gap) !important; }
+  /* the pills stretch across the free space of the chores row */
+  .home.wide .who-row { justify-content: stretch; }
+  .home.wide .who-chip { flex: 1 1 auto; }
 }
