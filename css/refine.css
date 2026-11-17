@@ -178,3 +178,71 @@ html.shifty #app { width: calc(100% - 6px); height: calc(100% - 6px); margin: 3p
 .cdk-cell span { font-size: var(--t-subhead); font-weight: 600; color: var(--label-2); }
 .cdk-done { margin: 0; font-size: var(--t-title2); font-weight: 700; text-align: center; }
 .cdk-done[hidden] { display: none; }
+
+/* "Before you leave" (mornings): one quiet card above the chores; three short lines with a coloured symbol each */
+.mo-card { position: relative; margin: 0 0 var(--sp-3); padding: var(--sp-3) var(--sp-4); border-radius: var(--r-lg); background: var(--g-fill); border: 1px solid var(--g-edge-2); box-shadow: var(--g-shine); color: var(--label); transition: opacity .25s ease-out, transform .25s ease-out; }
+.mo-card.gone { opacity: 0; transform: translateY(-6px); }
+.mo-t { margin: 0 var(--hit) var(--sp-2) 0; font: 600 var(--t-footnote)/1.2 var(--font-body); color: var(--label-2); letter-spacing: 0; }
+.mo-rows { display: grid; gap: var(--sp-2); margin: 0; padding: 0; list-style: none; }
+.mo-row { display: flex; align-items: center; gap: var(--sp-3); min-width: 0; font: 600 var(--t-callout)/1.25 var(--font-body); }
+.mo-ico { display: grid; place-items: center; flex: none; width: 28px; height: 28px; border-radius: 8px; color: #fff; background: var(--tone, var(--tone-blue)); }
+.mo-ico svg { width: 17px; height: 17px; stroke-width: 2.2; }
+.mo-txt { min-width: 0; }
+.mo-x { position: absolute; top: var(--sp-1); right: var(--sp-1); display: grid; place-items: center; width: var(--hit); height: var(--hit); padding: 0; border: 0; border-radius: 50%; background: none; color: var(--label-2); }
+.mo-x:active { background: var(--g-fill); transform: scale(.94); }
+.tone-blue { --tone: var(--tone-blue); }
+@media (prefers-reduced-motion: reduce) { .mo-card { transition: none; } }
+/* wide screens: the three lines side by side, one row */
+@media (orientation: landscape) and (min-width: 900px) {
+  .home.wide .mo-card { margin: 0 0 var(--gap, var(--sp-4)); }
+  .home.wide .mo-rows { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--sp-4); }
+}
+/* phones: under the summary, the design's 8px rhythm */
+@media (max-width: 699px) and (orientation: portrait) {
+  .home.phone .mo-card { margin: var(--sp-2) 0 0; padding: var(--sp-3) var(--sp-4); background: var(--ph-fill, var(--g-fill)) !important; border-color: var(--ph-line, var(--g-edge-2)); box-shadow: none; }
+  .home.phone .mo-row { font-size: 15px; }
+}
+@media (max-width: 699px) and (orientation: portrait) {
+  .home.phone .mo-card { padding: var(--sp-2) var(--sp-3) var(--sp-3) var(--sp-4); }
+  .home.phone .mo-t { margin-top: var(--sp-1); }
+  .home.phone .mo-rows { gap: 6px; }
+  .home.phone .mo-ico { width: 24px; height: 24px; border-radius: 7px; }
+  .home.phone .mo-ico svg { width: 15px; height: 15px; }
+}
+
+/* ----- Settings, iOS style: grouped lists, coloured symbol tiles, a caption above and a note below a group ----- */
+.glist { margin: 0 0 var(--sp-2); border-radius: var(--r-lg); background: var(--g-fill); border: 1px solid var(--g-edge-2); box-shadow: var(--g-shine); overflow: hidden; }
+.glist > * { position: relative; }
+.glist > * + *::before { content: ''; position: absolute; top: 0; left: 58px; right: 0; height: 1px; background: var(--separator); pointer-events: none; }
+.glist-foot { margin: 0 var(--sp-4) var(--sp-5); }
+.set-gh { margin: var(--sp-2) var(--sp-4) var(--sp-2); font: 600 var(--t-footnote)/1.2 var(--font-body); color: var(--label-2); letter-spacing: 0; }
+.gico { display: grid; place-items: center; flex: none; width: 30px; height: 30px; border-radius: 8px; color: #fff; background: var(--tone, var(--tone-blue)); }
+.gico svg { width: 18px; height: 18px; stroke-width: 2.2; }
+.tone-cyan { --tone: var(--tone-cyan); } .tone-gray { --tone: #8E8E93; }
+/* a switch row */
+.grow { display: flex; align-items: center; gap: var(--sp-3); min-height: 52px; padding: 0 var(--sp-4); cursor: pointer; }
+.grow-t { flex: 1; min-width: 0; font: 500 var(--t-body)/1.25 var(--font-body); color: var(--label); }
+.grow input[type=checkbox] { flex: none; }
+.grow:active { background: var(--g-fill-2, rgba(127, 127, 127, .08)); }
+.grow-sub { padding: var(--sp-2) var(--sp-4) var(--sp-3) 58px; }
+.grow-sub .row2 { margin: 0; }
+.grow-sub .hint { margin: var(--sp-2) 0 0; }
+.grow-sub::before { left: 58px; }
+/* the menu rows inside a group: no card of their own */
+.set-menu { max-width: 640px; }
+.set-glist .row { display: flex; align-items: center; gap: var(--sp-3); width: 100%; min-height: 56px; margin: 0 !important; padding: var(--sp-2) var(--sp-3) var(--sp-2) var(--sp-4) !important;
+  background: none !important; border: 0 !important; border-radius: 0 !important; box-shadow: none !important; text-align: left; color: var(--label); }
+.set-glist .row > svg { flex: none; color: var(--label-3); }
+.set-glist .row .row-title { font: 600 var(--t-body)/1.25 var(--font-body); }
+.set-glist .row:active { background: var(--g-fill-2, rgba(127, 127, 127, .08)) !important; }
+.set-glist .row.sel { background: rgba(var(--brand-rgb), .16) !important; box-shadow: none !important; }
+.set-glist .row.sel .gico { box-shadow: 0 0 0 2px var(--brand); }
+/* the time picker: two compact menus, hour : minute */
+.tpick { display: inline-flex; align-items: center; gap: var(--sp-1); }
+.tpick select { width: auto; min-width: 76px; min-height: var(--hit); padding-right: var(--sp-6); font-variant-numeric: tabular-nums; }
+.tpick .tp-sep { font-weight: 700; color: var(--label-2); }
+.ac-form-row .tpick select { font-size: var(--t-title3); }
+.set-menu > .glist { margin-bottom: var(--sp-5); }
+.set-menu > .glist:has(+ .glist-foot) { margin-bottom: var(--sp-2); }
+/* the name beside a chore in the calendar day panel: secondary, but readable (AA) on the glass panel */
+.day-panel .muted { color: var(--label-2); }

@@ -109,7 +109,7 @@
       var el = h('div', { class: 'ac-form' });
       function paint() {
         U.clear(el);
-        var tIn = h('input', { type: 'time', value: f.at, onchange: function () { if (tIn.value) f.at = tIn.value; } });
+        var tIn = FB.ui.timeField({ value: f.at, onchange: function () { if (tIn.value) f.at = tIn.value; } });
         el.appendChild(h('div', { class: 'ac-form-row' }, tIn,
           ui.seg([{ v: 'on', label: t('ac.s.turnOn') }, { v: 'off', label: t('ac.s.turnOff') }], f.action, function (v) { f.action = v; paint(); })));
         el.appendChild(h('div', { class: 'day-dots' }, DOTS.map(function (d) {

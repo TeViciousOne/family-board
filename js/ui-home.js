@@ -203,6 +203,7 @@
   /* a quiet day leaves room under the chores: show tomorrow there, so the wall is never half empty */
   function tomorrowCard(today, count) {
     var ph = isPhone(); /* phones: only on a short day (up to 3 chores), and fewer lines */
+    if (ph && noTmr) return null;
     if (count > (ph ? 3 : 6)) return null;
     var tm = U.addDays(today, 1);
     var chores = L.choresDue(tm, '00:00').filter(function (x) { return !x.done; }).slice(0, ph ? 3 : 6);
@@ -539,11 +540,50 @@
     return rail;
   }
 
+  /* "Before you leave": between the hours set in Settings (5:00-10:00 unless changed). Rain or snow today, what to wear, the first thing on the calendar.
+     Hidden until tomorrow with its X. ?morning in the address shows it at any hour (for trying it out). */
+  var MO_KEY = 'fb.morningHidden', noTmr = false;
+  function morningCard(today, now) {
+    if (!FB.showW('morning')) return null;
+    var force = /[?&]morning\b/.test(root.location ? root.location.search : '');
+    var hr = now.getHours(), m = hr * 60 + now.getMinutes();
+    var a = U.minutesOf(FB.device.morningFrom || '05:00'), b = U.minutesOf(FB.device.morningTo || '10:00');
+    var inside = a <= b ? m >= a && m < b : m >= a || m < b;
+    if (!force && !inside) return null;
+    try { if (localStorage.getItem(MO_KEY) === today) return null; } catch (e) {} /* the X hides it until tomorrow, also with ?morning */
+    var w = FB.app.weather && FB.app.weather.data, rows = [];
+    if (w && FB.showW('weather')) {
+      var hours = FB.weather.hoursFrom(w, 24).filter(function (x) { return x.time.slice(0, 10) === today && +x.time.slice(11, 13) <= 21; });
+      var wet = hours.filter(function (x) { return x.rain >= 50 || /rain|storm|drizzle|snow/.test(FB.weather.kindOf(x.code, 1)); })[0];
+      var snow = wet && /snow/.test(FB.weather.kindOf(wet.code, 1));
+      rows.push(['umbrella', wet ? 'blue' : 'green', wet ? t(snow ? 'mo.snow' : 'mo.rain', { time: FB.i18n.hm(wet.time.slice(11, 16)) }) : t('mo.dry')]);
+      var d0 = w.days[0] || {}, cur = Math.round(w.current.temp), hi = Math.round(d0.max != null ? d0.max : cur), lo = Math.min(cur, Math.round(d0.min != null ? d0.min : cur));
+      var key = lo < 8 ? 'mo.cold' : lo < 15 ? 'mo.cool' : hi >= 30 ? 'mo.hot' : 'mo.temp';
+      rows.push(['thermo', lo < 15 ? 'teal' : hi >= 30 ? 'orange' : 'green', t(key, { now: cur, hi: hi })]);
+    }
+    var nowHM = ('0' + hr).slice(-2) + ':' + ('0' + now.getMinutes()).slice(-2);
+    var first = L.eventsOn(today).filter(function (x) { var e = x.event; return e.kind !== 'countdown' && e.kind !== 'birthday' && !e.all_day && e.start_time && e.start_time.slice(0, 5) >= nowHM; })
+      .sort(function (a, b) { return a.event.start_time < b.event.start_time ? -1 : 1; })[0];
+    rows.push(['calendar', 'red', first ? t('mo.first', { what: FB.i18n.hm(first.event.start_time.slice(0, 5)) + ' ' + first.event.title }) : t('mo.free')]);
+    var card = h('section', { class: 'mo-card', 'aria-label': t('mo.title') },
+      h('h2', { class: 'mo-t' }, t('mo.title')),
+      h('ul', { class: 'mo-rows' }, rows.map(function (r) {
+        return h('li', { class: 'mo-row' }, h('span', { class: 'mo-ico tone-' + r[1] }, ui.icon(r[0], 18)), h('span', { class: 'mo-txt' }, r[2]));
+      })),
+      h('button', { type: 'button', class: 'mo-x', 'aria-label': t('mo.hide'), onclick: function () {
+        try { localStorage.setItem(MO_KEY, today); } catch (e) {}
+        card.classList.add('gone'); setTimeout(function () { FB.app.render(); }, 250);
+      } }, ui.icon('x', 18)));
+    return card;
+  }
+
   /* ---------- the view ---------- */
   FB.views.home = function (ctx) {
     var today = ctx.today;
     var due = L.choresDue(today, ctx.nowHHMM);
     var clk = FB.i18n.clock(ctx.now), phone = isPhone();
+    var mo = morningCard(today, ctx.now);
+    noTmr = !!mo && phone; /* a phone has room for the morning card or tomorrow's list, not both */
 
     var left = h('aside', { class: 'rail rail-left', 'data-scroll': 'rail-left' },
       h('div', { class: 'rail-in', 'data-fit': '1', 'data-fit-min': '0.9', 'data-cap': 'soft' },
@@ -581,6 +621,8 @@
     /* wide: the chores come right under the header; the summary and the news close the page */
     if (isWide()) { if (aiEl) board.appendChild(aiEl); if (nw) board.appendChild(nw); }
 
+    /* mornings: right above the chores */
+    if (mo) { var lst = board.querySelector('.col, .board-hint'); board.insertBefore(mo, lst || board.firstChild); }
     if (isWide()) { board.classList.add('has-news'); board.insertBefore(homeHead(today), board.firstChild); }
 
     var rr = rightRail(today, left.firstChild);

@@ -147,8 +147,8 @@ input[type=range] { width: 100%; accent-color: var(--brand); height: 36px; }
 .tick { width: 40px; height: 40px; border-radius: 50%; border: 3px solid var(--c); flex: none; display: grid; place-items: center; color: #fff; }
 .chore.done .tick { background: var(--c); }
 .chore-txt { display: block; min-width: 0; flex: 1; }
-.chore-title { display: block; font-weight: 700; font-size: var(--t-title3); line-height: 1.2; overflow-wrap: anywhere; }
-.chore-meta { display: block; font-size: var(--t-subhead); color: var(--ink-3); margin-top: 2px; overflow-wrap: anywhere; }
+.chore-title { display: block; font-weight: 700; font-size: var(--t-title3); line-height: 1.2; overflow-wrap: break-word; }
+.chore-meta { display: block; font-size: var(--t-subhead); color: var(--ink-3); margin-top: 2px; overflow-wrap: break-word; }
 .chore.done { background: rgba(255, 255, 255, .55); }
 .chore.done .chore-title { text-decoration: line-through; text-decoration-thickness: 2px; color: var(--ink-3); }
 .chore.overdue { box-shadow: inset 6px 0 0 var(--alert); }
@@ -161,7 +161,7 @@ input[type=range] { width: 100%; accent-color: var(--brand); height: 36px; }
 .ev { display: flex; align-items: baseline; gap: 10px; width: 100%; padding: 8px 0; border: 0; background: none; text-align: left; min-height: 44px; }
 .ev-dot { width: 12px; height: 12px; border-radius: 50%; flex: none; display: inline-block; position: relative; top: 1px; }
 .ev-when { color: var(--ink-2); font-size: var(--t-subhead); min-width: 52px; flex: none; font-variant-numeric: tabular-nums; }
-.ev-title { font-weight: 700; flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.ev-title { font-weight: 700; flex: 1; min-width: 0; overflow-wrap: break-word; }
 .ev-day { font: 700 var(--t-body) var(--font-display); color: var(--ink-3); margin: 8px 0 0; }
 .ev.big { padding: 12px 0; font-size: var(--t-title3); }
 .ev.small { min-height: 36px; padding: 5px 0; font-size: var(--t-body); }
@@ -222,10 +222,10 @@ input[type=range] { width: 100%; accent-color: var(--brand); height: 36px; }
 .shop { display: flex; align-items: center; gap: 12px; min-height: 60px; padding: 4px 6px 4px 12px; border-radius: var(--r-md); background: #fff; }
 .shop-tick { width: 38px; height: 38px; border-radius: 50%; border: 3px solid var(--brand); display: grid; place-items: center; background: transparent; color: #fff; flex: none; }
 .shop.done .shop-tick { background: var(--brand); }
-.shop-title { flex: 1; font-size: var(--t-title3); font-weight: 700; overflow-wrap: anywhere; }
+.shop-title { flex: 1; font-size: var(--t-title3); font-weight: 700; overflow-wrap: break-word; }
 .shop.done .shop-title { text-decoration: line-through; color: var(--ink-3); font-weight: 400; }
 .note { padding: 12px 14px 4px; border-left: 6px solid; border-radius: 6px; background: #fff; }
-.note p { font-size: var(--t-title3); white-space: pre-wrap; overflow-wrap: anywhere; }
+.note p { font-size: var(--t-title3); white-space: pre-wrap; overflow-wrap: break-word; }
 .note footer { display: flex; align-items: center; font-size: var(--t-subhead); margin-top: 4px; }
 .note.pinned { background: #FFF7DC; }
 

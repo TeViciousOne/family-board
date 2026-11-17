@@ -107,3 +107,7 @@
   .home.wide .who-row { justify-content: stretch; }
   .home.wide .who-chip { flex: 1 1 auto; }
 }
+/* three across only while a card stays at least 200px wide (the wall tablet); a narrower board shows two */
+@media (orientation: landscape) and (min-width: 900px) {
+  .home.wide .list-grid.few, .home.wide .list-grid.mid { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)) !important; }
+}
