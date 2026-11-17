@@ -128,8 +128,8 @@
     var dateIn = h('input', { type: 'date', value: e.on_date, onchange: function () { if (dateIn.value) { rec.setStart(dateIn.value); } } });
     var endIn = h('input', { type: 'date', value: e.end_date || '', min: e.on_date });
     var allDay = h('input', { type: 'checkbox', checked: !!e.all_day, onchange: function () { sync(); } });
-    var startT = h('input', { type: 'time', value: e.start_time || '09:00' });
-    var endT = h('input', { type: 'time', value: e.end_time || '' });
+    var startT = ui.timeField({ value: e.start_time || '09:00' });
+    var endT = ui.timeField({ value: e.end_time || '' });
     var personSel = h('select', null,
       h('option', { value: '', selected: !e.member_id }, t('event.everyone')),
       L.membersSorted().map(function (m) { return h('option', { value: m.id, selected: e.member_id === m.id }, m.name); }));

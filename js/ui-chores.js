@@ -121,7 +121,7 @@
       h('option', { value: '', selected: !c.member_id }, t('chore.anyone')),
       L.membersSorted().map(function (m) { return h('option', { value: m.id, selected: c.member_id === m.id }, m.name); }));
     var hasTime = h('input', { type: 'checkbox', checked: !!c.due_time, onchange: function () { timeIn.style.display = hasTime.checked ? '' : 'none'; } });
-    var timeIn = h('input', { type: 'time', value: c.due_time || '18:00', style: { display: c.due_time ? '' : 'none' } });
+    var timeIn = ui.timeField({ value: c.due_time || '18:00', style: { display: c.due_time ? '' : 'none' } });
     var active = h('input', { type: 'checkbox', checked: c.active !== false });
     var rec = ui.recurEditor(c.rule, { onceLabel: t('rule.f.once') });
     var err = h('p', { class: 'form-err', role: 'alert' });
@@ -233,7 +233,7 @@
     var title = h('input', { type: 'text', value: existing ? FB.templates.label(existing) : '', placeholder: t('chore.titlePh'), maxlength: '80' });
     var grid = ui.emojiGrid(ui.CHORE_EMOJI, emoji, function (v) { emoji = v; }, true);
     var hasTime = h('input', { type: 'checkbox', checked: !!c.due_time, onchange: function () { timeIn.style.display = hasTime.checked ? '' : 'none'; } });
-    var timeIn = h('input', { type: 'time', value: c.due_time || '18:00', style: { display: c.due_time ? '' : 'none' } });
+    var timeIn = ui.timeField({ value: c.due_time || '18:00', style: { display: c.due_time ? '' : 'none' } });
     var rec = ui.recurEditor(c.rule, { onceLabel: t('rule.f.once') });
     var err = h('p', { class: 'form-err', role: 'alert' });
     function finish(r) { if (r) { modal.close(); if (done) done(); } }

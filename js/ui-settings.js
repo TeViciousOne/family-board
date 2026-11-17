@@ -147,22 +147,39 @@
   function nightSection() {
     var s = section(t('set.night'), t('set.nightHint'));
     s.appendChild(toggle(t('set.nightOn'), FB.device.nightOn, function (v) { FB.device.nightOn = v; saveDevice(); }));
-    var from = h('input', { type: 'time', value: FB.device.nightFrom, onchange: function () { if (from.value) { FB.device.nightFrom = from.value; saveDevice(); } } });
-    var to = h('input', { type: 'time', value: FB.device.nightTo, onchange: function () { if (to.value) { FB.device.nightTo = to.value; saveDevice(); } } });
+    var from = ui.timeField({ value: FB.device.nightFrom, onchange: function () { if (from.value) { FB.device.nightFrom = from.value; saveDevice(); } } });
+    var to = ui.timeField({ value: FB.device.nightTo, onchange: function () { if (to.value) { FB.device.nightTo = to.value; saveDevice(); } } });
     s.appendChild(h('div', { class: 'row2' }, ui.field(t('set.nightFrom'), from), ui.field(t('set.nightTo'), to)));
     s.appendChild(h('button', { class: 'btn ghost', onclick: function () { FB.night.sleepNow(); } }, ui.icon('moon', 20), ' ', t('set.sleepNow')));
     return s;
   }
 
   /* ---------- home screen ---------- */
+  /* a grouped list (one rounded card, thin lines between rows), like iOS Settings */
+  function glist(rows, footer) {
+    var g = h('div', { class: 'glist' }, rows.filter(Boolean));
+    return footer ? h('div', null, g, h('p', { class: 'hint glist-foot' }, footer)) : g;
+  }
+  function grow(icon, tone, label, value, onChange) {
+    var cb = h('input', { type: 'checkbox', checked: !!value, onchange: function () { onChange(cb.checked); } });
+    return h('label', { class: 'grow' }, h('span', { class: 'gico tone-' + tone }, ui.icon(icon, 18)), h('span', { class: 'grow-t' }, label), cb);
+  }
+  /* the blocks in the order they appear on the screen, each with its own symbol */
+  var BLOCKS = [
+    ['weather', 'sun', 'yellow'], ['events', 'calendar', 'red'], ['countdown', 'hourglass', 'orange'], ['morning', 'umbrella', 'blue'],
+    ['summary', 'sparkle', 'pink'], ['news', 'news', 'indigo'], ['ac', 'snow', 'cyan'], ['shopping', 'cart', 'green'], ['notes', 'edit', 'yellow']
+  ];
   function homeSection() {
     var s = section(t('set.homeTitle'), t('home.showHint'));
-    FB.widgets.forEach(function (w) {
+    var rows = [];
+    BLOCKS.forEach(function (b) {
+      var w = b[0];
+      if (FB.widgets.indexOf(w) < 0) return;
       if (w === 'ac' && !(FB.ac && FB.ac.enabled())) return;
-      if (w === 'spotify') return; /* its switch sits in the Spotify block below, once connected */
-      s.appendChild(toggle(t('w.' + w), FB.showW(w), function (v) { FB.device.show[w] = v; saveDevice(); }));
+      rows.push(grow(b[1], b[2], t('w.' + w), FB.showW(w), function (v) { FB.device.show[w] = v; saveDevice(); if (w === 'morning') FB.app.render(); }));
+      if (w === 'morning' && FB.showW('morning')) rows.push(morningTimes());
     });
-    s.appendChild(morningBlock());
+    s.appendChild(glist(rows));
     s.appendChild(h('h3', { class: 'set-sub' }, t('set.homeMore')));
     s.appendChild(toggle(t('set.namedays'), FB.device.namedays !== false, function (v) { FB.device.namedays = v; saveDevice(); }, t('set.namedaysHint')));
     s.appendChild(toggle(t('set.calm'), FB.device.calm, function (v) { FB.device.calm = v; saveDevice(); }, t('set.calmHint')));
@@ -172,15 +189,14 @@
     return s;
   }
 
-  /* "Before you leave": the hours it shows (the switch itself is in the list above) */
-  function morningBlock() {
+  /* "Before you leave": its hours, right under its switch */
+  function morningTimes() {
     var d = FB.device;
-    var from = h('input', { type: 'time', value: d.morningFrom || '05:00', onchange: function () { if (from.value) { d.morningFrom = from.value; saveDevice(); } } });
-    var to = h('input', { type: 'time', value: d.morningTo || '10:00', onchange: function () { if (to.value) { d.morningTo = to.value; saveDevice(); } } });
-    return h('div', { class: 'mo-set' },
-      h('h3', { class: 'set-sub' }, t('mo.title')),
-      h('p', { class: 'hint' }, t('mo.hoursHint')),
-      h('div', { class: 'row2' }, ui.field(t('set.nightFrom'), from), ui.field(t('set.nightTo'), to)));
+    var from = ui.timeField({ value: d.morningFrom || '05:00', onchange: function () { if (from.value) { d.morningFrom = from.value; saveDevice(); } } });
+    var to = ui.timeField({ value: d.morningTo || '10:00', onchange: function () { if (to.value) { d.morningTo = to.value; saveDevice(); } } });
+    return h('div', { class: 'grow-sub mo-set' },
+      h('div', { class: 'row2' }, ui.field(t('set.nightFrom'), from), ui.field(t('set.nightTo'), to)),
+      h('p', { class: 'hint' }, t('mo.hoursHint')));
   }
 
   /* Spotify remote: Client ID of the family's own Spotify app, sign in, and the on/off switch for the tile */
@@ -268,7 +284,9 @@
       return ui.field(label, h('div', { class: 'look-range' }, rng, val, reset), hint);
     }
     s.appendChild(sizeRow(t('look.text'), t('look.textHint'), 'textSize', 80, 150, false));
-    s.appendChild(sizeRow(t('look.ui'), t('look.uiHint'), 'uiScale', 70, 160, true));
+    /* phones keep the phone design's fixed sizes: only the text size applies there */
+    var onPhone = (FB.device.kind || '') === 'phone';
+    if (!onPhone || d.uiScale) s.appendChild(sizeRow(t('look.ui'), t('look.uiHint'), 'uiScale', 70, 160, true));
     /* theme: small previews */
     var PV = { auto: ['linear-gradient(135deg, #EEF3FB 50%, #0B1020 50%)', 'rgba(140, 150, 170, .6)'], glass: ['linear-gradient(135deg, #24459A, #3B2A7A 60%, #0E3F45)', 'rgba(255, 255, 255, .3)'],
       dark: ['#10162A', '#26304C'], black: ['#000000', '#1B1C21'], light: ['#EEF2F9', '#FFFFFF'] };
@@ -287,7 +305,8 @@
     var grange = h('input', { type: 'range', min: '0', max: '100', step: '5', value: String(d.glass), disabled: solidTheme, 'aria-label': t('look.glass'),
       oninput: function () { d.glass = Number(grange.value); gval.textContent = d.glass === 0 ? t('look.solid') : d.glass + '%'; FB.app.applyLook(); },
       onchange: function () { FB.saveDevice(); } });
-    s.appendChild(ui.field(t('look.glass'), h('div', { class: 'look-range' }, grange, gval), solidTheme ? t('look.glassOff') : t('look.glassHint')));
+    if (!onPhone) s.appendChild(ui.field(t('look.glass'), h('div', { class: 'look-range' }, grange, gval), solidTheme ? t('look.glassOff') : t('look.glassHint')));
+    else s.appendChild(h('p', { class: 'hint' }, t('look.glassPhone')));
     s.appendChild(ui.field(t('look.space'), ui.seg([{ v: 'def', label: t('look.space.def') }, { v: 'more', label: t('look.space.more') }], d.dense ? 'more' : 'def', function (v) { d.dense = v === 'more'; relook(); }), t('look.spaceHint')));
     s.appendChild(ui.field(t('look.glow'), ui.seg([{ v: 'on', label: t('look.glow.on') }, { v: 'off', label: t('look.glow.off') }], d.glow !== false ? 'on' : 'off', function (v) { d.glow = v === 'on'; relook(); }), t('look.glowHint')));
     s.appendChild(ui.field(t('look.time'), ui.seg([{ v: '24', label: t('look.time.24') }, { v: '12', label: t('look.time.12') }], d.time12 ? '12' : '24', function (v) { d.time12 = v === '12'; relook(); })));
@@ -432,32 +451,43 @@
     var d = FB.device, place = d.place || FB.weather.DEFAULT_PLACE;
     var shown = FB.widgets.filter(function (w) { return FB.showW(w) && (w !== 'ac' || (FB.ac && FB.ac.enabled())) && (w !== 'spotify' || (FB.spotify && FB.spotify.connected())); }).length;
     var total = FB.widgets.filter(function (w) { return (w !== 'ac' || (FB.ac && FB.ac.enabled())) && (w !== 'spotify' || (FB.spotify && FB.spotify.connected())); }).length;
+    var kind = d.kind || 'tablet';
     var out = [
-      ['family', 'home', t('set.family'), familySection, t('set.nMembers', { n: FB.state.members.length })],
-      ['home', 'grid', t('set.homeTitle'), homeSection, t('set.nBlocks', { n: shown, total: total })],
+      ['family', 'home', t('set.family'), familySection, t('set.nMembers', { n: FB.state.members.length }), 'orange', 'family'],
+      ['account', 'user', t('set.account'), accountSection, FB.store.mode === 'demo' ? t('about.demo') : (FB.store.userEmail() || ''), 'blue', 'family'],
+      ['home', 'grid', t('set.homeTitle'), homeSection, t('set.nBlocks', { n: shown, total: total }), 'blue', 'device'],
+      ['night', 'moon', t('set.night'), nightSection, d.nightOn ? d.nightFrom + '–' + d.nightTo : t('set.off'), 'indigo', 'device'],
+      ['look', 'sparkle', t('set.look'), lookSection, (d.lang === 'sq' ? 'Shqip' : 'English') + (d.lite ? ' · ' + t('set.liteShort') : ''), 'pink', 'device'],
       ['notify', 'bell', t('set.notify'), function () {
         var box = h('div');
         if (FB.push && FB.push.supported()) box.appendChild(pushSection());
         box.appendChild(soundSection());
         return box;
-      }, [FB.push && FB.push.supported() ? (FB.push.wanted() ? t('set.on') : t('set.off')) : null, t('set.sound') + ': ' + (d.sound ? t('set.on') : t('set.off'))].filter(Boolean).join(' · ')],
-      ['night', 'moon', t('set.night'), nightSection, d.nightOn ? d.nightFrom + '–' + d.nightTo : t('set.off')],
-      ['look', 'sparkle', t('set.look'), lookSection, (d.lang === 'sq' ? 'Shqip' : 'English') + (d.lite ? ' · ' + t('set.liteShort') : '')],
-      ['device', 'phone', t('set.device'), deviceSection, t('dev.' + (d.kind || 'tablet')) + (d.pin ? ' · 🔒' : '')],
-      ['connections', 'sun', t('set.connections'), connectionsSection, place.name + (FB.ac && FB.ac.enabled() ? ' · ' + t('ac.title') : '')],
-      ['account', 'user', t('set.account'), accountSection, FB.store.mode === 'demo' ? t('about.demo') : (FB.store.userEmail() || '')],
-      ['about', 'info', t('about.title'), aboutSection, '']
+      }, [FB.push && FB.push.supported() ? (FB.push.wanted() ? t('set.on') : t('set.off')) : null, t('set.sound') + ': ' + (d.sound ? t('set.on') : t('set.off'))].filter(Boolean).join(' · '), 'red', 'device'],
+      ['device', 'phone', t('set.device'), deviceSection, t('dev.' + kind) + (d.pin ? ' · 🔒' : ''), 'teal', 'device'],
+      ['connections', 'sun', t('set.connections'), connectionsSection, place.name + (FB.ac && FB.ac.enabled() ? ' · ' + t('ac.title') : ''), 'yellow', 'conn'],
+      ['about', 'info', t('about.title'), aboutSection, '', 'gray', 'about']
     ];
     return out;
   }
   function wideNow() { return FB.app.layout ? FB.app.layout.w >= 900 : !!(root.matchMedia && root.matchMedia('(min-width: 900px)').matches); }
+  /* the menu in iOS-style groups; the device group says plainly that it only changes this screen */
   function menu(list, cur) {
-    return h('div', { class: 'list set-menu' }, list.map(function (x) {
-      return h('button', { type: 'button', class: 'row' + (cur && cur[0] === x[0] ? ' sel' : ''), 'data-topic': x[0], onclick: function () { page = x[0]; FB.app.render(); } },
-        h('span', { class: 'row-ico' }, ui.icon(x[1], 24)),
-        h('span', { class: 'row-main' }, h('span', { class: 'row-title' }, x[2]), x[4] ? h('span', { class: 'row-sub' }, x[4]) : null),
-        ui.icon('right', 20));
-    }));
+    var kind = FB.device.kind || 'tablet', box = h('div', { class: 'set-menu' }), groups = [];
+    list.forEach(function (x) { var g = groups.filter(function (q) { return q.id === x[6]; })[0]; if (!g) groups.push(g = { id: x[6], rows: [] }); g.rows.push(x); });
+    groups.forEach(function (g) {
+      if (g.id === 'device') box.appendChild(h('h3', { class: 'set-gh' }, t('set.gDevice', { kind: t('dev.' + kind).toLowerCase() })));
+      if (g.id === 'family') box.appendChild(h('h3', { class: 'set-gh' }, t('set.gFamily')));
+      box.appendChild(h('div', { class: 'glist set-glist' }, g.rows.map(function (x) {
+        return h('button', { type: 'button', class: 'row' + (cur && cur[0] === x[0] ? ' sel' : ''), 'data-topic': x[0], 'aria-current': cur && cur[0] === x[0] ? 'page' : null, onclick: function () { page = x[0]; FB.app.render(); } },
+          h('span', { class: 'gico tone-' + x[5] }, ui.icon(x[1], 18)),
+          h('span', { class: 'row-main' }, h('span', { class: 'row-title' }, x[2]), x[4] ? h('span', { class: 'row-sub' }, x[4]) : null),
+          ui.icon('right', 18));
+      })));
+      if (g.id === 'device') box.appendChild(h('p', { class: 'hint glist-foot' }, t('set.gDeviceHint', { kind: t('dev.' + kind).toLowerCase() })));
+      if (g.id === 'family') box.appendChild(h('p', { class: 'hint glist-foot' }, t('set.gFamilyHint')));
+    });
+    return box;
   }
   FB.views.settings = function () {
     if (FB.device.pin && Date.now() > unlockedUntil) return lockedView();
