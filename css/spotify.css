@@ -73,3 +73,13 @@
 .sp-check { flex: none; color: var(--brand); }
 .sp-note { margin: var(--sp-3) 0; font-size: var(--t-subhead); color: var(--label-2); }
 .sp-reconnect { display: flex; flex-direction: column; align-items: flex-start; gap: var(--sp-2); }
+
+/* fixes: the idle icon must honour [hidden]; the player never clips its last button */
+.sp-cover[hidden], .sp-idle-ico[hidden] { display: none; }
+.sp-modal { padding-bottom: var(--sp-2); }
+.sp-modal > * { flex: none; }
+.sp-big { width: min(240px, 60vw, 30vh); }
+.sp-browse { min-height: 0; }
+.sp-list { max-height: min(52vh, 420px); }
+.sp-big { width: clamp(96px, 17vh, 240px); }
+.sp-modal { gap: var(--sp-2); }
