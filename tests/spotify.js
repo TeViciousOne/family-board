@@ -18,10 +18,10 @@ const track = (o) => Object.assign({ is_playing: true, progress_ms: 30000, item:
     await p.route('**/config.js', r => r.fulfill({ contentType: 'text/javascript', body: 'window.FB_CONFIG={SUPABASE_URL:"",SUPABASE_ANON_KEY:""};' }));
     await p.route(/fonts\.(googleapis|gstatic)\.com|open-meteo|\/functions\//, r => r.abort());
     await p.route(/i\.scdn\.co/, r => r.fulfill({ contentType: 'image/png', body: PNG }));
-    const calls = []; let player = { status: 200, body: track() }, cmdStatus = 204, tokenBodies = [], force401 = 0;
+    const calls = []; let player = { status: 200, body: track() }, cmdStatus = 204, extra403 = false, tokenBodies = [], force401 = 0;
     let authUrl = null;
     await p.route(/accounts\.spotify\.com\/authorize/, r => { const u = new URL(r.request().url()); authUrl = u; r.fulfill({ status: 302, headers: { location: BASE + '?code=abc123&state=' + u.searchParams.get('state') } }); });
-    await p.route(/accounts\.spotify\.com\/api\/token/, r => { const b = new URLSearchParams(r.request().postData()); tokenBodies.push(Object.fromEntries(b)); const refresh = b.get('grant_type') === 'refresh_token'; r.fulfill({ contentType: 'application/json', headers: { 'access-control-allow-origin': '*' }, body: JSON.stringify(Object.assign({ access_token: refresh ? 'AT2' : 'AT1', expires_in: 3600, scope: 'x' }, refresh ? {} : { refresh_token: 'RT1' })) }); });
+    await p.route(/accounts\.spotify\.com\/api\/token/, r => { const b = new URLSearchParams(r.request().postData()); tokenBodies.push(Object.fromEntries(b)); const refresh = b.get('grant_type') === 'refresh_token'; r.fulfill({ contentType: 'application/json', headers: { 'access-control-allow-origin': '*' }, body: JSON.stringify(Object.assign({ access_token: refresh ? 'AT2' : 'AT1', expires_in: 3600, scope: 'user-read-playback-state user-modify-playback-state user-read-currently-playing playlist-read-private playlist-read-collaborative user-library-read user-library-modify' }, refresh ? {} : { refresh_token: 'RT1' })) }); });
     await p.route(/api\.spotify\.com\/v1\//, r => {
       const req = r.request(), u = new URL(req.url()), cors = { 'access-control-allow-origin': '*', 'access-control-allow-headers': '*', 'access-control-allow-methods': '*' };
       if (req.method() === 'OPTIONS') return r.fulfill({ status: 204, headers: cors });
@@ -30,6 +30,12 @@ const track = (o) => Object.assign({ is_playing: true, progress_ms: 30000, item:
         if (force401 > 0) { force401--; return r.fulfill({ status: 401, headers: cors, contentType: 'application/json', body: '{"error":{"status":401,"message":"expired"}}' }); }
         return player.status === 204 ? r.fulfill({ status: 204, headers: cors }) : r.fulfill({ status: 200, headers: cors, contentType: 'application/json', body: JSON.stringify(player.body) });
       }
+      const J = (b) => r.fulfill({ status: 200, headers: cors, contentType: 'application/json', body: JSON.stringify(b) });
+      if (extra403 && /playlists|search|library|devices/.test(u.pathname)) return r.fulfill({ status: 403, headers: cors, contentType: 'application/json', body: '{"error":{"message":"Insufficient client scope"}}' });
+      if (u.pathname === '/v1/me/player/devices') return J({ devices: [{ id: 'd1', name: 'Pixel', type: 'Smartphone', is_active: true }, { id: 'd2', name: 'Kitchen speaker', type: 'Speaker', is_active: false }] });
+      if (u.pathname === '/v1/me/playlists') return J({ items: [{ name: 'Morning mix', uri: 'spotify:playlist:p1', owner: { display_name: 'Andrias' }, images: [{ url: 'https://i.scdn.co/small.jpg' }] }] });
+      if (u.pathname === '/v1/search') return J({ tracks: { items: [{ name: 'Gjithmone', uri: 'spotify:track:t1', artists: [{ name: 'Ledi' }], album: { images: [{ url: 'https://i.scdn.co/small.jpg' }] } }] }, albums: { items: [{ name: 'Album Një', uri: 'spotify:album:a1', artists: [{ name: 'Ledi' }], images: [] }] } });
+      if (/\/v1\/me\/(library|tracks)/.test(u.pathname) && req.method() === 'GET') return J([false]);
       return cmdStatus === 204 ? r.fulfill({ status: 204, headers: cors }) : r.fulfill({ status: cmdStatus, headers: cors, contentType: 'application/json', body: '{"error":{"message":"x"}}' });
     });
     await p.goto(BASE); await p.waitForSelector('.home .col');
@@ -80,11 +86,39 @@ const track = (o) => Object.assign({ is_playing: true, progress_ms: 30000, item:
 
     /* 5. the sheet: volume */
     if (!phone) { await p.locator('.sp-tile .sp-info').click(); await p.waitForSelector('.sp-modal'); }
-    await p.locator('.sp-modal input[type=range]').fill('70'); await p.waitForTimeout(500);
+    await p.locator('.sp-vol input').fill('70'); await p.waitForTimeout(500);
     ok(calls.some(c => /PUT \/v1\/me\/player\/volume\?volume_percent=70/.test(c)), tag + 'volume is sent');
-    ok(/Pixel/.test(await p.locator('.sp-dev').innerText()), tag + 'sheet says where it plays');
+    ok(/Pixel/.test(await p.locator('.sp-device').innerText()), tag + 'sheet says where it plays');
     await shot('sheet');
     await p.evaluate(() => { if (FB.ui.closeAllModals) FB.ui.closeAllModals(); });
+
+    /* 5b. shuffle, repeat, seek */
+    await p.evaluate(() => FB.spotify.open()); await p.waitForSelector('.sp-modal');
+    await p.locator('.sp-modal .sp-btn[aria-label="Shuffle"]').click(); await p.waitForTimeout(200);
+    ok(calls.some(c => /PUT \/v1\/me\/player\/shuffle\?state=true/.test(c)), tag + 'shuffle on is sent');
+    await p.locator('.sp-modal .sp-btn[aria-label="Repeat"]').click(); await p.waitForTimeout(200);
+    ok(calls.some(c => /PUT \/v1\/me\/player\/repeat\?state=context/.test(c)), tag + 'repeat goes off to all');
+    await p.locator('.sp-seek').evaluate((el) => { el.value = '90000'; el.dispatchEvent(new Event('change', { bubbles: true })); }); await p.waitForTimeout(200);
+    ok(calls.some(c => /PUT \/v1\/me\/player\/seek\?position_ms=90000/.test(c)), tag + 'seek is sent');
+
+    /* 5c. device picker */
+    await p.locator('.sp-device').click(); await p.waitForSelector('.sp-row');
+    ok(/Kitchen speaker/.test(await p.locator('.sp-list').innerText()), tag + 'devices are listed');
+    await p.locator('.sp-row-main', { hasText: 'Kitchen speaker' }).click(); await p.waitForTimeout(250);
+    ok(calls.some(c => /PUT \/v1\/me\/player /.test(c) || /PUT \/v1\/me\/player \[/.test(c)), tag + 'playback is moved to the chosen device');
+
+    /* 5d. choose music: playlist, search, queue */
+    await p.evaluate(() => FB.spotify.browse()); await p.waitForSelector('.sp-browse .sp-row');
+    ok(/Morning mix/.test(await p.locator('.sp-browse').innerText()), tag + 'playlists are listed');
+    await p.locator('.sp-browse .sp-row-main', { hasText: 'Morning mix' }).click(); await p.waitForTimeout(250);
+    ok(calls.some(c => /PUT \/v1\/me\/player\/play /.test(c) || /PUT \/v1\/me\/player\/play\b/.test(c)), tag + 'a playlist starts playing');
+    await p.evaluate(() => FB.spotify.browse()); await p.waitForSelector('.sp-browse');
+    await p.locator('.sp-browse button', { hasText: 'Search' }).click();
+    await p.locator('.sp-q').fill('ledi'); await p.waitForSelector('.sp-row', { timeout: 3000 });
+    ok(/Gjithmone/.test(await p.locator('.sp-list').innerText()) && /Album/.test(await p.locator('.sp-list').innerText()), tag + 'search shows songs and albums');
+    await p.locator('.sp-btn[aria-label="Add to queue"]').first().click(); await p.waitForTimeout(250);
+    ok(calls.some(c => /POST \/v1\/me\/player\/queue\?uri=spotify%3Atrack%3At1/.test(c)), tag + 'add to queue is sent');
+    await p.evaluate(() => { document.querySelectorAll('.modal-back, .modal').forEach(() => {}); FB.ui.closeAllModals && FB.ui.closeAllModals(); });
 
     /* 6. an error from Spotify is explained, not silent */
     cmdStatus = 404; player = { status: 200, body: track() };
@@ -101,10 +135,15 @@ const track = (o) => Object.assign({ is_playing: true, progress_ms: 30000, item:
     await p.evaluate(() => FB.spotify.refresh(true)); await p.waitForTimeout(700);
     ok(tokenBodies.length === before + 1, tag + 'a 401 triggers one refresh and a retry');
 
-    /* 8. nothing playing: the tile goes away */
+    /* 8. nothing playing: the tile stays and invites you to choose music */
     player = { status: 204 };
     await p.evaluate(() => FB.spotify.refresh(true)); await p.waitForTimeout(500);
-    ok(await p.locator(sel).count() === 0 || await p.locator(sel).first().isHidden(), tag + 'tile hides when nothing is playing');
+    ok(await p.locator(sel).count() === 1 && /Choose music/.test(await p.locator(sel).first().innerText()), tag + 'idle tile says Choose music');
+    /* 8b. an old login without the new permissions: explained, with Reconnect */
+    extra403 = true;
+    await p.evaluate(() => FB.spotify.browse()); await p.waitForTimeout(500);
+    ok(await p.locator('.sp-browse .btn', { hasText: 'Reconnect' }).count() === 1 || await p.locator('.sp-browse .sp-row').count() === 0, tag + 'missing permission shows Reconnect');
+    await p.evaluate(() => FB.ui.closeAllModals && FB.ui.closeAllModals()); extra403 = false;
 
     /* 9. disconnect */
     player = { status: 200, body: track() };
