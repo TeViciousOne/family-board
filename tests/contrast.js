@@ -41,7 +41,7 @@ const WANT_AAA = !process.env.NO_AAA;
         const w = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
         const nm = (el) => (el.className && typeof el.className === 'string' ? '.' + el.className.trim().split(/\s+/).slice(0, 2).join('.') : el.tagName.toLowerCase());
         for (let n; (n = w.nextNode());) {
-          if (!n.data.trim()) continue;
+          if (!n.data.trim() || !/[\p{L}\p{N}]/u.test(n.data.replace(/\p{Extended_Pictographic}/gu, ''))) continue; /* emoji carry their own colours */
           const el = n.parentElement; if (!el || /^(SCRIPT|STYLE|NOSCRIPT)$/.test(el.tagName) || el.closest('#night, #calm, [aria-hidden="true"]')) continue;
           const cs = getComputedStyle(el); if (cs.visibility === 'hidden' || cs.display === 'none') continue;
           let op = 1; for (let a = el; a; a = a.parentElement) op *= +getComputedStyle(a).opacity;
@@ -59,10 +59,10 @@ const WANT_AAA = !process.env.NO_AAA;
         return out;
       });
       /* 2. text off, photograph the real background */
-      await p.addStyleTag({ content: '*{color:transparent !important;-webkit-text-fill-color:transparent !important;text-shadow:none !important;caret-color:transparent !important} svg text{fill:transparent !important}', id: 'ct-off' });
+      const off = await p.addStyleTag({ content: '*{color:transparent !important;-webkit-text-fill-color:transparent !important;text-shadow:none !important;caret-color:transparent !important} svg text{fill:transparent !important}' });
       await p.waitForTimeout(150);
       const shot = await p.screenshot(); if (process.env.DUMP) require('fs').writeFileSync(process.env.DUMP + '-' + dn + '-' + scheme + '-' + route + '.png', shot); const png = shot.toString('base64');
-      await p.evaluate(() => document.getElementById('ct-off') && document.getElementById('ct-off').remove());
+      await off.evaluate(e => e.remove());
       /* 3. read the pixels under each run and measure */
       const res = await p.evaluate(async ({ png, runs, dpr }) => {
         const img = new Image(); img.src = 'data:image/png;base64,' + png; await img.decode();
