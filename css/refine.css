@@ -159,3 +159,14 @@ html.shifty #app { width: calc(100% - 6px); height: calc(100% - 6px); margin: 3p
 }
 .cd-num b, .cd-num small { text-align: center; }
 .cd-hms { display: block; margin-top: 2px; font-size: var(--t-subhead); font-weight: 600; font-variant-numeric: tabular-nums; color: var(--label-2); }
+
+/* countdown sheet: one big live clock */
+.cdk { display: flex; flex-direction: column; align-items: center; gap: var(--sp-5); padding: var(--sp-4) 0 var(--sp-2); }
+.cdk-when { margin: 0; font-size: var(--t-body); font-weight: 500; color: var(--label-2); text-align: center; }
+.cdk-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--sp-3); width: 100%; }
+.cdk-cell { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--sp-1); padding: var(--sp-5) var(--sp-2); border-radius: var(--r-lg); background: var(--g-fill); border: 1px solid var(--g-edge-2); box-shadow: var(--g-shine); }
+.cdk-cell b { font-size: clamp(36px, 9vw, 72px); line-height: 1; font-weight: 700; letter-spacing: var(--tracking-display); font-variant-numeric: tabular-nums; text-align: center; }
+.cdk-cell:first-child b { color: var(--brand); }
+.cdk-cell span { font-size: var(--t-subhead); font-weight: 600; color: var(--label-2); }
+.cdk-done { margin: 0; font-size: var(--t-title2); font-weight: 700; text-align: center; }
+.cdk-done[hidden] { display: none; }

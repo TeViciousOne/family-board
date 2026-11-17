@@ -354,6 +354,35 @@
   }
   function cdStart() { cdTick(); if (!cdTimer) cdTimer = setInterval(cdTick, 1000); }
 
+  /* tap a countdown: a big live clock (days, hours, minutes, seconds); editing is one tap away */
+  function cdParts(ms) {
+    var sec = Math.floor(Math.max(0, ms) / 1000);
+    return [Math.floor(sec / 86400), Math.floor(sec % 86400 / 3600), Math.floor(sec % 3600 / 60), sec % 60];
+  }
+  function openCountdown(ev, at) {
+    var names = [t('unit.days'), t('cd.hours'), t('cd.minutes'), t('cd.seconds')], nums = [], cells = names.map(function (n) {
+      var b = h('b', null, '0'); nums.push(b);
+      return h('div', { class: 'cdk-cell' }, b, h('span', null, n));
+    });
+    var done = h('p', { class: 'cdk-done', hidden: true }, t('cd.now'));
+    var body = h('div', { class: 'cdk' },
+      h('p', { class: 'cdk-when' }, FB.i18n.dateLong(ev.on_date) + (ev.start_time && !ev.all_day ? ' · ' + FB.i18n.hm(ev.start_time) : '')),
+      h('div', { class: 'cdk-grid', role: 'timer', 'aria-label': ev.title }, cells), done);
+    var m = ui.modal({ title: ev.title, body: body, focus: false,
+      actions: [h('button', { type: 'button', class: 'btn ghost', onclick: function () { m.close(); FB.actions.openEvent(ev); } }, t('common.edit'))] });
+    var last = [];
+    function paint() {
+      if (!body.isConnected) { clearInterval(timer); return; }
+      var ms = at - Date.now(), v = cdParts(ms);
+      v.forEach(function (x, i) {
+        if (last[i] === x) return;
+        last[i] = x; nums[i].textContent = i === 0 ? String(x) : (x < 10 ? '0' : '') + x;
+      });
+      done.hidden = ms > 0;
+    }
+    var timer = setInterval(paint, 1000); paint();
+  }
+
   /* ---------- right rail ---------- */
   function eventLine(x) {
     var e = x.event, m = L.member(e.member_id);
@@ -435,7 +464,7 @@
         var dp = c.event.on_date.split('-');
         var at = new Date(+dp[0], +dp[1] - 1, +dp[2], +tm[0] || 0, +tm[1] || 0, 0).getTime();
         var cdB = h('b', null, String(c.days)), cdS = h('small', null, c.days === 1 ? t('unit.day') : t('unit.days')), cdT = h('small', { class: 'cd-hms' }, '');
-        var cdBtn = h('button', { type: 'button', class: 'cd cd-card', onclick: function () { FB.actions.openEvent(c.event); } },
+        var cdBtn = h('button', { type: 'button', class: 'cd cd-card', onclick: function () { openCountdown(c.event, at); } },
           h('span', { class: 'cd-num' }, cdB, cdS),
           h('span', { class: 'cd-title' }, c.event.title, cdT));
         cdLive.push({ el: cdBtn, at: at, b: cdB, s: cdS, t: cdT });
