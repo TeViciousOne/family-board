@@ -79,4 +79,18 @@
   /* foot: summary and news, equal gaps */
   .home.wide .ai-sum { margin: 0 0 var(--sp-2); }
   .home.wide .news-strip { margin-bottom: 0; }
+
+  /* one gap everywhere (card to card, row to row, across the column lines): --gap.
+     Across a column line the gap is split in half on each side, so the line sits in the middle. */
+  .home.wide { --gap: var(--sp-4); }
+  .home.wide .board { padding: var(--edge) calc(var(--gap) / 2) !important; gap: 0 !important; }
+  .home.wide .rail-left { padding-right: calc(var(--gap) / 2) !important; }
+  .home.wide .rail-right { padding-left: calc(var(--gap) / 2) !important; }
+  .home.wide .home-head { gap: var(--gap); margin: 0 0 var(--gap) !important; }
+  .home.wide .list-head.lh-wide { margin: 0 0 var(--gap) !important; }
+  .home.wide .done-card { margin: 0 0 var(--gap) !important; }
+  .home.wide .list-grid { gap: var(--gap) !important; }
+  .home.wide .tmr-card { margin-top: var(--gap) !important; }
+  .home.wide .ai-sum { margin: var(--gap) 0 var(--gap) !important; }
+  .home.wide .rail-right .ac-tile + .sp-tile, .home.wide .rail-right .sp-tile { margin-top: var(--gap) !important; }
 }
