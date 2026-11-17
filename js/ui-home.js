@@ -350,12 +350,14 @@
       } else tile('pt-ev', '📅', '—', t('pt.noEvents'), function () { FB.app.go('calendar'); });
     }
     if (FB.ac && FB.showW('ac') && FB.ac.mini) { var ac = FB.ac.mini(); if (ac) tiles.push(ac); }
+    if (FB.spotify && FB.showW('spotify') && FB.spotify.mini) { var spm = FB.spotify.mini(); if (spm) tiles.push(spm); }
     if (FB.showW('countdown')) {
       var cd = L.countdowns(today)[0];
       if (cd) tile('pt-cd', '⏳', String(cd.days), (cd.days === 1 ? t('unit.day') : t('unit.days')) + ' · ' + cd.event.title, function () { FB.actions.showEvent(cd.event, cd.date); });
     }
     if (!tiles.length) return null;
-    return h('nav', { class: 'ptiles', style: { gridTemplateColumns: 'repeat(' + tiles.length + ', minmax(0, 1fr))' } }, tiles);
+    /* equal columns for whatever is visible (the Spotify tile appears and disappears by itself) */
+    return h('nav', { class: 'ptiles', style: { gridTemplateColumns: 'none', gridAutoFlow: 'column', gridAutoColumns: 'minmax(0, 1fr)' } }, tiles);
   }
 
   function rightRail(today, leftIn) {
@@ -396,6 +398,7 @@
     }
 
     if ((wide || phone) && FB.ac && FB.showW('ac')) { var act = FB.ac.tile(); if (act) inner.appendChild(act); }
+    if (FB.spotify && FB.showW('spotify')) { var spt = FB.spotify.tile(); if (spt) inner.appendChild(spt); }
     var notes = FB.showW('notes') ? L.notesSorted().slice(0, wide ? 1 : 2) : [];
     if (notes.length) {
       var secN = h('section', { class: 'rr rr-notes' }, h('h3', null, t('home.notes')));

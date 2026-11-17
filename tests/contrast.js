@@ -27,6 +27,8 @@ const WANT_AAA = !process.env.NO_AAA;
       try { localStorage.setItem('fb.device.v1', JSON.stringify({ lang: 'sq', kind, kindAsked: true, nightOn: false, homeIdle: false, calm: false, wall: kind === 'wall', nativeEmoji: true })); localStorage.removeItem('stubdb'); } catch (e) {}
     }, [d.kind]);
     await p.addInitScript(stub);
+    if (process.env.SPOTIFY) { await p.addInitScript(() => { try { localStorage.setItem('fb.sp.v1', JSON.stringify({ cid: 'x', tok: { access: 'a', refresh: 'r', exp: Date.now() + 3.6e6 } })); } catch (e) {} });
+      await p.route(/api\.spotify\.com\/v1\/me\/player/, r => r.fulfill({ contentType: 'application/json', headers: { 'access-control-allow-origin': '*', 'access-control-allow-headers': '*' }, body: JSON.stringify({ is_playing: true, progress_ms: 60000, item: { name: 'Ndarja', duration_ms: 240000, artists: [{ name: 'Alban Skenderaj' }], album: { images: [] } }, device: { name: 'Samsung Tab A', volume_percent: 40, supports_volume: true } }) })); }
     await p.route(/fonts\.g|jsdelivr|open-meteo/, r => r.abort());
     await p.route('**/config.js', r => r.fulfill({ contentType: 'text/javascript', body: 'window.FB_CONFIG={SUPABASE_URL:"https://x.supabase.co",SUPABASE_ANON_KEY:"k"};' }));
     await p.goto('http://localhost:8123/');

@@ -159,14 +159,42 @@
     var s = section(t('set.homeTitle'), t('home.showHint'));
     FB.widgets.forEach(function (w) {
       if (w === 'ac' && !(FB.ac && FB.ac.enabled())) return;
+      if (w === 'spotify') return; /* its switch sits in the Spotify block below, once connected */
       s.appendChild(toggle(t('w.' + w), FB.showW(w), function (v) { FB.device.show[w] = v; saveDevice(); }));
     });
     s.appendChild(h('h3', { class: 'set-sub' }, t('set.homeMore')));
     s.appendChild(toggle(t('set.namedays'), FB.device.namedays !== false, function (v) { FB.device.namedays = v; saveDevice(); }, t('set.namedaysHint')));
     s.appendChild(toggle(t('set.calm'), FB.device.calm, function (v) { FB.device.calm = v; saveDevice(); }, t('set.calmHint')));
     s.appendChild(toggle(t('set.homeIdle'), FB.device.homeIdle, function (v) { FB.device.homeIdle = v; saveDevice(); }, t('set.homeIdleHint')));
+    s.appendChild(spotifyBlock());
     s.appendChild(photosBlock());
     return s;
+  }
+
+  /* Spotify remote: Client ID of the family's own Spotify app, sign in, and the on/off switch for the tile */
+  function spotifyBlock() {
+    var box = h('div', { class: 'sp-set' });
+    function draw() {
+      U.clear(box);
+      box.appendChild(h('h3', { class: 'set-sub' }, 'Spotify'));
+      if (FB.spotify.connected()) {
+        box.appendChild(h('p', { class: 'hint' }, t('sp.connectedHint')));
+        box.appendChild(toggle(t('w.spotify'), FB.showW('spotify'), function (v) { FB.device.show.spotify = v; saveDevice(); }));
+        box.appendChild(h('button', { type: 'button', class: 'btn ghost', onclick: function () { FB.spotify.disconnect(); draw(); } }, t('sp.disconnect')));
+        return;
+      }
+      var cid = h('input', { type: 'text', value: FB.spotify.clientId(), placeholder: 'Client ID', autocapitalize: 'off', autocomplete: 'off', spellcheck: 'false', 'aria-label': t('sp.clientId') });
+      box.appendChild(h('p', { class: 'hint' }, t('sp.setupHint')));
+      box.appendChild(ui.field(t('sp.clientId'), cid));
+      box.appendChild(h('p', { class: 'hint' }, t('sp.redirect')));
+      box.appendChild(h('p', { class: 'sp-uri' }, FB.spotify.redirectUri()));
+      box.appendChild(h('button', { type: 'button', class: 'btn', onclick: function () {
+        var v = cid.value.trim(); if (!v) { cid.focus(); return; }
+        FB.spotify.setClientId(v); FB.spotify.connect();
+      } }, t('sp.connect')));
+    }
+    draw();
+    return box;
   }
 
   /* photos shown on the calm screen, shared by the whole family */
@@ -390,8 +418,8 @@
   var page = null;
   function topics() {
     var d = FB.device, place = d.place || FB.weather.DEFAULT_PLACE;
-    var shown = FB.widgets.filter(function (w) { return FB.showW(w) && (w !== 'ac' || (FB.ac && FB.ac.enabled())); }).length;
-    var total = FB.widgets.filter(function (w) { return w !== 'ac' || (FB.ac && FB.ac.enabled()); }).length;
+    var shown = FB.widgets.filter(function (w) { return FB.showW(w) && (w !== 'ac' || (FB.ac && FB.ac.enabled())) && (w !== 'spotify' || (FB.spotify && FB.spotify.connected())); }).length;
+    var total = FB.widgets.filter(function (w) { return (w !== 'ac' || (FB.ac && FB.ac.enabled())) && (w !== 'spotify' || (FB.spotify && FB.spotify.connected())); }).length;
     var out = [
       ['family', 'home', t('set.family'), familySection, t('set.nMembers', { n: FB.state.members.length })],
       ['home', 'grid', t('set.homeTitle'), homeSection, t('set.nBlocks', { n: shown, total: total })],
