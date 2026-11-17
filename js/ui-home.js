@@ -190,14 +190,38 @@
   }
 
   /* everything done: say so, and show what is coming tomorrow */
-  function allDone() {
+  function allDone(count) {
     var tm = U.addDays(U.today(), 1);
     var next = L.choresDue(tm, '00:00').filter(function (x) { return !x.done; }).slice(0, 5);
     /* deliberately plain markup (grid + paragraphs, no animation): iPad Safari left the old flex version blank */
     return h('div', { class: 'done-card' },
       h('div', { class: 'dc-ico' }, ui.icon('check', 30)),
       h('p', { class: 'dc-title' }, t('board.allDone')),
-      next.length ? h('p', { class: 'dc-next' }, t('home.tomorrow') + ': ' + next.map(function (x) { return (x.chore.emoji ? x.chore.emoji + ' ' : '') + x.chore.title; }).join(' · ')) : null);
+      next.length && (isPhone() || count > 6 || !tomorrowCard(U.today(), count)) ? h('p', { class: 'dc-next' }, t('home.tomorrow') + ': ' + next.map(function (x) { return (x.chore.emoji ? x.chore.emoji + ' ' : '') + x.chore.title; }).join(' · ')) : null);
+  }
+
+  /* a quiet day leaves room under the chores: show tomorrow there, so the wall is never half empty */
+  function tomorrowCard(today, count) {
+    if (isPhone() || count > 6) return null;
+    var tm = U.addDays(today, 1);
+    var chores = L.choresDue(tm, '00:00').filter(function (x) { return !x.done; }).slice(0, 6);
+    var evs = L.upcoming(today, 2).filter(function (x) { return x.date === tm; }).slice(0, 3);
+    if (!chores.length && !evs.length) return null;
+    return h('section', { class: 'tmr-card', 'data-fit-skip': '1', 'aria-label': t('home.tomorrow') },
+      h('h3', { class: 'tmr-head' }, t('home.tomorrow')),
+      h('div', { class: 'tmr-grid' },
+        evs.map(function (x) {
+          var e = x.event, when = e.all_day || !e.start_time ? t('event.allDay') : FB.i18n.hm(e.start_time);
+          return h('button', { type: 'button', class: 'tmr-item tmr-ev', onclick: function () { FB.actions.openEvent(e); } },
+            h('span', { class: 'tmr-ico' }, ui.icon('calendar', 20)),
+            h('span', { class: 'tmr-txt' }, h('b', null, e.title), h('small', null, when)));
+        }),
+        chores.map(function (x) {
+          var c = x.chore, who = L.member(c.member_id);
+          return h('div', { class: 'tmr-item' },
+            who ? ui.avatar(who, 32) : h('span', { class: 'tmr-ico' }, ui.icon('check', 20)),
+            h('span', { class: 'tmr-txt' }, h('b', null, (c.emoji ? c.emoji + ' ' : '') + c.title), who ? h('small', null, who.name) : null));
+        })));
   }
 
   /* today's events as a strip above the chores */
@@ -281,9 +305,11 @@
     var body = h('div', { class: 'list-body', 'data-scroll': 'chores-list' });
     if (!items.length) body.appendChild(ui.empty('🌤️', t('board.nothingToday'), t('empty.choresHint')));
     else {
-      if (doneN === items.length) body.appendChild(allDone());
+      if (doneN === items.length) body.appendChild(allDone(items.length));
       var size = sorted.length <= 4 ? ' few' : sorted.length <= 8 ? ' mid' : '';
       body.appendChild(h('div', { class: 'list-grid' + size, 'data-fit': '1', 'data-fit-min': '0.86', 'data-fit-max': '1', 'data-cap': '1' }, sorted.map(function (x) { return choreRow(x); })));
+      var tmr = tomorrowCard(U.today(), sorted.length);
+      if (tmr) body.appendChild(tmr);
     }
     return h('section', { class: 'col' }, head, body);
   }

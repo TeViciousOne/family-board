@@ -657,6 +657,13 @@
   };
   calm.preview = function () { calm.forced = true; calm.update(new Date()); };
   calm.hide = function () { calm.on = false; calm.forced = false; clearInterval(calm.slide.timer); if (calm.el) calm.el.classList.remove('on'); };
+  /* burn-in guard for an always-on panel: every 4 minutes the whole screen drifts by 1-3 px along a slow loop (nobody notices; the pixels do) */
+  var SHIFT = [[0, 0], [2, 1], [3, 3], [1, 3], [-1, 2], [-3, 0], [-2, -2], [0, -3], [2, -2]];
+  app.shift = function (minute) {
+    var p = SHIFT[Math.floor(minute / 4) % SHIFT.length];
+    var st = document.documentElement.style;
+    st.setProperty('--shift-x', p[0] + 'px'); st.setProperty('--shift-y', p[1] + 'px');
+  };
   var timersStarted = false, lastMinute = -1;
   function startTimers() {
     if (timersStarted) return; timersStarted = true;
@@ -675,6 +682,7 @@
       var m = now.getHours() * 60 + now.getMinutes();
       if (m !== lastMinute) {
         lastMinute = m;
+        if (FB.device.wall) app.shift(m);
         var typing = document.activeElement && document.activeElement.getAttribute && document.activeElement.getAttribute('data-fid');
         if (!typing) app.render();
         if (FB.device.wall && FB.device.reload4 && now.getHours() === 4 && now.getMinutes() < 2) {

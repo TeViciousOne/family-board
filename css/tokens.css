@@ -1,8 +1,15 @@
 /* Design tokens: the one place for type, spacing, corners, colour roles and motion.
    Loaded first; every other stylesheet uses these names instead of raw numbers.
    Modelled on Apple's Dynamic Type and system colours, tuned for a wall screen read from 2-3 m. */
+/* Inter, bundled (Latin + Latin Extended, so Albanian ë and ç are covered): the Apple-like face for Android, where SF Pro does not exist.
+   500 uses Regular; 800 is the heavy weight of big numbers. */
+@font-face { font-family: Inter; font-style: normal; font-weight: 400 500; font-display: swap; src: url(../fonts/inter-Regular.woff) format('woff'); }
+@font-face { font-family: Inter; font-style: normal; font-weight: 600; font-display: swap; src: url(../fonts/inter-SemiBold.woff) format('woff'); }
+@font-face { font-family: Inter; font-style: normal; font-weight: 700; font-display: swap; src: url(../fonts/inter-Bold.woff) format('woff'); }
+@font-face { font-family: Inter; font-style: normal; font-weight: 800 900; font-display: swap; src: url(../fonts/inter-ExtraBold.woff) format('woff'); }
+
 :root {
-  /* type: system font stack (Inter is downloaded for Android, where the Apple fonts do not exist) */
+  /* type: system font stack (Inter is bundled in fonts/ for Android, where the Apple fonts do not exist) */
   --font-display: -apple-system, "SF Pro Display", "SF Pro Text", Inter, system-ui, sans-serif;
   --font-body: -apple-system, "SF Pro Display", "SF Pro Text", Inter, system-ui, sans-serif;
   --t-caption2: 12px;   /* badges, tiny counters */
