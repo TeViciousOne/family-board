@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Spotify test</title>
+<style>
+  :root { --bg: #F2F2F7; --card: #fff; --label: #000; --label-2: #48484A; --sep: rgba(60,60,67,.2); --tint: #0A6CFF; --ok: #1E7B34; --bad: #C4251B; }
+  @media (prefers-color-scheme: dark) { :root { --bg: #000; --card: #1C1C1E; --label: #fff; --label-2: #C7C7CC; --sep: rgba(255,255,255,.16); --tint: #64A8FF; --ok: #30D158; --bad: #FF8A84; } }
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 24px 16px 48px; background: var(--bg); color: var(--label); font: 400 17px/1.4 -apple-system, "SF Pro Text", Inter, system-ui, sans-serif; }
+  main { max-width: 640px; margin: 0 auto; }
+  h1 { font-size: 28px; margin: 0 0 4px; letter-spacing: -.02em; }
+  p { margin: 0 0 16px; color: var(--label-2); }
+  .card { background: var(--card); border-radius: 20px; padding: 16px; margin-bottom: 16px; }
+  label { display: block; font-weight: 600; font-size: 15px; margin-bottom: 8px; color: var(--label-2); }
+  input { width: 100%; min-height: 48px; padding: 0 14px; border-radius: 12px; border: 1px solid var(--sep); background: transparent; color: var(--label); font: inherit; }
+  button { min-height: 48px; padding: 0 18px; border: 0; border-radius: 14px; background: var(--tint); color: #fff; font: 600 17px/1 inherit; }
+  @media (prefers-color-scheme: dark) { button { color: #000; } }
+  button.ghost { background: rgba(120,120,128,.18); color: var(--label); }
+  .row { display: flex; flex-wrap: wrap; gap: 8px; }
+  ul { list-style: none; margin: 0; padding: 0; }
+  li { display: grid; grid-template-columns: 1fr auto; gap: 4px 12px; padding: 12px 0; border-top: 1px solid var(--sep); }
+  li:first-child { border-top: 0; }
+  li b { font-weight: 600; } li small { grid-column: 1; color: var(--label-2); font-size: 15px; overflow-wrap: anywhere; }
+  .code { font-weight: 700; font-variant-numeric: tabular-nums; } .ok { color: var(--ok); } .bad { color: var(--bad); }
+  pre { margin: 8px 0 0; padding: 12px; border-radius: 12px; background: rgba(120,120,128,.12); font-size: 13px; white-space: pre-wrap; overflow-wrap: anywhere; max-height: 260px; overflow: auto; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Spotify test</h1>
+  <p>Checks which Spotify controls a new developer app can use. Nothing here changes your account except play, pause, skip and volume.</p>
+
+  <section class="card" id="setup">
+    <label for="cid">Client ID (from the Spotify developer dashboard)</label>
+    <input id="cid" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="32 characters">
+    <p style="margin-top:12px">Redirect URI to register in the dashboard (copy exactly):</p>
+    <pre id="redir"></pre>
+    <div class="row" style="margin-top:12px"><button id="login">Log in with Spotify</button><button class="ghost" id="logout">Forget login</button></div>
+  </section>
+
+  <section class="card" id="tests" hidden>
+    <label>Tests</label>
+    <div class="row">
+      <button data-t="me">Who am I</button>
+      <button data-t="state">Now playing</button>
+      <button data-t="devices">Devices</button>
+      <button data-t="playlists">Playlists</button>
+      <button data-t="pause">Pause</button>
+      <button data-t="play">Play</button>
+      <button data-t="next">Next</button>
+      <button data-t="vol">Volume 30%</button>
+    </div>
+    <p style="margin:12px 0 0">Open Spotify on the tablet and play anything first, so there is an active device.</p>
+  </section>
+
+  <section class="card" id="results" hidden><label>Results</label><ul id="list"></ul></section>
+</main>
+<script>
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+  var REDIR = location.origin + location.pathname;
+  var SCOPES = 'user-read-playback-state user-modify-playback-state user-read-currently-playing playlist-read-private';
+  function store(k, v) { try { if (v === undefined) return localStorage.getItem(k); if (v === null) localStorage.removeItem(k); else localStorage.setItem(k, v); } catch (e) { return null; } }
+  function b64(buf) { return btoa(String.fromCharCode.apply(null, new Uint8Array(buf))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, ''); }
+  function rand(n) { var a = new Uint8Array(n); crypto.getRandomValues(a); return b64(a); }
+  $('redir').textContent = REDIR;
+  $('cid').value = store('sp.cid') || '';
+
+  $('login').onclick = function () {
+    var cid = $('cid').value.trim(); if (!cid) { $('cid').focus(); return; }
+    store('sp.cid', cid);
+    var verifier = rand(64); store('sp.ver', verifier);
+    crypto.subtle.digest('SHA-256', new TextEncoder().encode(verifier)).then(function (h) {
+      location.href = 'https://accounts.spotify.com/authorize?' + new URLSearchParams({ response_type: 'code', client_id: cid, scope: SCOPES, redirect_uri: REDIR, code_challenge_method: 'S256', code_challenge: b64(h) });
+    });
+  };
+  $('logout').onclick = function () { ['sp.tok', 'sp.ver'].forEach(function (k) { store(k, null); }); location.href = REDIR; };
+
+  function token(body) {
+    return fetch('https://accounts.spotify.com/api/token', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: new URLSearchParams(body) })
+      .then(function (r) { return r.json(); }).then(function (j) { if (j.access_token) { j.at = Date.now(); store('sp.tok', JSON.stringify(j)); } return j; });
+  }
+  function access() {
+    var t = null; try { t = JSON.parse(store('sp.tok')); } catch (e) {}
+    if (!t) return Promise.reject(new Error('Not logged in'));
+    if (Date.now() - t.at < (t.expires_in - 60) * 1000) return Promise.resolve(t.access_token);
+    return token({ grant_type: 'refresh_token', refresh_token: t.refresh_token, client_id: store('sp.cid') }).then(function (j) { if (!j.access_token) throw new Error('Refresh failed'); return j.access_token; });
+  }
+
+  var q = new URLSearchParams(location.search);
+  var code = q.get('code');
+  var boot = Promise.resolve();
+  if (q.get('error')) { show('Login', 0, q.get('error')); }
+  if (code) {
+    history.replaceState(null, '', REDIR);
+    boot = token({ grant_type: 'authorization_code', code: code, redirect_uri: REDIR, client_id: store('sp.cid'), code_verifier: store('sp.ver') }).then(function (j) { show('Login', j.access_token ? 200 : 400, j.access_token ? 'Logged in. Scopes: ' + j.scope : JSON.stringify(j)); });
+  }
+  boot.then(function () { if (store('sp.tok')) { $('tests').hidden = false; } });
+
+  function show(name, status, note, raw) {
+    $('results').hidden = false;
+    var li = document.createElement('li'), ok = status >= 200 && status < 300;
+    li.innerHTML = '<b></b><span class="code"></span><small></small>';
+    li.children[0].textContent = name; li.children[1].textContent = status || '—'; li.children[1].className = 'code ' + (ok ? 'ok' : 'bad');
+    li.children[2].textContent = note || '';
+    if (raw) { var pre = document.createElement('pre'); pre.textContent = raw; li.appendChild(pre); pre.style.gridColumn = '1 / -1'; }
+    $('list').insertBefore(li, $('list').firstChild);
+  }
+  function call(name, method, path, body, summarize) {
+    return access().then(function (at) {
+      return fetch('https://api.spotify.com/v1' + path, { method: method, headers: { Authorization: 'Bearer ' + at, 'Content-Type': 'application/json' }, body: body ? JSON.stringify(body) : undefined });
+    }).then(function (r) {
+      return r.text().then(function (txt) {
+        var j = null; try { j = JSON.parse(txt); } catch (e) {}
+        var note = r.status === 204 ? 'Done (no content)' : (j && j.error ? (j.error.message || JSON.stringify(j.error)) : (summarize && j ? summarize(j) : ''));
+        if (r.status === 204 && name === 'Now playing') note = 'Nothing is playing on any device';
+        show(name, r.status, note, txt && txt.length < 1500 ? txt : (txt || '').slice(0, 1500));
+      });
+    }).catch(function (e) { show(name, 0, String(e.message || e)); });
+  }
+  var T = {
+    me: function () { return call('Who am I', 'GET', '/me', null, function (j) { return (j.display_name || j.id) + ' · plan: ' + (j.product || 'not shown'); }); },
+    state: function () { return call('Now playing', 'GET', '/me/player', null, function (j) { return (j.is_playing ? 'Playing' : 'Paused') + ': ' + (j.item ? j.item.name + ' — ' + (j.item.artists || []).map(function (a) { return a.name; }).join(', ') : '?') + ' on ' + (j.device && j.device.name); }); },
+    devices: function () { return call('Devices', 'GET', '/me/player/devices', null, function (j) { return (j.devices || []).map(function (d) { return d.name + (d.is_active ? ' (active)' : ''); }).join(', ') || 'No devices open'; }); },
+    playlists: function () { return call('Playlists', 'GET', '/me/playlists?limit=5', null, function (j) { return (j.items || []).map(function (p) { return p && p.name; }).join(', ') || 'None'; }); },
+    pause: function () { return call('Pause', 'PUT', '/me/player/pause'); },
+    play: function () { return call('Play', 'PUT', '/me/player/play'); },
+    next: function () { return call('Next', 'POST', '/me/player/next'); },
+    vol: function () { return call('Volume 30%', 'PUT', '/me/player/volume?volume_percent=30'); }
+  };
+  document.querySelectorAll('[data-t]').forEach(function (b) { b.onclick = T[b.getAttribute('data-t')]; });
+})();
+</script>
+</body>
+</html>
