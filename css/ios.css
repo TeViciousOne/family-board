@@ -3,7 +3,7 @@
   color-scheme: light dark;
   --sea: #F2F2F7; --sea-2: #F2F2F7; --sea-3: #E5E5EA; --paper: #F2F2F7;
   --card: #FFFFFF; --fill: rgba(118, 118, 128, .12); --fill-2: rgba(118, 118, 128, .2);
-  --ink: #000000; --ink-2: #6C6C70; --ink-3: #8E8E93;
+  --ink: #000000; --ink-2: #48484A; --ink-3: #5A5A5F; /* AA (4.5:1+) on the glass cards over the wallpaper */
   --line: rgba(60, 60, 67, .18);
   --brand: #007AFF; --brand-d: #007AFF; --alert: #FF3B30; --ok: #34C759;
   --bar: rgba(249, 249, 249, .86);
@@ -13,7 +13,7 @@
   :root:not([data-theme="light"]) {
     --sea: #000000; --sea-2: #000000; --sea-3: #1C1C1E; --paper: #1C1C1E;
     --card: #1C1C1E; --fill: rgba(118, 118, 128, .24); --fill-2: rgba(118, 118, 128, .36);
-    --ink: #FFFFFF; --ink-2: #AEAEB2; --ink-3: #8E8E93;
+    --ink: #FFFFFF; --ink-2: #C7C7CC; --ink-3: #A1A1A6;
     --line: rgba(84, 84, 88, .6);
     --brand: #0A84FF; --brand-d: #0A84FF; --alert: #FF453A; --ok: #30D158;
     --bar: rgba(29, 29, 31, .86);
@@ -93,7 +93,7 @@ input[type=range] { accent-color: var(--brand); }
 .list-bar { background: var(--fill); height: 5px; }
 .chore { background: var(--card); border-radius: var(--r-md); box-shadow: none; }
 .chore:active { background: var(--fill); }
-.chore.done { background: var(--card); opacity: .6; }
+.chore.done { background: var(--card); }
 .chore-title { font-weight: 600; font-size: var(--t-title3); }
 .chore.overdue { box-shadow: none; }
 .chore.overdue .chore-title { color: var(--alert); }

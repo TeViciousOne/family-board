@@ -278,7 +278,7 @@ html.size-compact .home .rail-left .wx-temp { font-size: min(calc(48px * var(--f
   .home .rail-left .wx-temp { font-size: min(calc(40px * var(--fs, 1)), 12cqw) !important; }
 }
 /* tab labels grow a little with the text size, then stop so they still fit */
-#nav button[data-route] { font-size: min(calc(11px * var(--fs, 1)), 12.5px) !important; }
+#nav button[data-route] { font-size: min(calc(12px * var(--fs, 1)), 13px); }
 
 /* large text: the hourly strip keeps as many hours as fit (all of them are in the weather popup) */
 .wx-hours { grid-template-columns: repeat(auto-fill, minmax(calc(44px * var(--fs, 1)), 1fr)) !important; grid-template-rows: auto; grid-auto-rows: 0; overflow: hidden; row-gap: 0 !important; }

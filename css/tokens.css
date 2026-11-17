@@ -46,7 +46,7 @@
   --separator: rgba(60, 60, 67, .2);
   --fill-quiet: rgba(118, 118, 128, .12);
   --fill-strong: rgba(118, 118, 128, .2);
-  --sys-red: #D70015; --sys-green: #248A3D; --sys-orange: #C93400; --sys-blue: #0040DD;
+  --sys-red: #D70015; --sys-green: #248A3D; --sys-orange: #C93400; --sys-blue: #0040DD; --sys-purple: #8944AB;
   --red-tint: rgba(255, 59, 48, .12);
 }
 @media (prefers-color-scheme: dark) {
@@ -57,12 +57,12 @@
     --separator: rgba(255, 255, 255, .14);
     --fill-quiet: rgba(255, 255, 255, .07);
     --fill-strong: rgba(255, 255, 255, .13);
-    --sys-red: #FF6961; --sys-green: #30D158; --sys-orange: #FF9F0A; --sys-blue: #64B5FF;
+    --sys-red: #FF8A84; --sys-green: #30D158; --sys-orange: #FF9F0A; --sys-blue: #64B5FF; --sys-purple: #D9A8FF;
     --red-tint: rgba(255, 69, 58, .16);
   }
 }
 :root[data-theme="dark"] {
   --label: #FFFFFF; --label-2: rgba(235, 235, 245, .78); --label-3: rgba(235, 235, 245, .5);
   --separator: rgba(255, 255, 255, .14); --fill-quiet: rgba(255, 255, 255, .07); --fill-strong: rgba(255, 255, 255, .13);
-  --sys-red: #FF6961; --sys-green: #30D158; --sys-orange: #FF9F0A; --sys-blue: #64B5FF; --red-tint: rgba(255, 69, 58, .16);
+  --sys-red: #FF8A84; --sys-green: #30D158; --sys-orange: #FF9F0A; --sys-blue: #64B5FF; --sys-purple: #D9A8FF; --red-tint: rgba(255, 69, 58, .16);
 }

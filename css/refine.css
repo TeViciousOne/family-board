@@ -39,6 +39,7 @@ h1, h2, h3, .list-title, .clock, .wx-temp, .hh-wx-t { letter-spacing: var(--trac
 .pane-shop { background: var(--g-fill); border-color: var(--g-edge-2); }
 .pane-notes { background: var(--g-fill) !important; border-color: var(--g-edge-2) !important; }
 .pane-shop .pane-ico, .pane-notes .pane-ico, .pane-n { background: var(--fill-strong); color: var(--label); }
+.ring-txt { color: var(--label); }
 .who-pill { color: var(--label); background: var(--fill-quiet); font-size: var(--t-subhead); font-weight: 600; }
 .news-src, .src-top .news-src, .src-oil .news-src { color: var(--label-2); background: var(--fill-strong); font-size: var(--t-caption); }
 .ring-fg { stroke: var(--sys-green); }
@@ -53,10 +54,6 @@ h1, h2, h3, .list-title, .clock, .wx-temp, .hh-wx-t { letter-spacing: var(--trac
 .note-mini { border-left: 0 !important; }
 .note-card { border-left: 1px solid var(--g-edge-2) !important; }
 .note-card::before { display: none !important; }
-
-/* calendar: public holidays as a soft red label, not a solid red block */
-.day-ev.day-hol { color: var(--sys-red) !important; background: var(--red-tint) !important; }
-.day-ev.day-hol.cel { color: #BF5AF2 !important; background: rgba(191, 90, 242, .16) !important; }
 
 /* ---------- overdue: normal title + a red label with an icon (colour never carries meaning alone) ---------- */
 .chore.overdue, html.glow .chore.overdue:not(.done) {
@@ -114,8 +111,8 @@ h1, h2, h3, .list-title, .clock, .wx-temp, .hh-wx-t { letter-spacing: var(--trac
 @media (orientation: landscape) and (min-width: 600px) {
   #nav { width: 88px; gap: var(--sp-1); }
   #nav button[data-route] { width: 80px; height: 64px; flex-direction: column; justify-content: center; gap: 3px; border-radius: var(--r-md); }
-  #nav button[data-route] span:last-child { display: block; max-width: 78px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: 600 var(--t-subhead)/1.15 var(--font-body) !important; letter-spacing: 0; color: var(--label-2); }
-  #nav button.on[data-route] span:last-child { color: var(--brand); }
+  #nav button[data-route] span:last-child { display: block; max-width: 78px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: 600 var(--t-subhead)/1.15 var(--font-body); letter-spacing: 0; color: var(--ink-2); }
+  #nav button.on[data-route] span:last-child { color: var(--label); font-weight: 700; }
   #nav button[data-route] svg { width: 24px; height: 24px; }
   .nav-pill { border-radius: var(--r-md); }
   #nav .nav-tool { width: var(--hit); height: var(--hit); }

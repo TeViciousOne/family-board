@@ -608,9 +608,7 @@ input[type=text], input[type=email], input[type=password], input[type=number], i
 }
 
 /* holidays and name days */
-.day.holiday .day-n { color: #FF453A; font-weight: 800; }
-.day-ev.day-hol { --c: #FF453A; color: #FF453A; font-weight: 700; }
-.day-ev.day-hol.cel { --c: #BF5AF2; color: #BF5AF2; }
+.day.holiday .day-n { color: var(--sys-red); font-weight: 800; }
 .hol-row { display: flex; align-items: center; gap: 12px; margin: 0 0 8px; padding: 10px 14px; border-radius: var(--r-md); background: var(--g-fill); }
 .hol-row.t-holiday, .hol-row.t-off { background: rgba(255, 69, 58, .14); border: 1px solid rgba(255, 69, 58, .35); }
 .hol-row.t-celebrant { background: rgba(191, 90, 242, .16); border: 1px solid rgba(191, 90, 242, .4); }
@@ -645,7 +643,7 @@ img.emoji { width: 1.05em; height: 1.05em; margin: 0 .05em; vertical-align: -0.1
 .chore-who-av .avatar { box-shadow: 0 0 0 3px rgba(255, 255, 255, .7), 0 4px 10px rgba(0, 0, 0, .15); font-weight: 800; }
 .chore-who-av small { font-size: var(--t-caption2); font-weight: 700; color: var(--ink-2); max-width: 72px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .list-grid.few .chore-who-av .avatar { width: 56px !important; height: 56px !important; font-size: var(--t-title1) !important; }
-.chore.done .chore-who-av { opacity: .6; }
+.chore.done .chore-who-av { opacity: 1; }
 .who-pill { display: inline-flex; align-items: center; gap: 6px; padding: 2px 10px 2px 2px; }
 .who-pill .avatar { box-shadow: none; }
 
@@ -667,9 +665,10 @@ img.emoji { width: 1.05em; height: 1.05em; margin: 0 .05em; vertical-align: -0.1
 /* calendar: clearer today, filled event chips */
 .day.today { outline: 3px solid #0A84FF; outline-offset: -3px; background: rgba(10, 132, 255, .1) !important; }
 .day.today .day-n { color: #fff; background: #0A84FF; }
-.day-ev { color: #fff; background: var(--c) !important; border-left: 0 !important; border-radius: 6px !important; padding: 2px 6px !important; font-weight: 600; }
-.day-ev.day-hol { color: #fff; background: #FF453A !important; }
-.day-ev.day-hol.cel { background: #BF5AF2 !important; }
+.day-ev { color: var(--label); background: color-mix(in srgb, var(--c) 26%, transparent); border-left: 3px solid var(--c); border-radius: 6px; padding: 2px 6px; font-weight: 600; }
+/* public holidays: a soft red label, name days and celebrations purple (text in the AA system colour, never white on a tint) */
+.day-ev.day-hol { --c: var(--sys-red); color: var(--sys-red); background: var(--red-tint); font-weight: 700; }
+.day-ev.day-hol.cel { --c: var(--sys-purple); color: var(--sys-purple); background: color-mix(in srgb, var(--sys-purple) 16%, transparent); }
 
 /* empty states */
 .empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; padding: 28px 16px; text-align: center; color: var(--ink-2); }
@@ -717,14 +716,13 @@ body.lite::before { transition: none; }
 .today-side .ts-ev { justify-content: flex-start; text-align: left; font-size: var(--t-subhead); white-space: normal; }
 /* calendar chips: full names on up to two lines, no tiny icons */
 .day-evs { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
-.day-ev { display: -webkit-box !important; -webkit-box-orient: vertical; -webkit-line-clamp: 2; white-space: normal !important; overflow: hidden; text-overflow: clip;
-  font-size: var(--t-caption2) !important; line-height: 1.2 !important; overflow-wrap: anywhere; hyphens: auto; }
+.day-ev { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; white-space: normal; overflow: hidden; text-overflow: clip;
+  font-size: var(--t-caption2); line-height: 1.2; overflow-wrap: anywhere; hyphens: auto; }
 .day-ev img.emoji { width: .95em; height: .95em; }
-@media (min-width: 1100px) { .day-ev { font-size: var(--t-caption) !important; } }
+@media (min-width: 1100px) { .day-ev { font-size: var(--t-caption); } }
 .day-evs { overflow: hidden; }
 .day-ev { flex-shrink: 0; }
 .day-evs > .day-ev ~ .day-ev { -webkit-line-clamp: 1; }
-.day-ev.day-hol.cel { color: #fff !important; }
 
 /* AC tile v2: symmetric */
 .ac-tile { display: flex !important; flex-direction: column !important; align-items: stretch !important; gap: 12px !important; padding: 14px 16px !important; }
