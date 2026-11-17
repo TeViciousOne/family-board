@@ -46,7 +46,7 @@
        [ room temp | set temp ]  two equal halves */
     var state = h('span', { class: 'ac-pill' }, ''), room = h('b', null, ''), set = h('b', null, '');
     var btn = h('button', { type: 'button', class: 'ac-tile', onclick: function () { AC.open(); } },
-      h('span', { class: 'ac-head' }, h('span', { class: 'ac-ico' }, ui.icon('snow', 24)), h('b', { class: 'ac-name' }, t('ac.title'))),
+      h('span', { class: 'ac-head' }, h('span', { class: 'ac-ico', 'aria-hidden': 'true' }, ui.icon('snow', 24)), h('b', { class: 'ac-name' }, t('ac.title'))),
       h('span', { class: 'ac-cols' },
         h('span', { class: 'ac-col' }, room, h('small', null, t('ac.roomShort'))),
         h('span', { class: 'ac-col ac-col-set' }, set, h('small', null, t('ac.setShort')))),

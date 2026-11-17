@@ -1,0 +1,118 @@
+/* Flavour: colour that carries meaning, never decoration.
+   1. the backdrop follows the time of day (morning peach, day blue, evening amber/violet, night indigo)
+   2. the weather card is tinted by the weather
+   3. section titles get a small filled icon in one system colour each (as in iOS Settings)
+   4. a finished chore flashes in its person's colour
+   5. every countdown has its own colour
+   Solid looks (Settings > Look: dark, black) are left alone. Loaded last. */
+
+:root {
+  --tone-red: #FF3B30; --tone-orange: #FF9500; --tone-yellow: #FFCC00; --tone-green: #34C759;
+  --tone-teal: #30B0C7; --tone-cyan: #32ADE6; --tone-blue: #007AFF; --tone-indigo: #5856D6; --tone-purple: #AF52DE; --tone-pink: #FF2D55;
+}
+
+/* ---------- 1. time of day backdrop (light) ---------- */
+html[data-tod="morning"]:not([data-look="dark"]):not([data-look="black"]) {
+  --bg-img:
+    radial-gradient(60% 55% at 8% 4%, rgba(255, 186, 120, .52), transparent 70%),
+    radial-gradient(50% 45% at 92% 10%, rgba(255, 150, 180, .42), transparent 70%),
+    radial-gradient(55% 50% at 82% 96%, rgba(255, 214, 140, .42), transparent 70%),
+    radial-gradient(50% 45% at 4% 92%, rgba(170, 200, 255, .38), transparent 70%),
+    linear-gradient(180deg, #FCF3EC, #F5EEF3);
+}
+/* day keeps the original blue backdrop (glass.css) */
+html[data-tod="evening"]:not([data-look="dark"]):not([data-look="black"]) {
+  --bg-img:
+    radial-gradient(60% 55% at 10% 6%, rgba(190, 140, 255, .48), transparent 70%),
+    radial-gradient(55% 50% at 92% 8%, rgba(255, 140, 120, .45), transparent 70%),
+    radial-gradient(65% 55% at 70% 100%, rgba(255, 170, 90, .48), transparent 70%),
+    radial-gradient(50% 45% at 0% 95%, rgba(255, 120, 150, .35), transparent 70%),
+    linear-gradient(180deg, #F6EEF2, #F7EDE6);
+}
+html[data-tod="night"]:not([data-look="dark"]):not([data-look="black"]) {
+  --bg-img:
+    radial-gradient(60% 55% at 10% 5%, rgba(120, 130, 235, .34), transparent 70%),
+    radial-gradient(50% 45% at 92% 10%, rgba(165, 130, 235, .30), transparent 70%),
+    radial-gradient(55% 50% at 82% 98%, rgba(100, 160, 225, .30), transparent 70%),
+    linear-gradient(180deg, #F0F1FA, #EAECF6);
+}
+
+/* ---------- 1b. time of day backdrop (dark: the device is dark, or the board's own dark theme) ---------- */
+@media (prefers-color-scheme: dark) {
+  html:not([data-theme="light"])[data-tod="morning"]:not([data-look="dark"]):not([data-look="black"]) {
+    --bg-img:
+      radial-gradient(60% 55% at 8% 4%, rgba(200, 100, 60, .45), transparent 70%),
+      radial-gradient(50% 45% at 92% 10%, rgba(170, 60, 120, .38), transparent 70%),
+      radial-gradient(55% 50% at 85% 100%, rgba(60, 80, 170, .40), transparent 70%),
+      linear-gradient(180deg, #140E14, #0A0910);
+  }
+  html:not([data-theme="light"])[data-tod="day"]:not([data-look="dark"]):not([data-look="black"]) {
+    --bg-img:
+      radial-gradient(60% 50% at 10% 5%, rgba(40, 100, 220, .55), transparent 70%),
+      radial-gradient(50% 45% at 95% 10%, rgba(110, 60, 200, .45), transparent 70%),
+      radial-gradient(55% 50% at 85% 100%, rgba(20, 140, 130, .45), transparent 70%),
+      linear-gradient(180deg, #0B0F1A, #05070D);
+  }
+  html:not([data-theme="light"])[data-tod="evening"]:not([data-look="dark"]):not([data-look="black"]) {
+    --bg-img:
+      radial-gradient(60% 55% at 10% 5%, rgba(110, 50, 190, .50), transparent 70%),
+      radial-gradient(55% 50% at 92% 8%, rgba(190, 70, 90, .40), transparent 70%),
+      radial-gradient(65% 55% at 70% 100%, rgba(210, 100, 40, .42), transparent 70%),
+      linear-gradient(180deg, #120C18, #0B070C);
+  }
+  html:not([data-theme="light"])[data-tod="night"]:not([data-look="dark"]):not([data-look="black"]) {
+    --bg-img:
+      radial-gradient(60% 55% at 10% 5%, rgba(40, 50, 150, .50), transparent 70%),
+      radial-gradient(50% 45% at 92% 10%, rgba(80, 40, 140, .40), transparent 70%),
+      radial-gradient(55% 50% at 85% 100%, rgba(20, 70, 130, .38), transparent 70%),
+      linear-gradient(180deg, #070914, #03040A);
+  }
+}
+
+/* ---------- 2. weather card tinted by the weather ---------- */
+.hh-wx { background-image: var(--wx-tint, none) !important; }
+html[data-wx="clear"]:not([data-tod="night"]) { --wx-tint: linear-gradient(135deg, rgba(255, 196, 60, .30), rgba(255, 150, 60, .10)); }
+html[data-wx="clear"][data-tod="night"]       { --wx-tint: linear-gradient(135deg, rgba(90, 100, 220, .28), rgba(60, 60, 160, .10)); }
+html[data-wx="cloud"]                          { --wx-tint: linear-gradient(135deg, rgba(140, 155, 180, .28), rgba(140, 155, 180, .08)); }
+html[data-wx="rain"]                           { --wx-tint: linear-gradient(135deg, rgba(60, 130, 230, .28), rgba(60, 130, 230, .08)); }
+html[data-wx="storm"]                          { --wx-tint: linear-gradient(135deg, rgba(110, 80, 200, .32), rgba(60, 60, 120, .10)); }
+html[data-wx="snow"]                           { --wx-tint: linear-gradient(135deg, rgba(170, 220, 255, .40), rgba(220, 240, 255, .14)); }
+html[data-wx="fog"]                            { --wx-tint: linear-gradient(135deg, rgba(180, 185, 195, .32), rgba(180, 185, 195, .10)); }
+
+/* ---------- 3. section icons ---------- */
+.sec-t { display: inline-flex; align-items: center; gap: var(--sp-2); }
+.sec-ico { display: inline-grid; place-items: center; flex: none; width: 22px; height: 22px; border-radius: 6px; color: #fff; background: var(--tone, var(--tone-blue)); }
+.sec-ico svg { width: 14px; height: 14px; stroke-width: 2.4; }
+.tone-red { --tone: var(--tone-red); }       .tone-orange { --tone: var(--tone-orange); }
+.tone-yellow { --tone: var(--tone-yellow); } .tone-green { --tone: var(--tone-green); }
+.tone-teal { --tone: var(--tone-teal); }     .tone-indigo { --tone: var(--tone-indigo); }
+.tone-purple { --tone: var(--tone-purple); } .tone-pink { --tone: var(--tone-pink); }
+/* the air conditioner keeps its blue "on" state; off it is cyan instead of grey */
+.ac-tile:not(.on) .ac-ico { background: var(--tone-cyan); color: #fff; }
+
+/* ---------- 4. a finished chore flashes in its person's colour ---------- */
+.chore.pop { overflow: hidden; }
+.chore.pop::after {
+  content: ''; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
+  background: var(--c); opacity: 0; animation: doneFlash 1.4s ease-out;
+}
+@keyframes doneFlash { 0% { opacity: .42; } 40% { opacity: .3; } 100% { opacity: 0; } }
+/* opacity only: cheap enough to keep in lite mode (the wall tablet default) */
+@media (prefers-reduced-motion: reduce) { .chore.pop::after { animation: none; } }
+
+/* ---------- 5. countdowns keep their own colour (deep shades: white text stays above 4.5:1) ---------- */
+.cd-card.tone-orange, .cdk.tone-orange { --cd-a: #C2410C; --cd-b: #9A3412; }
+.cd-card.tone-pink, .cdk.tone-pink     { --cd-a: #BE185D; --cd-b: #9D174D; }
+.cd-card.tone-purple, .cdk.tone-purple { --cd-a: #7E22CE; --cd-b: #6B21A8; }
+.cd-card.tone-indigo, .cdk.tone-indigo { --cd-a: #4338CA; --cd-b: #3730A3; }
+.cd-card.tone-teal, .cdk.tone-teal     { --cd-a: #0F766E; --cd-b: #115E59; }
+.cd-card.tone-green, .cdk.tone-green   { --cd-a: #15803D; --cd-b: #166534; }
+.cd-card.tone-red, .cdk.tone-red       { --cd-a: #B91C1C; --cd-b: #991B1B; }
+.cd-card[class*="tone-"] .cd-num { background: var(--cd-b); background-image: linear-gradient(160deg, var(--cd-a), var(--cd-b)); }
+.cd.cd-card[class*="tone-"] .cd-num b, .cd.cd-card[class*="tone-"] .cd-num small { color: #fff; }
+.cdk[class*="tone-"] .cdk-cell:first-child { background: var(--cd-b); background-image: linear-gradient(160deg, var(--cd-a), var(--cd-b)); border-color: transparent; box-shadow: 0 8px 24px rgba(0, 0, 0, .18); }
+.cdk[class*="tone-"] .cdk-cell:first-child b, .cdk[class*="tone-"] .cdk-cell:first-child span { color: #fff; }
+.cdk[class*="tone-"] .cdk-cell:not(:first-child) b { color: var(--label); }
+
+/* reduced transparency: plain cards, no tints */
+@media (prefers-reduced-transparency: reduce) { .hh-wx { background-image: none !important; } }
