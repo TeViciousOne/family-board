@@ -169,3 +169,10 @@
     --ph-nav: rgba(255, 255, 255, .09); --ph-nav-line: rgba(255, 255, 255, .12); --ph-nav-ink: #D1D1D6; --ph-on: rgba(255, 255, 255, .06);
   }
 }
+@media (max-width: 699px) and (orientation: portrait) {
+  /* nav items sit on the pill's centre line (they were top-aligned), the avatar keeps its 44px circle */
+  #nav { display: flex !important; align-items: center !important; }
+  #nav .nav-brand { flex: none !important; width: 44px !important; }
+  /* the outline is drawn on the active button itself: the sliding pill would sit off-centre */
+  #nav .nav-pill { display: none !important; }
+}
