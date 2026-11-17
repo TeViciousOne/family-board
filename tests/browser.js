@@ -257,8 +257,10 @@ function ok(cond, msg) { console.log((cond ? 'PASS ' : 'FAIL ') + msg); if (!con
   const P = await newPage(390, 844, { hasTouch: true, isMobile: true, deviceScaleFactor: 2 });
   const q = P.page;
   await q.goto(BASE); await q.waitForSelector('.home .col');
-  ok((await q.locator('.wx-temp').count()) === 0 && (await q.evaluate(() => FB.device.kind)) === 'phone', 'phone defaults: type phone, weather hidden');
-  await q.evaluate(() => { FB.device.show.weather = true; FB.app.render(); }); await q.waitForSelector('.wx-temp');
+  await q.waitForSelector('.ph-wx .ph-big b');
+  ok((await q.locator('.ph-clock').count()) === 1 && (await q.locator('.ph-wx').count()) === 1 && (await q.evaluate(() => FB.device.kind)) === 'phone', 'phone defaults: type phone, clock and weather cards in the header');
+  const pc = await q.evaluate(() => { const a = document.querySelector('.ph-clock').getBoundingClientRect(), b = document.querySelector('.ph-wx').getBoundingClientRect(); return [a.width, a.height, b.width, b.height].map(Math.round); });
+  ok(pc[0] === pc[2] && pc[1] === pc[3], 'phone: clock and weather cards are the same size (' + pc.join('x') + ')');
   await q.waitForTimeout(250);
   await q.screenshot({ path: OUT + '/20-phone-home.png' });
   ok(await q.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1), 'phone: no horizontal overflow on home');

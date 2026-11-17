@@ -260,12 +260,34 @@
         color ? h('span', { class: 'who-dot', style: { background: color } }) : null, h('span', { class: 'who-name' }, label));
     }
     return h('div', { class: 'who-row', role: 'group', 'aria-label': t('home.who') },
-      pill(null, t('home.everyone')), ms.map(function (m) { return pill(m.id, m.name, m.color); }));
+      pill(null, t(isPhone() ? 'home.all' : 'home.everyone')), ms.map(function (m) { return pill(m.id, m.name, m.color); }));
   }
 
   function addBtn() {
-    return h('button', { type: 'button', class: 'btn add-pill', onclick: function () { FB.actions.openTemplates(); } }, ui.icon('plus', 18), h('span', null, t('board.addChores')));
+    return h('button', { type: 'button', class: 'btn add-pill', onclick: function () { FB.actions.openTemplates(); } }, ui.icon('plus', 18), h('span', null, isPhone() ? t('common.add') : t('board.addChores')));
   }
+  /* phone header: two cards of the same size and the same build, a big line over two small ones (clock | weather) */
+  function phoneCards(today, clk) {
+    var dl = dateTwoLines(today);
+    var clockCard = h('div', { class: 'ph-card ph-clock' },
+      h('div', { class: 'ph-big clock' }, clk.t, clk.ap ? h('small', { class: 'ampm' }, clk.ap) : null),
+      h('span', { class: 'ph-l1' }, dl[0]), h('span', { class: 'ph-l2' }, dl[1]));
+    var w = FB.app.weather || {}, wxCard;
+    if (!FB.showW('weather')) return h('div', { class: 'ph-cards solo' }, clockCard);
+    if (!w.data) {
+      wxCard = h('div', { class: 'ph-card ph-wx' }, h('span', { class: 'ph-l1' }, w.loading ? t('wx.loading') : t('wx.unavailable')));
+    } else {
+      var cur = w.data.current, day = w.data.days[0] || {}, place = FB.device.place || FB.weather.DEFAULT_PLACE;
+      var rainAt = FB.weather.hoursFrom(w.data, 14).filter(function (x, i) { return i > 0 && (x.rain >= 50 || /rain|storm|snow|drizzle/.test(FB.weather.kindOf(x.code, 1))); })[0];
+      var l2 = rainAt ? t('wx.rainAt', { time: FB.i18n.hm(rainAt.time.slice(11, 16)) }) : (place.name || '');
+      wxCard = h('button', { type: 'button', class: 'ph-card ph-wx', 'aria-label': t('wx.hourly'), onclick: openWeather },
+        h('div', { class: 'ph-big' }, h('span', { class: 'ph-ico', html: FB.weather.icon(FB.weather.kindOf(cur.code, cur.isDay), 32) }), h('b', null, Math.round(cur.temp) + '°')),
+        h('span', { class: 'ph-l1' }, t(FB.weather.labelKey(cur.code)) + (day.max != null ? ' · ' + t('wx.hl', { hi: Math.round(day.max), lo: Math.round(day.min) }) : '')),
+        h('span', { class: 'ph-l2' }, l2));
+    }
+    return h('div', { class: 'ph-cards' }, clockCard, wxCard);
+  }
+
   /* wide screens: page header with the day, the date and week, today's progress and the add button */
   function homeHead(today) {
     return h('header', { class: 'home-head', 'data-fit-skip': '1' },
@@ -304,7 +326,7 @@
 
   /* one shared list: to-do first, finished at the bottom; the person shows as a small coloured tag */
   function list(items) {
-    var all = items, wideNow = isWide();
+    var all = items, wideNow = isWide() || isPhone();
     if (wideNow && whoSel) items = items.filter(function (x) { return x.chore.member_id === whoSel; });
     var sorted = items.map(function (x, i) { return { x: x, i: i }; }).sort(function (a, b) {
       var da = a.x.done ? 1 : 0, db = b.x.done ? 1 : 0;
@@ -334,7 +356,7 @@
       var tmr = tomorrowCard(U.today(), all.length);
       if (tmr) body.appendChild(tmr);
     }
-    return h('section', { class: 'col' }, head, body);
+    return h('section', { class: 'col' }, head, isPhone() ? whoPills(all) : null, body);
   }
 
   /* a small filled icon before a section title (Settings-style), one system colour per section */
@@ -414,21 +436,21 @@
     }
     if (FB.showW('shopping')) {
       var n = FB.state.shopping.filter(function (x) { return !x.done; }).length;
-      tile('pt-shop', '🛒', String(n), n ? t('pt.toBuy') : t('pt.listEmpty'), function () { FB.actions.openShopping(); });
+      tile('pt-shop', ui.icon('cart', 20), String(n), n ? t('pt.toBuy') : t('pt.listEmpty'), function () { FB.actions.openShopping(); });
     }
     if (FB.showW('events')) {
       var now = U.hhmm(new Date());
       var nx = L.upcoming(today, 14).filter(function (x) { var e = x.event; return x.date > today || e.all_day || !e.start_time || e.start_time >= now; })[0];
       if (nx) {
         var e = nx.event, when = nx.date === today ? (e.start_time && !e.all_day ? FB.i18n.hm(e.start_time) : t('rel.today')) : nx.date === U.addDays(today, 1) ? t('rel.tomorrow') : FB.i18n.dayShort(U.weekday(nx.date)) + ' ' + U.parts(nx.date).d;
-        tile('pt-ev', e.kind === 'birthday' ? '🎂' : '📅', when, e.title, function () { FB.actions.showEvent(e, nx.date); });
-      } else tile('pt-ev', '📅', '—', t('pt.noEvents'), function () { FB.app.go('calendar'); });
+        tile('pt-ev', e.kind === 'birthday' ? '🎂' : ui.icon('calendar', 20), when, e.title, function () { FB.actions.showEvent(e, nx.date); });
+      } else tile('pt-ev', ui.icon('calendar', 20), '—', t('pt.noEvents'), function () { FB.app.go('calendar'); });
     }
     if (FB.ac && FB.showW('ac') && FB.ac.mini) { var ac = FB.ac.mini(); if (ac) tiles.push(ac); }
     if (FB.spotify && FB.showW('spotify') && FB.spotify.mini) { var spm = FB.spotify.mini(); if (spm) tiles.push(spm); }
     if (FB.showW('countdown')) {
       var cd = L.countdowns(today)[0];
-      if (cd) tile('pt-cd', '⏳', String(cd.days), (cd.days === 1 ? t('unit.day') : t('unit.days')) + ' · ' + cd.event.title, function () { FB.actions.showEvent(cd.event, cd.date); });
+      if (cd) tile('pt-cd', ui.icon('hourglass', 20), cd.days + ' ' + (cd.days === 1 ? t('unit.day') : t('unit.days')), cd.event.title, function () { FB.actions.showEvent(cd.event, cd.date); });
     }
     if (!tiles.length) return null;
     /* equal columns for whatever is visible (the Spotify tile appears and disappears by itself) */
@@ -520,15 +542,16 @@
   FB.views.home = function (ctx) {
     var today = ctx.today;
     var due = L.choresDue(today, ctx.nowHHMM);
-    var clk = FB.i18n.clock(ctx.now);
+    var clk = FB.i18n.clock(ctx.now), phone = isPhone();
 
     var left = h('aside', { class: 'rail rail-left', 'data-scroll': 'rail-left' },
       h('div', { class: 'rail-in', 'data-fit': '1', 'data-fit-min': '0.9', 'data-cap': 'soft' },
-        h('div', { class: 'clock-row' },
+        phone ? phoneCards(today, clk) : null,
+        phone ? null : h('div', { class: 'clock-row' },
           h('div', { class: 'clock' }, clk.t, clk.ap ? h('small', { class: 'ampm' }, clk.ap) : null),
           h('button', { type: 'button', class: 'icon-btn sleep-btn', 'aria-label': t('home.sleep'), onclick: function () { FB.night.sleepNow(); } }, ui.icon('moon'))),
-        isWide() ? null : h('div', { class: 'dateline' }, FB.i18n.dateLong(today)), /* wide: the date is in the "Today" header */
-        FB.showW('weather') && !isWide() ? weatherBlock(false) : null, /* wide: the weather lives in the "Today" header */
+        isWide() || phone ? null : h('div', { class: 'dateline' }, FB.i18n.dateLong(today)), /* wide: the date is in the "Today" header */
+        FB.showW('weather') && !isWide() && !phone ? weatherBlock(false) : null, /* wide: the weather lives in the "Today" header */
         FB.ac && FB.showW('ac') && !isWide() && !isPhone() ? FB.ac.tile() : null));
 
     var board = h('main', { class: 'board' });
@@ -563,6 +586,6 @@
     if (tsSide) left.firstChild.appendChild(tsSide); /* below "coming up" on wide screens */
     var cdSec = isWide() ? rr.querySelector('.rr-cd') : null;
     if (cdSec) left.firstChild.appendChild(cdSec); /* wide: the countdown closes the clock panel */
-    return h('div', { class: 'home' + (isWide() ? ' wide' : '') }, left, board, rr);
+    return h('div', { class: 'home' + (isWide() ? ' wide' : '') + (isPhone() ? ' phone' : '') }, left, board, rr);
   };
 })(typeof window !== 'undefined' ? window : globalThis);
