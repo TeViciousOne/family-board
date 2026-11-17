@@ -1,0 +1,34 @@
+/* Spotify remote: the now-playing tile in the right column, the phone tile, the player sheet and the Settings block.
+   Neutral on purpose (one accent colour for the whole app); tokens only. */
+.sp-tile { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--sp-2); padding: var(--sp-3); border-radius: var(--r-lg); background: var(--g-fill); border: 1px solid var(--g-edge-2); box-shadow: var(--g-shine); color: var(--label); }
+.sp-tile[hidden] { display: none; }
+.sp-info { display: flex; align-items: center; gap: var(--sp-3); min-width: 0; min-height: var(--hit); padding: 0; border: 0; background: none; color: inherit; text-align: left; font: inherit; }
+.sp-cover { flex: none; width: 56px; height: 56px; border-radius: var(--r-sm); object-fit: cover; background: var(--fill-strong); }
+.sp-txt { display: flex; flex-direction: column; min-width: 0; }
+.sp-title { font-size: var(--t-body); font-weight: 600; line-height: 1.25; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sp-artist { font-size: var(--t-subhead); line-height: 1.3; color: var(--label-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sp-ctl { display: flex; align-items: center; justify-content: center; gap: var(--sp-5); }
+.sp-btn { display: grid; place-items: center; width: var(--hit); height: var(--hit); padding: 0; border: 0; border-radius: 50%; background: transparent; color: var(--label); transition: transform var(--dur-1) var(--ease-out), background-color var(--dur-1) var(--ease-out); -webkit-tap-highlight-color: transparent; }
+.sp-btn.main { width: var(--hit-wall); height: var(--hit-wall); background: var(--fill-strong); }
+.sp-btn:active { transform: scale(.92); background: var(--fill-strong); }
+.sp-bar { display: block; height: 4px; border-radius: 2px; background: var(--fill-strong); overflow: hidden; }
+.sp-bar i { display: block; width: 100%; height: 100%; background: var(--label-2); transform: scaleX(0); transform-origin: left center; }
+/* a hidden tile must not keep its column */
+.ptile[hidden] { display: none; }
+.ptile.pt-sp .pt-ico { display: grid; place-items: center; height: 24px; }
+
+/* the player sheet */
+.sp-modal { display: flex; flex-direction: column; align-items: center; gap: var(--sp-3); text-align: center; }
+.sp-big { width: min(240px, 60vw); aspect-ratio: 1; border-radius: var(--r-lg); object-fit: cover; background: var(--fill-strong); }
+.sp-m-title { margin: 0; font-size: var(--t-title2); line-height: 1.2; overflow-wrap: anywhere; }
+.sp-m-artist { margin: 0; font-size: var(--t-body); color: var(--label-2); overflow-wrap: anywhere; }
+.sp-modal .sp-bar { width: 100%; }
+.sp-vol { display: flex; align-items: center; gap: var(--sp-3); width: 100%; }
+.sp-vol[hidden] { display: none; }
+.sp-vol input { flex: 1; min-height: var(--hit); }
+.sp-vol-l { font-size: var(--t-subhead); font-weight: 600; color: var(--label-2); }
+.sp-dev { margin: 0; font-size: var(--t-subhead); color: var(--label-2); }
+
+/* Settings */
+.sp-uri { margin: 0 0 var(--sp-3); padding: var(--sp-3); border-radius: var(--r-sm); background: var(--fill-quiet); font-size: var(--t-subhead); overflow-wrap: anywhere; -webkit-user-select: text; user-select: text; }
+@media (prefers-reduced-motion: reduce) { .sp-btn { transition: none; } }

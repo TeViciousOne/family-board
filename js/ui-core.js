@@ -22,7 +22,7 @@
     place: FB.weather.DEFAULT_PLACE, reload4: true, homeIdle: wallGuess
   }, stored);
   /* device type + which home-screen blocks this device shows */
-  FB.widgets = ['weather', 'ac', 'news', 'summary', 'events', 'countdown', 'shopping', 'notes'];
+  FB.widgets = ['weather', 'ac', 'spotify', 'news', 'summary', 'events', 'countdown', 'shopping', 'notes'];
   FB.kindDefaults = function (k) {
     var m = {}; FB.widgets.forEach(function (w) { m[w] = true; });
     if (k === 'phone') { m.news = false; m.weather = false; m.notes = false; }
