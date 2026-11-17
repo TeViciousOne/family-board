@@ -41,7 +41,7 @@
 
   /* colour roles (light) */
   --label: #000000;
-  --label-2: rgba(60, 60, 67, .78);     /* secondary text, AA on every light surface */
+  --label-2: rgba(60, 60, 67, .88);     /* secondary text, AA on every light surface */
   --label-3: rgba(60, 60, 67, .55);     /* placeholders, disabled */
   --separator: rgba(60, 60, 67, .2);
   --fill-quiet: rgba(118, 118, 128, .12);
