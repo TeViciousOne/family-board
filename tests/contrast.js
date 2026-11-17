@@ -33,7 +33,7 @@ const WANT_AAA = !process.env.NO_AAA;
     await p.waitForSelector('#view .page, #view .home', { timeout: 15000 }).catch(() => {});
     await p.waitForTimeout(2000);
     for (const route of routes) {
-      if (route !== 'home') { await p.evaluate(r => { location.hash = '#/' + r; }, route); await p.waitForTimeout(900); }
+      if (route !== 'home') { await p.evaluate(r => { location.hash = '#/' + r; }, route); await p.waitForTimeout(1600); }
       await p.evaluate(() => document.querySelectorAll('.toast').forEach(t => t.remove()));
       /* 1. every text run: colour, size, weight, tight box */
       const runs = await p.evaluate(() => {
