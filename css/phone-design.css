@@ -136,3 +136,36 @@
   .home.phone .tmr-grid { grid-template-columns: minmax(0, 1fr); gap: 0; }
   .home.phone .tmr-item { min-height: var(--hit); padding: 0; }
 }
+
+/* ----- phone material = the design's: a thin 7% card with a 10% hairline, crisp text, no blur -----
+   (the glass setting still applies to tablets; on a phone the cards are small and blur only greyed them out) */
+@media (max-width: 699px) and (orientation: portrait) {
+  :root {
+    --ph-fill: var(--g-fill); --ph-line: var(--g-edge-2); --ph-ink-2: var(--label-2);
+    --ph-nav: rgba(255, 255, 255, .78); --ph-nav-line: rgba(0, 0, 0, .08); --ph-nav-ink: var(--label-2); --ph-on: rgba(0, 0, 0, .04);
+  }
+  :root[data-theme="dark"] {
+    --ph-fill: rgba(255, 255, 255, .07); --ph-line: rgba(255, 255, 255, .10); --ph-ink-2: #C7CBD6;
+    --ph-nav: rgba(255, 255, 255, .09); --ph-nav-line: rgba(255, 255, 255, .12); --ph-nav-ink: #D1D1D6; --ph-on: rgba(255, 255, 255, .06);
+  }
+  .ph-card, .ptile, .home.phone .who-chip, .home.phone .chore, .home.phone .ai-sum {
+    background: var(--ph-fill) !important; border: 1px solid var(--ph-line) !important; box-shadow: none !important;
+    -webkit-backdrop-filter: none !important; backdrop-filter: none !important;
+  }
+  .home.phone .who-chip.on { border: 1.5px solid var(--brand) !important; }
+  .ph-l2, .ptile small, .home.phone .chore-meta:not(.late):not(.overdue) { color: var(--ph-ink-2) !important; }
+  .ptile b.long { font-size: 13px !important; }
+
+  /* nav: the design's pill — 9% fill, 12% hairline, white active label inside a 1.5px accent outline */
+  #nav { background: var(--ph-nav) !important; border: 1px solid var(--ph-nav-line) !important; box-shadow: none !important; -webkit-backdrop-filter: none !important; backdrop-filter: none !important; }
+  #nav button[data-route] { color: var(--ph-nav-ink) !important; background: none !important; box-shadow: none !important; }
+  #nav button[data-route].on { color: var(--label) !important; background: var(--ph-on) !important; box-shadow: inset 0 0 0 1.5px var(--brand) !important; }
+  #nav button.on svg { transform: none !important; }
+  #nav .nav-brand, #nav .nav-brand.me { box-shadow: none !important; border: 0 !important; background: none !important; }
+}
+@media (max-width: 699px) and (orientation: portrait) and (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --ph-fill: rgba(255, 255, 255, .07); --ph-line: rgba(255, 255, 255, .10); --ph-ink-2: #C7CBD6;
+    --ph-nav: rgba(255, 255, 255, .09); --ph-nav-line: rgba(255, 255, 255, .12); --ph-nav-ink: #D1D1D6; --ph-on: rgba(255, 255, 255, .06);
+  }
+}

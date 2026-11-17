@@ -433,7 +433,7 @@
   function phoneTiles(today) {
     var tiles = [];
     function tile(cls, ico, big, small, fn) {
-      tiles.push(h('button', { type: 'button', class: 'ptile ' + cls, onclick: fn }, h('span', { class: 'pt-ico' }, ico), h('b', null, big), h('small', null, small)));
+      tiles.push(h('button', { type: 'button', class: 'ptile ' + cls, onclick: fn }, h('span', { class: 'pt-ico' }, ico), h('b', { class: String(big).length > 6 ? 'long' : null }, big), h('small', null, small)));
     }
     if (FB.showW('shopping')) {
       var n = FB.state.shopping.filter(function (x) { return !x.done; }).length;
