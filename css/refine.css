@@ -157,3 +157,4 @@ html.shifty #app { width: calc(100% - 6px); height: calc(100% - 6px); margin: 3p
   .home-head .hh-gap { display: none; }
   .home-head .hh-hours { margin-left: auto; }
 }
+.cd-num b, .cd-num small { text-align: center; }
