@@ -110,15 +110,15 @@ h1, h2, h3, .list-title, .clock, .wx-temp, .hh-wx-t { letter-spacing: var(--trac
 /* labels under the rail icons (a shared screen: kids and grandparents should not have to guess) */
 @media (orientation: landscape) and (min-width: 600px) {
   #nav { width: 76px; gap: var(--sp-1); }
-  #nav button[data-route] { width: 66px; height: 58px; flex-direction: column; justify-content: center; gap: 3px; border-radius: var(--r-md); }
-  #nav button[data-route] span:last-child { display: block; max-width: 64px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: 600 var(--t-caption2)/1.1 var(--font-body); letter-spacing: 0; color: var(--ink-2); }
+  #nav button[data-route] { width: 58px; height: 58px; flex-direction: column; justify-content: center; gap: 3px; border-radius: var(--r-md); }
+  #nav button[data-route] span:last-child { display: block; max-width: 56px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: 600 var(--t-caption2)/1.1 var(--font-body); letter-spacing: 0; color: var(--ink-2); }
   #nav button.on[data-route] span:last-child { color: var(--label); }
   #nav button[data-route] svg { width: 24px; height: 24px; }
   .nav-pill { border-radius: var(--r-md); }
   #nav .nav-tool { width: var(--hit); height: var(--hit); }
 }
 html.size-short #nav { width: 70px; }
-html.size-short #nav button[data-route] { width: 62px; height: 50px; }
+html.size-short #nav button[data-route] { width: 54px; height: 50px; }
 
 /* ---------- continuous (squircle) corners on cards and sheets where the browser supports it; plain rounded corners elsewhere ---------- */
 @supports (corner-shape: squircle) {
@@ -142,7 +142,11 @@ html.size-short #nav button[data-route] { width: 62px; height: 50px; }
    portrait keeps a 3 px margin: there the cards run to the screen edge and must not be cut */
 html.shifty, html.shifty body { overflow: hidden; }
 html.shifty #app { width: calc(100% - 6px); height: calc(100% - 6px); margin: 3px; }
-@media (orientation: landscape) { html.shifty #app { width: calc(100% + 6px); height: calc(100% + 6px); margin: -3px; } }
+@media (orientation: landscape) {
+  html.shifty #app { width: calc(100% + 6px); height: calc(100% + 6px); margin: -3px; }
+  /* the rail's background bleeds 3px past the left edge; its buttons do not: they stay centred in the part you see */
+  html.shifty #nav { padding-left: 3px; }
+}
 
 /* ---------- accessibility ---------- */
 @media (prefers-reduced-transparency: reduce) {
