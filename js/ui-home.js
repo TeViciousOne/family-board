@@ -337,6 +337,12 @@
     return h('section', { class: 'col' }, head, body);
   }
 
+  /* a small filled icon before a section title (Settings-style), one system colour per section */
+  function secIco(name, tone) { return h('span', { class: 'sec-ico tone-' + tone, 'aria-hidden': 'true' }, ui.icon(name, 14)); }
+  /* each countdown keeps its own colour: picked from its id, so it never changes between renders */
+  var CD_TONES = ['orange', 'pink', 'purple', 'indigo', 'teal', 'green', 'red'];
+  function cdTone(ev) { var s = String(ev.id || ev.title || ''), n = 0; for (var i = 0; i < s.length; i++) n = (n * 31 + s.charCodeAt(i)) >>> 0; return CD_TONES[n % CD_TONES.length]; }
+
   /* countdown tiles tick every second (days big, hours:minutes:seconds under the title); one timer for all of them */
   var cdLive = [], cdTimer = null;
   function cdTick() {
@@ -365,7 +371,7 @@
       return h('div', { class: 'cdk-cell' }, b, h('span', null, n));
     });
     var done = h('p', { class: 'cdk-done', hidden: true }, t('cd.now'));
-    var body = h('div', { class: 'cdk' },
+    var body = h('div', { class: 'cdk tone-' + cdTone(ev) },
       h('p', { class: 'cdk-when' }, FB.i18n.dateLong(ev.on_date) + (ev.start_time && !ev.all_day ? ' · ' + FB.i18n.hm(ev.start_time) : '')),
       h('div', { class: 'cdk-grid', role: 'timer', 'aria-label': ev.title }, cells), done);
     var m = ui.modal({ title: ev.title, body: body, focus: false,
@@ -439,7 +445,7 @@
     var ups = L.upcoming(today, 8);
     var shown = ups.slice(0, 7);
     /* the first day sits on the heading line, to its right */
-    var head = h('h3', { class: 'ups-head' }, h('span', null, t('home.comingUp')));
+    var head = h('h3', { class: 'ups-head' }, h('span', { class: 'sec-t' }, secIco('calendar', 'red'), t('home.comingUp')));
     var secUps = h('section', { class: 'rr rr-ups' }, head);
     if (!shown.length) secUps.appendChild(h('p', { class: 'muted empty-mini' }, '📭 ' + t('home.noEvents')));
     var lastDate = null, group = null;
@@ -458,13 +464,13 @@
     var cds = FB.showW('countdown') ? L.countdowns(today).slice(0, 3) : [];
     cdLive = [];
     if (cds.length) {
-      var secCd = h('section', { class: 'rr rr-cd' }, h('h3', null, t('home.countdowns')));
+      var secCd = h('section', { class: 'rr rr-cd' }, h('h3', { class: 'sec-t' }, secIco('clock', 'orange'), t('home.countdowns')));
       cds.forEach(function (c) {
         var tm = (c.event.start_time && !c.event.all_day ? c.event.start_time : '00:00').split(':');
         var dp = c.event.on_date.split('-');
         var at = new Date(+dp[0], +dp[1] - 1, +dp[2], +tm[0] || 0, +tm[1] || 0, 0).getTime();
         var cdB = h('b', null, String(c.days)), cdS = h('small', null, c.days === 1 ? t('unit.day') : t('unit.days')), cdT = h('small', { class: 'cd-hms' }, '');
-        var cdBtn = h('button', { type: 'button', class: 'cd cd-card', onclick: function () { openCountdown(c.event, at); } },
+        var cdBtn = h('button', { type: 'button', class: 'cd cd-card tone-' + cdTone(c.event), onclick: function () { openCountdown(c.event, at); } },
           h('span', { class: 'cd-num' }, cdB, cdS),
           h('span', { class: 'cd-title' }, c.event.title, cdT));
         cdLive.push({ el: cdBtn, at: at, b: cdB, s: cdS, t: cdT });
@@ -478,7 +484,7 @@
     if (FB.spotify && FB.showW('spotify')) { var spt = FB.spotify.tile(); if (spt) inner.appendChild(spt); }
     var notes = FB.showW('notes') ? L.notesSorted().slice(0, wide ? 1 : 2) : [];
     if (notes.length) {
-      var secN = h('section', { class: 'rr rr-notes' }, h('h3', null, t('home.notes')));
+      var secN = h('section', { class: 'rr rr-notes' }, h('h3', { class: 'sec-t' }, secIco('edit', 'yellow'), t('home.notes')));
       notes.forEach(function (n) {
         var m = L.member(n.author);
         secN.appendChild(h('button', { type: 'button', class: 'note-mini', onclick: function () { FB.app.go('lists'); } },
@@ -493,7 +499,7 @@
     var showShop = FB.showW('shopping');
     if (open && showShop) {
       rail.classList.add('has-shop');
-      var secS = h('section', { class: 'rr rr-shop' }, h('h3', null, t('shop.title')));
+      var secS = h('section', { class: 'rr rr-shop' }, h('h3', { class: 'sec-t' }, secIco('cart', 'green'), t('shop.title')));
       openItems.slice(0, 4).forEach(function (it) {
         var m = L.member(it.added_by);
         secS.appendChild(h('button', { type: 'button', class: 'note-mini shop-mini', onclick: function () { FB.actions.openShopping(); } },
