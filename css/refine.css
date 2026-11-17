@@ -151,3 +151,9 @@ html.shifty #app { width: calc(100% - 6px); height: calc(100% - 6px); margin: 3p
   *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; scroll-behavior: auto !important; }
   .calm-photo.show { animation: none !important; }
 }
+
+/* the hourly forecast sits at the right edge of the header, in line with the cards below it */
+@media (orientation: landscape) and (min-width: 900px) {
+  .home-head .hh-gap { display: none; }
+  .home-head .hh-hours { margin-left: auto; }
+}
