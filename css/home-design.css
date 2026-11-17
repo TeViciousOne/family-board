@@ -93,4 +93,11 @@
   .home.wide .tmr-card { margin-top: var(--gap) !important; }
   .home.wide .ai-sum { margin: var(--gap) 0 var(--gap) !important; }
   .home.wide .rail-right .ac-tile + .sp-tile, .home.wide .rail-right .sp-tile { margin-top: var(--gap) !important; }
+
+  /* the left column is a column of the same grid, not a separate panel: no tinted panel, no line,
+     so the gap from the clock card to the Today card reads as the same 16px as every other gap */
+  .home.wide .rail-left { background: none !important; border-right: 0 !important; box-shadow: none !important; }
+  /* who filter: pills keep their size, 8px apart (a control group, like iOS filter chips) */
+  .home.wide .who-row { gap: var(--sp-2); }
+  .home.wide .who-chip { flex: 0 1 auto; min-width: 0; overflow: hidden; }   /* on a narrow board a name shortens to "Led…" instead of spilling over its neighbours */
 }
