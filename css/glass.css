@@ -484,8 +484,6 @@ input[type=text], input[type=email], input[type=password], input[type=number], i
 @media (orientation: landscape) and (min-width: 900px) {
   .rail-right { padding-top: 30px; }
   .rail-left .rr { margin-top: 16px; }
-  .rail-left .rr h3 { margin: 0 0 6px; }
-  .rail-right .rr-shop h3 { margin: 0 0 8px; font-size: var(--t-title2); font-weight: 800; letter-spacing: -.01em; text-transform: none; color: var(--ink); }
   .rail-right .rr-shop .note-mini { font-size: var(--t-body); }
 }
 
@@ -511,7 +509,7 @@ input[type=text], input[type=email], input[type=password], input[type=number], i
 .mini-dots { display: inline-flex; gap: 3px; }
 .mini-dots i { display: grid; place-items: center; width: 20px; height: 20px; border-radius: 50%; font-style: normal; font-size: var(--t-caption2); font-weight: 700; color: var(--ink-3); background: var(--g-fill); }
 .mini-dots i.on { color: #fff; background: #0A84FF; }
-.chore-row .row-sub { margin-top: 3px; font-size: var(--t-caption); }
+.chore-row .row-sub { margin-top: 3px; }
 .chore-row.paused { opacity: .55; }
 .mini-sw { flex: none; position: relative; width: 50px; height: 30px; padding: 0; border: 0; border-radius: var(--r-pill); background: rgba(120, 120, 128, .32); transition: background .2s; }
 .mini-sw i { position: absolute; top: 2px; left: 2px; width: 26px; height: 26px; border-radius: 50%; background: #fff; box-shadow: 0 2px 6px rgba(0, 0, 0, .25); transition: transform .2s; }
@@ -805,7 +803,6 @@ body.lite::before { transition: none; }
 .wx-hn { font-size: var(--t-caption); }
 .wx-hr { font-size: 12.5px; }
 .wx-ht { font-size: var(--t-body); }
-.rr > h3, .ups-head, .ts-lbl, .rail h3 { font-size: var(--t-caption) !important; letter-spacing: .05em; }
 .chore-who-av small { font-size: var(--t-subhead); }
 .chore-meta { font-size: var(--t-subhead); }
 .wx-hr { font-size: var(--t-caption) !important; }
@@ -874,7 +871,6 @@ button.ai-sum { width: 100%; text-align: left; color: var(--ink); font: inherit;
   .ptile small { white-space: normal !important; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; text-align: center; line-height: 1.2; font-size: 12.5px !important; min-height: 2.4em; }
   .ptile { min-height: 92px !important; }
   .home .chore-title { font-size: var(--t-body) !important; }
-  .home .chore-meta { font-size: var(--t-caption) !important; }
   .more-chip { padding: 6px 16px; font-size: var(--t-subhead); }
 }
 
@@ -890,7 +886,6 @@ button.ai-sum { width: 100%; text-align: left; color: var(--ink); font: inherit;
   .chore-row .row-title { font-size: var(--t-body); }
   .chore-row .mini-dots i { width: 17px; height: 17px; font-size: 10px; }
   .chore-row .who-pill { font-size: var(--t-caption2); }
-  .chore-row .row-sub { font-size: 12.5px; }
   /* lists: tidy button under the title instead of past the edge */
   .pane-shop .pane-head { flex-wrap: wrap; }
   .pane-shop .pane-head .ai-tidy { margin-left: 0; flex-basis: 100%; justify-content: flex-start; padding: 2px 0 0; }
@@ -920,7 +915,6 @@ button.ai-sum { width: 100%; text-align: left; color: var(--ink); font: inherit;
 .evi-ico { width: 28px; text-align: center; font-size: var(--t-title3); flex: none; }
 
 /* notes v2: glass cards that match the rest of the board */
-.pane-notes { background: linear-gradient(160deg, rgba(255, 204, 0, .10), rgba(255, 149, 0, .03)) !important; border-color: rgba(255, 204, 0, .22) !important; }
 .note-list { flex: 1; min-height: 0; overflow: auto; display: flex; flex-direction: column; gap: 10px; padding: 6px 2px 10px; }
 .note-card { position: relative; display: flex; flex-direction: column; gap: 8px; padding: 12px 14px 14px 16px; border-radius: var(--r-lg); background: var(--g-fill); box-shadow: var(--g-shine), var(--g-shadow); border-left: 5px solid var(--c); }
 .note-card.pinned { background: linear-gradient(135deg, rgba(255, 204, 0, .16), rgba(255, 204, 0, .05)), var(--g-fill); }
@@ -968,7 +962,7 @@ button.ai-sum { width: 100%; text-align: left; color: var(--ink); font: inherit;
 }
 
 /* ---------- settings v2 ---------- */
-.set-menu .row .row-sub { font-size: var(--t-subhead); color: var(--ink-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.set-menu .row .row-sub { font-size: var(--t-subhead); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .set-menu .row-main { min-width: 0; }
 .set-split { display: grid; grid-template-columns: minmax(300px, 34%) minmax(0, 1fr); gap: 24px; height: 100%; min-height: 0; }
 .set-split .set-left, .set-split .set-right { min-height: 0; overflow-y: auto; padding-bottom: 100px; }
