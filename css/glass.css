@@ -562,13 +562,15 @@ input[type=text], input[type=email], input[type=password], input[type=number], i
 .ad-txt b { display: block; font-size: var(--t-title3); line-height: 1.25; color: #34C759; }
 .ad-txt span { display: block; font-size: var(--t-subhead); line-height: 1.35; color: var(--ink-2); }
 @keyframes adPop { from { transform: scale(.94); } to { transform: none; } }
-/* chore cards: compact enough for three rows of two on a wall screen (up to 6 chores), the same size for a few more */
+/* chore cards: three columns on a wall screen, small enough that three rows fit */
 @media (orientation: landscape) and (min-width: 700px) {
-  .list-grid.few, .list-grid.mid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
-  .list-grid.few .chore, .list-grid.mid .chore { min-height: 72px; padding: 10px 16px; border-radius: var(--r-lg); }
-  .list-grid.few .chore-title, .list-grid.mid .chore-title { font-size: var(--t-title3); }
-  .list-grid.few .chore-meta, .list-grid.mid .chore-meta { font-size: var(--t-subhead); }
-  .list-grid.few .tick, .list-grid.mid .tick { width: 40px; height: 40px; }
+  .list-grid.few, .list-grid.mid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+  .list-grid.few .chore, .list-grid.mid .chore { min-height: 64px; padding: 8px 12px; gap: 10px; border-radius: var(--r-lg); }
+  .list-grid.few .chore-title, .list-grid.mid .chore-title { font-size: var(--t-body); line-height: 1.2; }
+  .list-grid.few .chore-meta, .list-grid.mid .chore-meta { font-size: var(--t-subhead); margin-top: 0; }
+  .list-grid.few .tick, .list-grid.mid .tick { width: 32px; height: 32px; }
+  .list-grid.few .chore-who-av .avatar, .list-grid.mid .chore-who-av .avatar { width: 36px !important; height: 36px !important; font-size: var(--t-subhead) !important; }
+  .list-grid.few .chore-who-av, .list-grid.mid .chore-who-av { min-width: 44px; }
 }
 /* today's events strip */
 .today-strip { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin: 0 0 10px; }
