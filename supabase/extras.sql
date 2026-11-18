@@ -43,3 +43,7 @@ create policy photos_insert on storage.objects for insert to authenticated
   with check (bucket_id = 'photos' and (split_part(name, '/', 1))::uuid in (select public.my_household_ids()));
 create policy photos_delete on storage.objects for delete to authenticated
   using (bucket_id = 'photos' and (split_part(name, '/', 1))::uuid in (select public.my_household_ids()));
+
+-- members that do not do chores (e.g. the home account) are left out of "who does it" / "who did it"
+alter table public.members add column if not exists does_chores boolean not null default true;
+grant update (does_chores) on public.members to authenticated;

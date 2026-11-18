@@ -31,6 +31,10 @@
   L.membersSorted = function () {
     return FB.state.members.slice().sort(function (a, b) { return a.created_at < b.created_at ? -1 : a.created_at > b.created_at ? 1 : 0; });
   };
+  /* the people who do chores (a shared account such as the home can be switched off in Family); keepId stays listed */
+  L.choreMembers = function (keepId) {
+    return L.membersSorted().filter(function (m) { return m.does_chores !== false || m.id === keepId; });
+  };
   L.chore = function (id) {
     var cs = FB.state.chores;
     for (var i = 0; i < cs.length; i++) if (cs[i].id === id) return cs[i];
@@ -46,7 +50,9 @@
       var rule = c.rule, done = null, carried = false;
       var hist = idx.byChore[c.id] || [];
       if (rule.freq === 'once') {
-        var any = hist[0] || null;
+        /* only a completion on or after its date counts: a chore done once and then set again ("Do it again") is due again */
+        var any = hist.filter(function (x) { return x.on_date >= rule.start; })[0] || null;
+        if (!any && rule.done && rule.done >= rule.start) return; /* finished long ago (older than the loaded history) */
         if (any) { if (any.on_date !== date) return; done = any; }
         else if (rule.start === date) { /* due exactly today */ }
         else if (date === today && rule.start < date) { carried = true; }
@@ -70,6 +76,18 @@
     return out;
   };
 
+  /* a one-time chore that has been done (for its current date) */
+  L.onceFinished = function (c) {
+    var r = c && c.rule;
+    if (!r || r.freq !== 'once') return false;
+    if (r.done && r.done >= r.start) return true;
+    return (index().byChore[c.id] || []).some(function (x) { return x.on_date >= r.start; });
+  };
+  /* when a finished one-time chore was done */
+  L.onceDoneOn = function (c) {
+    var r = c.rule, x = (index().byChore[c.id] || []).filter(function (q) { return q.on_date >= r.start; })[0];
+    return x ? x.on_date : (r.done || null);
+  };
   L.lastDone = function (choreId) { return (index().byChore[choreId] || [])[0] || null; };
 
   /* completions for the History tab: newest first */

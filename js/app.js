@@ -255,7 +255,8 @@
   function whoFor(chore) {
     var ask = FB.device.askWho;
     if (ask === 'unassigned' && chore.member_id) return chore.member_id;
-    return FB.state.me || chore.member_id || null;
+    var me = L.member(FB.state.me);
+    return (me && me.does_chores !== false ? me.id : null) || chore.member_id || null; /* a home account is never "who did it" */
   }
 
   function complete(entry, who, anchor) {
@@ -264,19 +265,27 @@
     FB.justDone = FB.justDone || {}; FB.justDone[c.id] = Date.now();
     FB.sound.done();
     var row = { chore_id: c.id, on_date: today, done_by: who || null, done_at: new Date().toISOString() };
+    var once = c.rule && c.rule.freq === 'once';
+    if (once) FB.data.edit('chores', c.id, { rule: Object.assign({}, c.rule, { done: today }) }); /* remembered past the loaded history */
     return FB.data.add('chore_completions', row).then(function (srv) {
       if (!srv) return;
-      ui.toast(t('chore.doneToast', { title: c.title }), { action: { label: t('common.undo'), fn: function () { FB.sound.undo(); FB.data.del('chore_completions', srv.id); } } });
+      ui.toast(t('chore.doneToast', { title: c.title }), { action: { label: t('common.undo'), fn: function () { FB.sound.undo(); undoDone(c, srv.id); } } });
     });
+  }
+
+  function undoDone(c, completionId) {
+    FB.data.del('chore_completions', completionId);
+    var cur = L.chore(c.id);
+    if (cur && cur.rule && cur.rule.freq === 'once' && cur.rule.done) { var r = Object.assign({}, cur.rule); delete r.done; FB.data.edit('chores', c.id, { rule: r }); }
   }
 
   function pickWho(entry, anchor) {
     var c = entry.chore, modal;
-    var grid = h('div', { class: 'who-grid' }, L.membersSorted().map(function (m) {
+    var grid = h('div', { class: 'who-grid' }, L.choreMembers().map(function (m) {
       return h('button', { type: 'button', class: 'who' + (m.id === c.member_id ? ' suggested' : ''), style: { '--c': m.color }, onclick: function () { modal.close(); complete(entry, m.id, anchor); } },
         ui.avatar(m, 64), h('span', null, m.name));
     }));
-    if (!FB.state.members.length) { complete(entry, null, anchor); return; }
+    if (!L.choreMembers().length) { complete(entry, null, anchor); return; }
     modal = ui.modal({
       title: t('chore.whoDid', { title: (c.emoji ? c.emoji + ' ' : '') + c.title }), body: grid, focus: false,
       actions: [h('button', { class: 'btn ghost', onclick: function () { modal.close(); } }, t('common.cancel'))]
@@ -292,12 +301,12 @@
         title: (c.emoji ? c.emoji + ' ' : '') + c.title, focus: false,
         body: h('p', { class: 'lead' }, t('chore.doneBy', { name: by ? by.name : t('chore.someone'), time: FB.i18n.timeOf(entry.done.done_at) })),
         actions: [h('button', { class: 'btn ghost', onclick: function () { modal.close(); } }, t('common.close')),
-          h('button', { class: 'btn', onclick: function () { modal.close(); FB.sound.undo(); FB.data.del('chore_completions', entry.done.id); } }, ui.icon('undo', 20), ' ', t('chore.markUndo'))]
+          h('button', { class: 'btn', onclick: function () { modal.close(); FB.sound.undo(); undoDone(c, entry.done.id); } }, ui.icon('undo', 20), ' ', t('chore.markUndo'))]
       });
       return;
     }
     var ask = FB.device.askWho;
-    if (ask === 'always' || (ask === 'unassigned' && !c.member_id)) { pickWho(entry, anchor); return; }
+    if (ask === 'always' || (ask === 'unassigned' && !c.member_id) || (!whoFor(c) && L.choreMembers().length)) { pickWho(entry, anchor); return; }
     complete(entry, whoFor(c), anchor);
   };
 

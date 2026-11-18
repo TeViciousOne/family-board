@@ -253,7 +253,8 @@
   /* who filter on the chores row (wide screens): everyone, or one person. Lives in memory only. */
   var whoSel = null;
   function whoPills(items) {
-    var ms = L.membersSorted();
+    var mine = {}; (items || []).forEach(function (x) { if (x.chore && x.chore.member_id) mine[x.chore.member_id] = true; });
+    var ms = L.membersSorted().filter(function (m) { return m.does_chores !== false || mine[m.id]; }); /* a home account shows only if a chore is its own */
     if (ms.length < 2) return null;
     if (whoSel && !L.member(whoSel)) whoSel = null;
     function pill(id, label, color) {
@@ -266,7 +267,7 @@
   }
 
   function addBtn() {
-    return h('button', { type: 'button', class: 'btn add-pill', onclick: function () { FB.actions.openTemplates(); } }, ui.icon('plus', 18), h('span', null, isPhone() ? t('common.add') : t('board.addChores')));
+    return h('button', { type: 'button', class: 'btn add-pill', onclick: function () { FB.actions.openChore(null); } }, ui.icon('plus', 18), h('span', null, isPhone() ? t('common.add') : t('board.addChores')));
   }
   /* phone header: two cards of the same size and the same build, a big line over two small ones (clock | weather) */
   function phoneCards(today, clk) {

@@ -64,7 +64,7 @@ function ok(cond, msg) { console.log((cond ? 'PASS ' : 'FAIL ') + msg); if (!con
   if (await p.locator('#layer .scrim').count()) { await p.locator('#layer .scrim').first().click({ position: { x: 5, y: 5 } }); await p.waitForTimeout(300); }
   /* chore templates */
   await p.evaluate(() => location.hash = '#/chores'); await p.waitForSelector('.page-head');
-  await p.click('.page-head .btn:not(.seg)'); await p.waitForSelector('.sheet .tpl');
+  await p.click('.page-head .btn:not(.seg)'); await p.waitForSelector('.chore-sheet'); await p.click('.more-btn'); await p.locator('.more-body .btn', { hasText: 'templates' }).click(); await p.waitForSelector('.sheet .tpl');
   ok((await p.locator('.tpl-tile').count()) === 0, 'templates start empty');
   await p.click('.tpl .btn'); await p.waitForSelector('.tpl-tile');
   const nTpl = await p.locator('.tpl-tile').count();
@@ -74,8 +74,17 @@ function ok(cond, msg) { console.log((cond ? 'PASS ' : 'FAIL ') + msg); if (!con
   await p.click('.sheet-actions .btn:not(.ghost)'); await p.waitForTimeout(500);
   ok((await p.evaluate(() => FB.state.chores.length)) === tplBefore + 2 && (await p.locator('.sheet').count()) === 0, 'templates add the ticked chores');
   ok((await p.evaluate(() => { const r = FB.state.chores.slice(-2).map(c => c.rule.freq); return r.filter(f => f === 'once').length === 1 && r.filter(f => f !== 'once').length === 1; })), 'chores are one-off unless repeat is switched on');
+  /* a finished one-time chore does not lock its template: "Add again" brings the same chore back */
+  const onceId = await p.evaluate(async () => { const c = FB.state.chores.slice(-2).filter(x => x.rule.freq === 'once')[0]; const d = FB.util.addDays(FB.util.today(), -2);
+    await FB.data.edit('chores', c.id, { rule: Object.assign({}, c.rule, { start: d }) }); await FB.data.add('chore_completions', { chore_id: c.id, on_date: d, done_by: null, done_at: new Date().toISOString() }); return c.id; });
+  await p.click('.page-head .btn:not(.seg)'); await p.waitForSelector('.chore-sheet'); await p.click('.more-btn'); await p.locator('.more-body .btn', { hasText: 'templates' }).click(); await p.waitForSelector('.tpl-tile');
+  const againTile = p.locator('.tpl-tile', { hasText: 'Add again' });
+  ok((await againTile.count()) === 1, 'the template of a finished chore reads "Add again" and can be tapped');
+  const nAgain = await p.evaluate(() => FB.state.chores.length);
+  await againTile.click(); await p.click('.sheet-actions .btn:not(.ghost)'); await p.waitForTimeout(500);
+  ok((await p.evaluate(() => FB.state.chores.length)) === nAgain && (await p.evaluate((id) => FB.logic.choresDue(FB.util.today(), '00:00').some(x => x.chore.id === id && !x.done), onceId)), 'adding it again reuses the finished chore (no copy)');
   /* edit, delete and create templates */
-  await p.click('.page-head .btn:not(.seg)'); await p.waitForSelector('.tpl-tile');
+  await p.click('.page-head .btn:not(.seg)'); await p.waitForSelector('.chore-sheet'); await p.click('.more-btn'); await p.locator('.more-body .btn', { hasText: 'templates' }).click(); await p.waitForSelector('.tpl-tile');
   await p.locator('.tpl-tile .tpl-edit').first().click(); await p.waitForSelector('.sheet input[type=text]');
   await p.locator('.sheet').last().locator('input[type=text]').first().fill('Renamed template'); await p.locator('.sheet').last().locator('.sheet-actions .btn:not(.ghost):not(.danger)').click(); await p.waitForTimeout(400);
   ok((await p.evaluate(() => FB.state.templates.some(x => x.title === 'Renamed template'))), 'a template can be renamed');
@@ -87,11 +96,28 @@ function ok(cond, msg) { console.log((cond ? 'PASS ' : 'FAIL ') + msg); if (!con
   await p.locator('.sheet').last().locator('input[type=text]').first().fill('My own chore'); await p.locator('.sheet').last().locator('.sheet-actions .btn:not(.ghost)').click(); await p.waitForTimeout(400);
   ok((await p.evaluate(() => FB.state.templates.some(x => x.title === 'My own chore'))), 'a new template can be created');
   await p.keyboard.press('Escape'); await p.waitForTimeout(300);
-  /* Custom chore button inside the popup opens the plain form */
-  await p.click('.page-head .btn:not(.seg)'); await p.waitForSelector('.sheet .tpl');
-  await p.locator('.sheet-actions .btn.ghost', { hasText: 'Custom chore' }).click(); await p.waitForSelector('.sheet .form');
-  ok((await p.locator('.sheet .tpl').count()) === 0, 'custom chore opens the chore form');
-  await p.keyboard.press('Escape'); await p.waitForTimeout(300);
+  /* Add chore: the short sheet (name, who, when); Save adds a chore for today in one go */
+  await p.click('.page-head .btn:not(.seg)'); await p.waitForSelector('.chore-sheet');
+  ok((await p.locator('.chore-sheet .who-pick .wp').count()) >= 2 && (await p.locator('.chore-sheet .when-pick .chip').count()) >= 4 && (await p.locator('.more-body').isHidden()), 'Add chore opens the short sheet: who, when, more options folded');
+  await p.locator('.name-row input').fill('Wash the dishes test'); await p.waitForTimeout(100);
+  ok((await p.locator('.name-ico').innerText()).indexOf('🍽') === 0, 'the icon follows the name');
+  await p.locator('.chore-sheet .wp').nth(1).click(); await p.locator('.chore-sheet .when-pick .chip', { hasText: 'Tomorrow' }).click();
+  await p.locator('.sheet-actions .btn:not(.ghost)').last().click(); await p.waitForTimeout(400);
+  ok((await p.evaluate(() => { const c = FB.state.chores.filter(x => x.title === 'Wash the dishes test')[0]; return c && c.rule.freq === 'once' && c.rule.start === FB.util.addDays(FB.util.today(), 1) && !!c.member_id && c.emoji.indexOf('🍽') === 0; })), 'the chore is saved with its person, day and icon');
+  /* one typed line fills the person, the days and the time; the name keeps only the chore */
+  await p.click('.page-head .btn:not(.seg)'); await p.waitForSelector('.chore-sheet');
+  const who1 = await p.evaluate(() => FB.logic.choreMembers()[0].name);
+  await p.locator('.name-row input').fill(who1 + ' wash the car e madhe every mon and thu 7pm'); await p.waitForTimeout(150);
+  ok((await p.locator('.dow.on').count()) === 2 && (await p.locator('.time-pick .chip.on').innerText()).indexOf('19') === 0, 'typed days and time light up the chips');
+  await p.locator('.sheet-actions .btn:not(.ghost)').last().click(); await p.waitForTimeout(400);
+  ok((await p.evaluate((n) => { const c = FB.state.chores[FB.state.chores.length - 1]; const m = FB.logic.member(c.member_id); return c.title === 'Wash the car e madhe' && m && m.name === n && c.rule.freq === 'weekly' && c.rule.weekdays.join() === '1,4' && c.due_time === '19:00'; }, who1)), 'the typed line is saved as person, Mon+Thu, 19:00 and a clean name');
+  /* a finished one-time chore: in Done, back with "Do it again" (no copy) */
+  await p.evaluate(async () => { const d = FB.util.addDays(FB.util.today(), -3); await FB.data.add('chores', { id: 'again-1', title: 'Fix the shelf', emoji: '🔧', member_id: null, rule: { freq: 'once', interval: 1, start: d }, due_time: null, active: true });
+    await FB.data.add('chore_completions', { chore_id: 'again-1', on_date: d, done_by: null, done_at: new Date().toISOString() }); FB.app.render(); });
+  await p.waitForSelector('.grp-btn'); await p.click('.grp-btn'); await p.waitForSelector('.again-btn');
+  const nCh = await p.evaluate(() => FB.state.chores.length);
+  await p.locator('.again-btn').first().click(); await p.waitForSelector('.when-pick'); await p.locator('.sheet-actions .btn:not(.ghost)').last().click(); await p.waitForTimeout(400);
+  ok((await p.evaluate(() => FB.state.chores.length)) === nCh && (await p.evaluate(() => FB.logic.choresDue(FB.util.today(), '00:00').some(x => x.chore.id === 'again-1' && !x.done))), 'Do it again brings the finished chore back for today, without a copy');
   await p.evaluate(() => location.hash = '#/home'); await p.waitForSelector('.home .col');
   /* wide screens: the next hours sit beside the current weather in the "Today" header; otherwise the strip starts with Now */
   ok((await p.locator('.hh-hours .wx-h').count()) >= 3 || ((await p.locator('.wx-hours .wx-h').count()) >= 4 && (await p.locator('.wx-hours .wx-hn').first().innerText()) === 'Now'), 'hourly weather is shown');
@@ -158,16 +184,15 @@ function ok(cond, msg) { console.log((cond ? 'PASS ' : 'FAIL ') + msg); if (!con
     await p.locator('.chore-row').first().click(); await p.locator('.sheet-actions .btn.danger').click(); await p.locator('.btn.danger').last().click(); await p.waitForTimeout(400);
     ok((await p.evaluate(() => FB.state.chores.length)) === n0 - 1, 'a chore can be deleted from its edit sheet'); }
   await p.locator('.page-head .btn:not(.ghost)').click();
-  await p.locator('.sheet-actions .btn.ghost', { hasText: 'Custom chore' }).click();
   await p.waitForSelector('.sheet form');
-  await p.fill('.sheet input[type=text]', 'Mop the kitchen');
-  await p.locator('.sheet .recur-more').click();
+  await p.fill('.name-row input', 'Mop the kitchen');
+  await p.click('.more-btn');
   await p.locator('.sheet .seg-b', { hasText: 'Monthly' }).click();
   await p.locator('.sheet .seg-b', { hasText: 'Weekday' }).click();
   await p.screenshot({ path: OUT + '/07-chore-form-monthly.png' });
   const sum = await p.locator('.recur-sum').innerText();
   ok(/Every month, on the .* /.test(sum + ' '), 'repeat summary reads naturally: "' + sum + '"');
-  await p.locator('.sheet-actions .btn', { hasText: 'Save' }).click();
+  await p.locator('.sheet-actions .btn', { hasText: 'Add chore' }).click();
   await p.waitForTimeout(250);
   ok((await p.locator('.row', { hasText: 'Mop the kitchen' }).count()) === 1, 'new chore listed');
   await p.locator('.seg-b', { hasText: 'History' }).click();
@@ -271,7 +296,6 @@ function ok(cond, msg) { console.log((cond ? 'PASS ' : 'FAIL ') + msg); if (!con
   await q.locator('#nav button[data-route=chores]').tap();
   await q.waitForTimeout(200);
   await q.locator('.page-head .btn:not(.ghost)').tap();
-  await q.locator('.sheet-actions .btn.ghost', { hasText: 'Custom chore' }).tap();
   await q.waitForSelector('.sheet form');
   await q.screenshot({ path: OUT + '/22-phone-chore-form.png' });
   await q.keyboard.press('Escape');
