@@ -31,6 +31,10 @@
   L.membersSorted = function () {
     return FB.state.members.slice().sort(function (a, b) { return a.created_at < b.created_at ? -1 : a.created_at > b.created_at ? 1 : 0; });
   };
+  /* the people who do chores (a shared account such as the home can be switched off in Family); keepId stays listed */
+  L.choreMembers = function (keepId) {
+    return L.membersSorted().filter(function (m) { return m.does_chores !== false || m.id === keepId; });
+  };
   L.chore = function (id) {
     var cs = FB.state.chores;
     for (var i = 0; i < cs.length; i++) if (cs[i].id === id) return cs[i];

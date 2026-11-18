@@ -253,7 +253,8 @@
   /* who filter on the chores row (wide screens): everyone, or one person. Lives in memory only. */
   var whoSel = null;
   function whoPills(items) {
-    var ms = L.membersSorted();
+    var mine = {}; (items || []).forEach(function (x) { if (x.chore && x.chore.member_id) mine[x.chore.member_id] = true; });
+    var ms = L.membersSorted().filter(function (m) { return m.does_chores !== false || mine[m.id]; }); /* a home account shows only if a chore is its own */
     if (ms.length < 2) return null;
     if (whoSel && !L.member(whoSel)) whoSel = null;
     function pill(id, label, color) {

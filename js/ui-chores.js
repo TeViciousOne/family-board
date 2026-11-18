@@ -90,7 +90,7 @@
   function historyList() {
     var wrap = h('div', { class: 'list' });
     var counts = L.weekCounts();
-    var members = L.membersSorted();
+    var members = L.choreMembers();
     wrap.appendChild(h('h3', { class: 'grp' }, t('hist.week')));
     wrap.appendChild(h('div', { class: 'week-counts' }, members.map(function (m) {
       return h('div', { class: 'wc', style: { '--c': m.color } }, ui.avatar(m, 36), h('b', null, String(counts[m.id] || 0)), h('span', null, m.name));
@@ -131,7 +131,7 @@
     var el = h('div', { class: 'who-pick', role: 'radiogroup', 'aria-label': t('chore.who') });
     function draw() {
       U.clear(el);
-      [null].concat(L.membersSorted()).forEach(function (m) {
+      [null].concat(L.choreMembers(value)).forEach(function (m) {
         var id = m ? m.id : null, on = (value || null) === id;
         el.appendChild(h('button', { type: 'button', class: 'wp' + (on ? ' on' : ''), role: 'radio', 'aria-checked': on ? 'true' : 'false', style: { '--c': m ? m.color : 'var(--label-3)' },
           onclick: function () { value = id; draw(); onChange(id); } },
@@ -325,7 +325,7 @@
     var modal, picked = {}, repeat = {};
     var who = h('select', { 'aria-label': t('tpl.assign') },
       h('option', { value: '' }, t('tpl.assign') + ': ' + t('chore.anyone')),
-      L.membersSorted().map(function (m) { return h('option', { value: m.id }, t('tpl.assign') + ': ' + m.name); }));
+      L.choreMembers().map(function (m) { return h('option', { value: m.id }, t('tpl.assign') + ': ' + m.name); }));
     var addBtn = h('button', { class: 'btn', onclick: add }, '');
     var body = h('div', { class: 'tpl' });
     function have() { var o = {}; FB.state.chores.forEach(function (c) { if (!L.onceFinished(c)) o[c.title.trim().toLowerCase()] = true; }); return o; }

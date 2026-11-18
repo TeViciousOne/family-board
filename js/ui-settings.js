@@ -24,11 +24,12 @@
     var m = existing ? Object.assign({}, existing) : { name: '', color: ui.COLORS[FB.state.members.length % ui.COLORS.length], emoji: '' };
     var modal, color = m.color, emoji = m.emoji || '';
     var name = h('input', { type: 'text', value: m.name, placeholder: t('member.namePh'), maxlength: '30' });
+    var chores = h('input', { type: 'checkbox', checked: m.does_chores !== false });
     var err = h('p', { class: 'form-err', role: 'alert' });
     function save() {
       var n = name.value.trim();
       if (!n) { err.textContent = t('member.needName'); name.focus(); return; }
-      var row = { name: n, color: color, emoji: emoji };
+      var row = { name: n, color: color, emoji: emoji, does_chores: chores.checked };
       var p = isNew ? FB.data.add('members', row) : FB.data.edit('members', existing.id, row);
       p.then(function (r) { if (r) modal.close(); });
     }
@@ -47,6 +48,7 @@
       ui.field(t('member.name'), name),
       ui.field(t('member.color'), ui.swatches(ui.COLORS, color, function (c) { color = c; })),
       ui.field(t('member.emoji'), ui.emojiGrid(ui.MEMBER_EMOJI, emoji, function (e) { emoji = e; }, true)),
+      h('div', { class: 'field' }, h('label', { class: 'check' }, chores, h('span', null, t('member.doesChores'))), h('p', { class: 'hint' }, t('member.doesChoresHint'))),
       !isNew && existing.user_id ? h('p', { class: 'hint' }, t('member.hasLogin')) : null,
       !isNew && existing.user_id && existing.id !== FB.state.me ? h('button', { type: 'button', class: 'btn ghost', onclick: function () { FB.auth.openMemberPassword(existing); } }, ui.icon('edit', 20), ' ', t('mp.set')) : null,
       err);
@@ -60,7 +62,7 @@
       list.appendChild(h('button', { type: 'button', class: 'row', onclick: function () { FB.actions.openMember(m); } },
         ui.avatar(m, 40),
         h('span', { class: 'row-main' }, h('span', { class: 'row-title' }, m.name),
-          m.user_id ? h('span', { class: 'row-sub' }, m.id === FB.state.me ? t('member.you') : t('member.login')) : null),
+          (m.user_id || m.does_chores === false) ? h('span', { class: 'row-sub' }, [m.user_id ? (m.id === FB.state.me ? t('member.you') : t('member.login')) : null, m.does_chores === false ? t('member.noChores') : null].filter(Boolean).join(' · ')) : null),
         ui.icon('edit', 20)));
     });
     s.appendChild(list);

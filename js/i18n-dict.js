@@ -48,6 +48,9 @@
       'cal.today': 'Today',
 
       'chore.when': 'When',
+      'member.doesChores': 'Does chores',
+      'member.doesChoresHint': 'Switch off for a shared account such as the home. It then never shows when choosing who does a chore or who did it.',
+      'member.noChores': 'No chores',
       'chore.more': 'More options',
       'chore.addOne': 'Add chore',
       'chore.fromTemplates': 'Add several from templates',
@@ -679,6 +682,9 @@
       'cal.today': 'Sot',
 
       'chore.when': 'Kur',
+      'member.doesChores': 'Bën detyra',
+      'member.doesChoresHint': 'Fike për një llogari të përbashkët si shtëpia. Atëherë nuk shfaqet kur zgjidhet kush e bën një detyrë ose kush e bëri.',
+      'member.noChores': 'Pa detyra',
       'chore.more': 'Më shumë opsione',
       'chore.addOne': 'Shto detyrën',
       'chore.fromTemplates': 'Shto disa nga shabllonet',

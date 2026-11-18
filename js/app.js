@@ -255,7 +255,8 @@
   function whoFor(chore) {
     var ask = FB.device.askWho;
     if (ask === 'unassigned' && chore.member_id) return chore.member_id;
-    return FB.state.me || chore.member_id || null;
+    var me = L.member(FB.state.me);
+    return (me && me.does_chores !== false ? me.id : null) || chore.member_id || null; /* a home account is never "who did it" */
   }
 
   function complete(entry, who, anchor) {
@@ -280,11 +281,11 @@
 
   function pickWho(entry, anchor) {
     var c = entry.chore, modal;
-    var grid = h('div', { class: 'who-grid' }, L.membersSorted().map(function (m) {
+    var grid = h('div', { class: 'who-grid' }, L.choreMembers().map(function (m) {
       return h('button', { type: 'button', class: 'who' + (m.id === c.member_id ? ' suggested' : ''), style: { '--c': m.color }, onclick: function () { modal.close(); complete(entry, m.id, anchor); } },
         ui.avatar(m, 64), h('span', null, m.name));
     }));
-    if (!FB.state.members.length) { complete(entry, null, anchor); return; }
+    if (!L.choreMembers().length) { complete(entry, null, anchor); return; }
     modal = ui.modal({
       title: t('chore.whoDid', { title: (c.emoji ? c.emoji + ' ' : '') + c.title }), body: grid, focus: false,
       actions: [h('button', { class: 'btn ghost', onclick: function () { modal.close(); } }, t('common.cancel'))]
@@ -305,7 +306,7 @@
       return;
     }
     var ask = FB.device.askWho;
-    if (ask === 'always' || (ask === 'unassigned' && !c.member_id)) { pickWho(entry, anchor); return; }
+    if (ask === 'always' || (ask === 'unassigned' && !c.member_id) || (!whoFor(c) && L.choreMembers().length)) { pickWho(entry, anchor); return; }
     complete(entry, whoFor(c), anchor);
   };
 
