@@ -296,3 +296,15 @@ html.shifty #app { width: calc(100% - 6px); height: calc(100% - 6px); margin: 3p
 .cat-items { display: flex; flex-wrap: wrap; gap: var(--sp-2); }
 .sug-row { display: block; }
 .sug-row > .chip.sug { margin: 0 var(--sp-2) var(--sp-2) 0; }
+/* More options: no sideways scrolling, and only what the sheet above does not already offer */
+.chore-sheet, .chore-sheet .field, .more-body, .more-body .recur { min-width: 0; max-width: 100%; }
+.chore-sheet input, .chore-sheet select { max-width: 100%; box-sizing: border-box; }
+.sheet:has(.chore-sheet) .sheet-body, .modal:has(.chore-sheet) .modal-body { overflow-x: hidden; }
+.more-body .recur .alarm-quick, .more-body .recur .day-dots, .more-body .recur .recur-more { display: none; }
+.more-body .recur { padding: 0 !important; background: none !important; border: 0 !important; box-shadow: none !important; }
+.more-body .recur .seg { display: flex !important; flex-wrap: nowrap !important; flex-direction: row !important; width: 100%; }
+.more-body .recur .seg .seg-b { flex: 1 1 0; min-width: 0; padding: 0 var(--sp-1); font-size: var(--t-footnote); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.more-body .recur .recur-row { flex-wrap: wrap; }
+.more-body .emoji-grid { grid-template-columns: repeat(auto-fill, minmax(52px, 1fr)); gap: var(--sp-2); }
+.more-body .emoji-grid .emoji-b, .more-body .emoji-grid .emoji-custom { width: auto; height: 52px; min-width: 0; font-size: 24px; }
+@media (max-width: 699px) { .more-body .recur .seg .seg-b { padding: 0 2px !important; font-size: 12px !important; letter-spacing: -.01em; } }

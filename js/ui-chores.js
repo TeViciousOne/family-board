@@ -387,7 +387,7 @@
     }
     function drawRec() {
       U.clear(recBox);
-      rec = ui.recurEditor(rule, { onceLabel: t('rule.f.once') });
+      rec = ui.recurEditor(rule, { onceLabel: t('rule.f.once'), advanced: true }); /* only the rarer repeats: the days are already above */
       recBox.appendChild(rec.el);
     }
 

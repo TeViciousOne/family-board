@@ -187,7 +187,6 @@ function ok(cond, msg) { console.log((cond ? 'PASS ' : 'FAIL ') + msg); if (!con
   await p.waitForSelector('.sheet form');
   await p.fill('.name-row input', 'Mop the kitchen');
   await p.click('.more-btn');
-  await p.locator('.sheet .recur-more').click();
   await p.locator('.sheet .seg-b', { hasText: 'Monthly' }).click();
   await p.locator('.sheet .seg-b', { hasText: 'Weekday' }).click();
   await p.screenshot({ path: OUT + '/07-chore-form-monthly.png' });
