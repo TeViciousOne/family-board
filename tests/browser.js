@@ -104,6 +104,13 @@ function ok(cond, msg) { console.log((cond ? 'PASS ' : 'FAIL ') + msg); if (!con
   await p.locator('.chore-sheet .wp').nth(1).click(); await p.locator('.chore-sheet .when-pick .chip', { hasText: 'Tomorrow' }).click();
   await p.locator('.sheet-actions .btn:not(.ghost)').last().click(); await p.waitForTimeout(400);
   ok((await p.evaluate(() => { const c = FB.state.chores.filter(x => x.title === 'Wash the dishes test')[0]; return c && c.rule.freq === 'once' && c.rule.start === FB.util.addDays(FB.util.today(), 1) && !!c.member_id && c.emoji.indexOf('🍽') === 0; })), 'the chore is saved with its person, day and icon');
+  /* one typed line fills the person, the days and the time; the name keeps only the chore */
+  await p.click('.page-head .btn:not(.seg)'); await p.waitForSelector('.chore-sheet');
+  const who1 = await p.evaluate(() => FB.logic.choreMembers()[0].name);
+  await p.locator('.name-row input').fill(who1 + ' wash the car e madhe every mon and thu 7pm'); await p.waitForTimeout(150);
+  ok((await p.locator('.dow.on').count()) === 2 && (await p.locator('.time-pick .chip.on').innerText()).indexOf('19') === 0, 'typed days and time light up the chips');
+  await p.locator('.sheet-actions .btn:not(.ghost)').last().click(); await p.waitForTimeout(400);
+  ok((await p.evaluate((n) => { const c = FB.state.chores[FB.state.chores.length - 1]; const m = FB.logic.member(c.member_id); return c.title === 'Wash the car e madhe' && m && m.name === n && c.rule.freq === 'weekly' && c.rule.weekdays.join() === '1,4' && c.due_time === '19:00'; }, who1)), 'the typed line is saved as person, Mon+Thu, 19:00 and a clean name');
   /* a finished one-time chore: in Done, back with "Do it again" (no copy) */
   await p.evaluate(async () => { const d = FB.util.addDays(FB.util.today(), -3); await FB.data.add('chores', { id: 'again-1', title: 'Fix the shelf', emoji: '🔧', member_id: null, rule: { freq: 'once', interval: 1, start: d }, due_time: null, active: true });
     await FB.data.add('chore_completions', { chore_id: 'again-1', on_date: d, done_by: null, done_at: new Date().toISOString() }); FB.app.render(); });

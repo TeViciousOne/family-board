@@ -267,7 +267,7 @@
   }
 
   function addBtn() {
-    return h('button', { type: 'button', class: 'btn add-pill', onclick: function () { FB.actions.openTemplates(); } }, ui.icon('plus', 18), h('span', null, isPhone() ? t('common.add') : t('board.addChores')));
+    return h('button', { type: 'button', class: 'btn add-pill', onclick: function () { FB.actions.openChore(null); } }, ui.icon('plus', 18), h('span', null, isPhone() ? t('common.add') : t('board.addChores')));
   }
   /* phone header: two cards of the same size and the same build, a big line over two small ones (clock | weather) */
   function phoneCards(today, clk) {

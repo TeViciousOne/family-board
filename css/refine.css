@@ -278,3 +278,12 @@ html.shifty #app { width: calc(100% - 6px); height: calc(100% - 6px); margin: 3p
 .again-btn { flex: none; min-height: 40px; padding: 0 var(--sp-3); white-space: nowrap; position: relative; }
 .again-btn::after { content: ''; position: absolute; inset: -2px 0; }
 .name-ico.empty { opacity: .45; }
+/* the week's days, one tap each; and the time chips */
+.plan { display: flex; flex-direction: column; gap: var(--sp-3); }
+.dow-row { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.dow-l { margin-right: var(--sp-1); font: 600 var(--t-footnote)/1 var(--font-body); color: var(--label-2); }
+.dow { display: grid; place-items: center; width: var(--hit); height: var(--hit); padding: 0; border: 0; border-radius: 50%; background: var(--fill); color: var(--label); font: 700 var(--t-subhead)/1 var(--font-body); transition: background .2s ease-out, transform .15s ease-out; }
+.dow.on { background: var(--brand); color: var(--on-brand); }
+.dow:active { transform: scale(.92); }
+.time-pick .tpick { margin-left: var(--sp-1); }
+@media (max-width: 699px) and (orientation: portrait) { .dow { width: 40px; height: 40px; } .dow-l { width: 100%; margin: 0 0 2px; } }

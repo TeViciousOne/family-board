@@ -205,6 +205,118 @@
     return FB.state.chores.filter(function (c) { return c.title.trim().toLowerCase() === k && L.onceFinished(c); })[0] || null;
   }
 
+  /* ---------- when: day chips + the week's days in one row, no menus ---------- */
+  function planPicker(rule, onChange) {
+    var today = U.today(), mode, days = [], date = today, custom = null;
+    function read(r) {
+      custom = null; days = [];
+      if (!r || r.freq === 'once') { date = r ? r.start : today; mode = date === today ? 'today' : date === U.addDays(today, 1) ? 'tomorrow' : 'date'; return; }
+      var plain = (r.interval || 1) === 1 && !r.until;
+      if (plain && r.freq === 'daily') { mode = 'daily'; return; }
+      if (plain && r.freq === 'weekly') { mode = 'days'; days = (r.weekdays && r.weekdays.length ? r.weekdays : [U.weekday(r.start)]).slice(); return; }
+      mode = 'custom'; custom = r;
+    }
+    function build() {
+      if (mode === 'today') return Object.assign(FB.recur.defaultRule(today), { freq: 'once' });
+      if (mode === 'tomorrow') return Object.assign(FB.recur.defaultRule(U.addDays(today, 1)), { freq: 'once' });
+      if (mode === 'date') return Object.assign(FB.recur.defaultRule(date), { freq: 'once' });
+      if (mode === 'daily') return Object.assign(FB.recur.defaultRule(today), { freq: 'daily' });
+      if (mode === 'days') return Object.assign(FB.recur.defaultRule(today), { freq: 'weekly', weekdays: DOTS.filter(function (d) { return days.indexOf(d) >= 0; }) });
+      return custom;
+    }
+    read(rule);
+    var el = h('div', { class: 'plan' });
+    var dateIn = h('input', { type: 'date', min: today, 'aria-label': t('rule.date'), onchange: function () { if (dateIn.value) { date = dateIn.value; set('date'); } } });
+    function set(m) { mode = m; if (m !== 'days') days = []; draw(); onChange(build()); }
+    function chip(k, label, on, fn) { return h('button', { type: 'button', class: 'chip' + (on ? ' on' : ''), 'aria-pressed': on ? 'true' : 'false', onclick: fn || function () { set(k); } }, label); }
+    function draw() {
+      U.clear(el);
+      dateIn.value = date;
+      el.appendChild(h('div', { class: 'when-pick' },
+        chip('today', t('when.today'), mode === 'today'),
+        chip('tomorrow', t('when.tomorrow'), mode === 'tomorrow'),
+        chip('daily', t('when.daily'), mode === 'daily'),
+        mode === 'custom' ? chip('custom', FB.recur.describe(custom, FB.i18n.L), true, function () {}) : null,
+        h('label', { class: 'chip chip-date' + (mode === 'date' ? ' on' : '') }, ui.icon('calendar', 16), h('span', null, mode === 'date' ? FB.i18n.relDay(date) : t('when.date')), dateIn)));
+      /* the week's days: tap one or more to repeat on them */
+      el.appendChild(h('div', { class: 'dow-row', role: 'group', 'aria-label': t('when.repeatOn') },
+        h('span', { class: 'dow-l' }, t('when.repeatOn')),
+        DOTS.map(function (d) {
+          var on = mode === 'days' && days.indexOf(d) >= 0;
+          return h('button', { type: 'button', class: 'dow' + (on ? ' on' : ''), 'aria-pressed': on ? 'true' : 'false', 'aria-label': FB.i18n.dayLong ? FB.i18n.dayLong(d) : FB.i18n.dayShort(d),
+            onclick: function () {
+              if (mode !== 'days') days = [];
+              var i = days.indexOf(d); if (i >= 0) days.splice(i, 1); else days.push(d);
+              if (days.length === 7) { set('daily'); return; }
+              if (!days.length) { set('today'); return; }
+              mode = 'days'; draw(); onChange(build());
+            } }, FB.i18n.dayShort(d).charAt(0));
+        })));
+    }
+    draw();
+    return { el: el, set: function (r) { read(r); draw(); onChange(build()); }, get: build };
+  }
+
+  /* ---------- by when: a few usual times as chips; Other opens the hour picker in place ---------- */
+  var TIMES = ['09:00', '15:00', '19:00'];
+  function timePicker(value, onChange) {
+    var v = value || null, other = !!(v && TIMES.indexOf(v) < 0);
+    var el = h('div', { class: 'when-pick time-pick' });
+    var tf = ui.timeField({ value: v || '18:00', onchange: function () { v = tf.value; onChange(v); } });
+    function set(x, o) { v = x; other = !!o; draw(); onChange(v); }
+    function draw() {
+      U.clear(el);
+      el.appendChild(h('button', { type: 'button', class: 'chip' + (!v ? ' on' : ''), 'aria-pressed': !v ? 'true' : 'false', onclick: function () { set(null); } }, t('when.noTime')));
+      TIMES.forEach(function (x) { var on = v === x && !other; el.appendChild(h('button', { type: 'button', class: 'chip' + (on ? ' on' : ''), 'aria-pressed': on ? 'true' : 'false', onclick: function () { set(x); } }, FB.i18n.hm(x))); });
+      el.appendChild(h('button', { type: 'button', class: 'chip' + (other ? ' on' : ''), 'aria-pressed': other ? 'true' : 'false', onclick: function () { set(tf.value || '18:00', true); } }, t('when.otherTime')));
+      if (other) el.appendChild(tf);
+    }
+    draw();
+    return { el: el, set: function (x) { v = x; other = !!(x && TIMES.indexOf(x) < 0); if (x) tf.value = x; draw(); onChange(v); }, get: function () { return v; } };
+  }
+
+  /* ---------- one typed line: "Lori laj enët çdo ditë 19:00" -> who, days, time and the name ---------- */
+  var DAY_WORDS = [
+    [0, 'sunday|sun|e diel|diel|dielën|dielen'], [1, 'monday|mon|e hënë|hënë|hene|hënën|henen'], [2, 'tuesday|tue|tues|e martë|martë|marte|martën|marten'],
+    [3, 'wednesday|wed|e mërkurë|mërkurë|merkure|mërkurën|merkuren'], [4, 'thursday|thu|thur|thurs|e enjte|enjte|enjten'], [5, 'friday|fri|e premte|premte|premten'], [6, 'saturday|sat|e shtunë|shtunë|shtune|shtunën|shtunen']
+  ];
+  function esc(x) { return x.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
+  function parseLine(text) {
+    var s = ' ' + text + ' ', out = {}, B = '(^|[\\s,.;])', E = '(?=$|[\\s,.;])';
+    function take(re) { var m = re.exec(s); if (!m) return null; s = s.slice(0, m.index) + ' ' + s.slice(m.index + m[0].length); return m; }
+    /* who: a family member's name */
+    L.choreMembers().forEach(function (m) { if (!out.who && take(new RegExp(B + esc(m.name) + E, 'i'))) out.who = m.id; });
+    /* time: 19:00, 7.30, 7pm, "ora 19", "at 7" (a bare number is not a time) */
+    var tre = /(^|\s)((?:(?:at|by|në|ne|deri|ora|orën|oren)\s+)*)(\d{1,2})(?:[:.](\d{2}))?\s*(am|pm)?(?=$|[\s,.;])/gi, tm;
+    while ((tm = tre.exec(s))) {
+      if (!(tm[4] || tm[5] || tm[2])) continue;
+      var hh = +tm[3], mm = tm[4] ? +tm[4] : 0;
+      if (tm[5] && /pm/i.test(tm[5]) && hh < 12) hh += 12;
+      if (tm[5] && /am/i.test(tm[5]) && hh === 12) hh = 0;
+      if (hh > 23 || mm > 59) continue;
+      out.time = String(hh).padStart(2, '0') + ':' + String(mm).padStart(2, '0');
+      s = s.slice(0, tm.index) + ' ' + s.slice(tm.index + tm[0].length);
+      break;
+    }
+    /* days */
+    if (take(new RegExp(B + '(every\\s*day|daily|each day|çdo ditë|cdo dite|çdo dite|për ditë|perdite|përditë)' + E, 'i'))) out.mode = 'daily';
+    else if (take(new RegExp(B + '(weekdays|work\\s*days|ditët e punës|ditet e punes|ditë pune)' + E, 'i'))) { out.mode = 'days'; out.days = [1, 2, 3, 4, 5]; }
+    else if (take(new RegExp(B + '(weekends?|fundjavë|fundjave|në fundjavë)' + E, 'i'))) { out.mode = 'days'; out.days = [6, 0]; }
+    else if (take(new RegExp(B + '(every\\s*week|weekly|çdo javë|cdo jave|javore)' + E, 'i'))) { out.mode = 'days'; out.days = [U.weekday(U.today())]; }
+    else if (take(new RegExp(B + '(today|sot)' + E, 'i'))) out.mode = 'today';
+    else if (take(new RegExp(B + '(tomorrow|nesër|neser)' + E, 'i'))) out.mode = 'tomorrow';
+    else {
+      var every = !!take(new RegExp(B + '(every|each|çdo|cdo)' + E, 'i')), found = [];
+      DAY_WORDS.forEach(function (d) { if (take(new RegExp(B + '(' + d[1] + ')' + E, 'i'))) found.push(d[0]); });
+      if (found.length) while (take(new RegExp(B + '(and|dhe|,)' + E, 'i'))) { /* joiners between days */ }
+      if (found.length && (every || found.length > 1)) { out.mode = 'days'; out.days = found; }
+      else if (found.length) { var dd = U.today(); for (var i = 0; i < 7 && U.weekday(dd) !== found[0]; i++) dd = U.addDays(dd, 1); out.mode = 'date'; out.date = dd; }
+    }
+    var name = s.replace(/\s+/g, ' ').trim().replace(/^[,.;-]+|[,.;-]+$/g, '').trim();
+    out.title = name ? name.charAt(0).toUpperCase() + name.slice(1) : '';
+    return out;
+  }
+
   /* ---------- the chore sheet: name, who, when, Save. Everything else under "More options" ---------- */
   FB.actions.openChore = function (existing, prefill) {
     var isNew = !existing, today = U.today();
@@ -215,13 +327,12 @@
     var err = h('p', { class: 'form-err', role: 'alert' });
     var sug = h('div', { class: 'sug-row' });
     var title = h('input', { type: 'text', value: c.title, placeholder: t('chore.titlePh'), maxlength: '80', enterkeyhint: 'done',
-      oninput: function () { autoIcon(); drawSug(); } });
+      oninput: function () { autoIcon(); drawSug(); understand(); } });
     var iconBox = h('div'), iconPrev = h('span', { class: 'name-ico', 'aria-hidden': 'true' });
-    var hasTime = h('input', { type: 'checkbox', checked: !!c.due_time, onchange: function () { timeIn.style.display = hasTime.checked ? '' : 'none'; } });
-    var timeIn = ui.timeField({ value: c.due_time || '18:00', style: { display: c.due_time ? '' : 'none' } });
+    var time = timePicker(c.due_time || null, function () {});
     var active = h('input', { type: 'checkbox', checked: c.active !== false });
     var rec = null, recBox = h('div');
-    var when = whenPicker(rule, true, function (r) { rule = r; if (rec) drawRec(); });
+    var plan = planPicker(rule, function (r) { rule = r; if (rec) drawRec(); });
     var whoEl = whoPicker(who, function (v) { who = v; });
 
     function drawIcon() {
@@ -240,11 +351,26 @@
       suggestions(title.value).forEach(function (x) {
         sug.appendChild(h('button', { type: 'button', class: 'chip sug', onclick: function () {
           title.value = x.title; emoji = x.emoji || iconFor(x.title) || emoji; iconByHand = !!x.emoji; drawIcon();
-          if (x.due_time) { hasTime.checked = true; timeIn.value = x.due_time; timeIn.style.display = ''; }
+          if (x.due_time) time.set(x.due_time);
           if (x.chore && x.chore.member_id && !who) { who = x.chore.member_id; var nw = whoPicker(who, function (v) { who = v; }); whoEl.replaceWith(nw); whoEl = nw; }
           drawSug(); title.focus();
         } }, x.emoji ? h('span', { class: 'sug-e' }, x.emoji) : null, x.title));
       });
+    }
+    /* what the typed line says (a name, days, a time) shows straight away in the chips below */
+    function understand() {
+      var o = parseLine(title.value);
+      if (o.who && o.who !== who) { who = o.who; var nw = whoPicker(who, function (v) { who = v; }); whoEl.replaceWith(nw); whoEl = nw; }
+      if (o.mode) {
+        var td = U.today(), r = o.mode === 'today' ? Object.assign(FB.recur.defaultRule(td), { freq: 'once' })
+          : o.mode === 'tomorrow' ? Object.assign(FB.recur.defaultRule(U.addDays(td, 1)), { freq: 'once' })
+          : o.mode === 'date' ? Object.assign(FB.recur.defaultRule(o.date), { freq: 'once' })
+          : o.mode === 'daily' ? Object.assign(FB.recur.defaultRule(td), { freq: 'daily' })
+          : Object.assign(FB.recur.defaultRule(td), { freq: 'weekly', weekdays: o.days });
+        if (JSON.stringify(r) !== JSON.stringify(rule)) plan.set(r);
+      }
+      if (o.time && o.time !== time.get()) time.set(o.time);
+      var e = iconFor(o.title); if (!iconByHand && e && e !== emoji) { emoji = e; drawIcon(); }
     }
     function drawRec() {
       U.clear(recBox);
@@ -253,12 +379,12 @@
     }
 
     function save() {
-      var name = title.value.trim();
+      var raw = title.value.trim(), name = (raw && parseLine(raw).title) || raw; /* "Lori laj enët 19:00" is saved as "Laj enët" */
       if (!name) { err.textContent = t('chore.needTitle'); title.focus(); return; }
-      var r = more && rec ? rec.get() : rule;
+      var r = more && rec ? rec.get() : plan.get();
       var row = {
         title: name, emoji: emoji || iconFor(name) || '🧹', member_id: who || null, rule: r,
-        due_time: hasTime.checked && timeIn.value ? timeIn.value : null, active: active.checked
+        due_time: time.get() || null, active: active.checked
       };
       /* the same one-time chore again: bring the finished one back rather than making a copy */
       var again = isNew && r.freq === 'once' ? finishedNamed(name) : null;
@@ -268,8 +394,7 @@
 
     var moreBody = h('div', { class: 'more-body', hidden: true },
       ui.field(t('chore.icon'), iconBox),
-      h('div', { class: 'field' }, h('label', { class: 'check' }, hasTime, h('span', null, t('chore.hasTime'))), timeIn, h('p', { class: 'hint' }, t('chore.timeHint'))),
-      ui.field(t('chore.repeat'), recBox),
+      ui.field(t('chore.repeatMore'), recBox, t('chore.repeatMoreHint')),
       h('label', { class: 'check' }, active, h('span', null, t('chore.active'))),
       isNew ? h('button', { type: 'button', class: 'btn ghost', onclick: function () { modal.close(); FB.actions.openTemplates(); } }, ui.icon('list', 18), ' ', t('chore.fromTemplates')) : null);
     var moreBtn = h('button', { type: 'button', class: 'more-btn', 'aria-expanded': 'false', onclick: function () {
@@ -292,9 +417,10 @@
 
     drawIcon(); drawSug();
     var body = h('form', { class: 'form chore-sheet', onsubmit: function (ev) { ev.preventDefault(); save(); } },
-      h('div', { class: 'field' }, h('label', null, t('chore.title')), h('div', { class: 'name-row' }, iconPrev, title), sug),
+      h('div', { class: 'field' }, h('label', null, t('chore.title')), h('div', { class: 'name-row' }, iconPrev, title), isNew ? h('p', { class: 'hint' }, t('chore.typeHint')) : null, sug),
       ui.field(t('chore.who'), whoEl),
-      ui.field(t('chore.when'), when.el),
+      ui.field(t('chore.when'), plan.el),
+      ui.field(t('chore.byTime'), time.el, t('chore.timeHint')),
       err, moreBtn, moreBody);
     modal = ui.modal({ title: isNew ? t('chore.new') : t('chore.edit'), body: body, actions: actions, size: 'wide' });
   };
