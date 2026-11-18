@@ -314,3 +314,10 @@ html.shifty #app { width: calc(100% - 6px); height: calc(100% - 6px); margin: 3p
 /* the icons: an even grid of equal squares, the "…" (own emoji) the same size as the rest */
 .more-body .emoji-grid { display: grid !important; grid-template-columns: repeat(auto-fill, minmax(48px, 1fr)); gap: var(--sp-2); }
 .more-body .emoji-grid .emoji-b, .more-body .emoji-grid .emoji-custom { width: 100% !important; min-width: 0 !important; max-width: none !important; height: 48px; min-height: 48px; padding: 0 !important; box-sizing: border-box; text-align: center; font-size: 22px; }
+/* room tabs: never scroll up and down inside their row. Wide screens: all rooms visible, wrapping;
+   phones: one row that only slides sideways, fading at the edge so the rest is discoverable */
+.cat-tabs { overflow-y: hidden !important; padding-bottom: 0; touch-action: pan-x; overscroll-behavior: contain; }
+.cat-tab::after { content: none; }
+.cat-tab { min-height: var(--hit); }
+@media (min-width: 700px) { .cat-tabs { flex-wrap: wrap; overflow-x: visible !important; overflow-y: visible !important; touch-action: auto; } }
+@media (max-width: 699px) { .cat-tabs { -webkit-mask-image: linear-gradient(90deg, #000 85%, transparent); mask-image: linear-gradient(90deg, #000 85%, transparent); } }
