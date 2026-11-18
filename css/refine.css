@@ -246,3 +246,35 @@ html.shifty #app { width: calc(100% - 6px); height: calc(100% - 6px); margin: 3p
 .set-menu > .glist:has(+ .glist-foot) { margin-bottom: var(--sp-2); }
 /* the name beside a chore in the calendar day panel: secondary, but readable (AA) on the glass panel */
 .day-panel .muted { color: var(--label-2); }
+
+/* ----- chore sheet: name (with suggestions), who (one tap per person), when (chips), then More options ----- */
+.chore-sheet { gap: var(--sp-4); }
+.name-row { display: flex; align-items: center; gap: var(--sp-3); }
+.name-row input { flex: 1; min-width: 0; }
+.name-ico { display: grid; place-items: center; flex: none; width: var(--hit); height: var(--hit); border-radius: var(--r-sm); background: var(--fill); font-size: 24px; }
+.sug-row { display: flex; flex-wrap: wrap; gap: var(--sp-2); margin-top: var(--sp-2); }
+.sug-row:empty { display: none; }
+.chip.sug { display: inline-flex; align-items: center; gap: 6px; min-height: 36px; min-width: 0; padding: 0 var(--sp-3); border-radius: 18px; font-size: var(--t-subhead); position: relative; }
+.chip.sug::after { content: ''; position: absolute; inset: -4px 0; }
+.sug-e { font-size: 16px; }
+.who-pick { display: flex; flex-wrap: wrap; gap: var(--sp-1); }
+.wp { display: flex; flex-direction: column; align-items: center; gap: var(--sp-1); min-width: 60px; padding: var(--sp-2) 2px; border: 0; border-radius: var(--r-md); background: none; color: var(--label); font: 600 var(--t-footnote)/1.2 var(--font-body); }
+.wp .avatar, .wp-any { width: 44px !important; height: 44px !important; border-radius: 50%; box-shadow: 0 0 0 2px transparent; transition: box-shadow .2s ease-out, transform .2s ease-out; }
+.wp-any { display: grid; place-items: center; background: var(--fill); color: var(--label-2); }
+.wp.on .avatar, .wp.on .wp-any { box-shadow: 0 0 0 3px var(--c, var(--brand)) !important; }
+.wp.on { background: var(--fill); }
+.wp:active .avatar, .wp:active .wp-any { transform: scale(.94); }
+.wp-n { max-width: 72px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.when-pick { display: flex; flex-wrap: wrap; gap: var(--sp-2); }
+.when-pick .chip { display: inline-flex; align-items: center; gap: 6px; min-height: var(--hit); padding: 0 var(--sp-4); border-radius: 22px; font-size: var(--t-callout); }
+.chip-date { position: relative; cursor: pointer; }
+.chip-date input[type=date] { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; border: 0; padding: 0; }
+.more-btn { display: flex; align-items: center; justify-content: space-between; width: 100%; min-height: var(--hit); padding: 0 var(--sp-1); border: 0; border-top: 1px solid var(--separator); background: none; color: var(--brand-ink, var(--brand)); font: 600 var(--t-callout)/1 var(--font-body); }
+.more-body { display: flex; flex-direction: column; gap: var(--sp-4); }
+.more-body[hidden] { display: none; }
+/* chores page: finished one-time chores */
+.grp-btn { display: flex; align-items: center; gap: var(--sp-2); width: 100%; min-height: var(--hit); padding: 0; border: 0; background: none; text-align: left; cursor: pointer; }
+.chore-row.finished .row-title { color: var(--label-2); }
+.again-btn { flex: none; min-height: 40px; padding: 0 var(--sp-3); white-space: nowrap; position: relative; }
+.again-btn::after { content: ''; position: absolute; inset: -2px 0; }
+.name-ico.empty { opacity: .45; }

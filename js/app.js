@@ -264,10 +264,18 @@
     FB.justDone = FB.justDone || {}; FB.justDone[c.id] = Date.now();
     FB.sound.done();
     var row = { chore_id: c.id, on_date: today, done_by: who || null, done_at: new Date().toISOString() };
+    var once = c.rule && c.rule.freq === 'once';
+    if (once) FB.data.edit('chores', c.id, { rule: Object.assign({}, c.rule, { done: today }) }); /* remembered past the loaded history */
     return FB.data.add('chore_completions', row).then(function (srv) {
       if (!srv) return;
-      ui.toast(t('chore.doneToast', { title: c.title }), { action: { label: t('common.undo'), fn: function () { FB.sound.undo(); FB.data.del('chore_completions', srv.id); } } });
+      ui.toast(t('chore.doneToast', { title: c.title }), { action: { label: t('common.undo'), fn: function () { FB.sound.undo(); undoDone(c, srv.id); } } });
     });
+  }
+
+  function undoDone(c, completionId) {
+    FB.data.del('chore_completions', completionId);
+    var cur = L.chore(c.id);
+    if (cur && cur.rule && cur.rule.freq === 'once' && cur.rule.done) { var r = Object.assign({}, cur.rule); delete r.done; FB.data.edit('chores', c.id, { rule: r }); }
   }
 
   function pickWho(entry, anchor) {
@@ -292,7 +300,7 @@
         title: (c.emoji ? c.emoji + ' ' : '') + c.title, focus: false,
         body: h('p', { class: 'lead' }, t('chore.doneBy', { name: by ? by.name : t('chore.someone'), time: FB.i18n.timeOf(entry.done.done_at) })),
         actions: [h('button', { class: 'btn ghost', onclick: function () { modal.close(); } }, t('common.close')),
-          h('button', { class: 'btn', onclick: function () { modal.close(); FB.sound.undo(); FB.data.del('chore_completions', entry.done.id); } }, ui.icon('undo', 20), ' ', t('chore.markUndo'))]
+          h('button', { class: 'btn', onclick: function () { modal.close(); FB.sound.undo(); undoDone(c, entry.done.id); } }, ui.icon('undo', 20), ' ', t('chore.markUndo'))]
       });
       return;
     }
