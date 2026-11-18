@@ -189,13 +189,15 @@
     return null;
   }
   /* names to pick from: the family's templates, then chores you have had before */
+  /* names to pick from while typing: the family's own chores and templates first, then the common chores (both languages) */
   function suggestions(typed) {
     var q = (typed || '').trim().toLowerCase(), seen = {}, out = [];
-    FB.state.templates.forEach(function (it) { out.push({ title: FB.templates.label(it), emoji: it.emoji, due_time: it.due_time || null }); });
     FB.state.chores.forEach(function (c) { out.push({ title: c.title, emoji: c.emoji, due_time: c.due_time || null, chore: c }); });
+    FB.state.templates.forEach(function (it) { out.push({ title: FB.templates.label(it), emoji: it.emoji, due_time: it.due_time || null, rule: it.rule && it.rule.freq !== 'once' ? it.rule : null }); });
+    FB.templates.all().forEach(function (it) { out.push({ title: FB.templates.name(it), alt: FB.i18n.lang === 'sq' ? it.en : it.sq, emoji: it.emoji, due_time: it.time || null, rule: it.rule }); });
     return out.filter(function (x) {
-      var k = x.title.trim().toLowerCase();
-      if (!k || seen[k] || (q && k.indexOf(q) < 0) || k === q) return false;
+      var k = x.title.trim().toLowerCase(), a = (x.alt || '').toLowerCase();
+      if (!k || seen[k] || k === q || (q && k.indexOf(q) < 0 && a.indexOf(q) < 0)) return false;
       seen[k] = true; return true;
     }).slice(0, 8);
   }
@@ -345,17 +347,28 @@
       var e = iconFor(title.value);
       if (e && e !== emoji) { emoji = e; drawIcon(); }
     }
+    /* empty name: the common chores by room, one tap fills name, icon, usual days and time.
+       typing: matching names from your chores, your templates and the common list */
+    var sugCat = 0;
+    function pickSug(x) {
+      title.value = x.title; emoji = x.emoji || iconFor(x.title) || emoji; iconByHand = !!x.emoji; drawIcon();
+      if (x.rule) plan.set(Object.assign({}, x.rule, { start: U.today() }));
+      time.set(x.due_time || null);
+      if (x.chore && x.chore.member_id && !who) { who = x.chore.member_id; var nw = whoPicker(who, function (v) { who = v; }); whoEl.replaceWith(nw); whoEl = nw; }
+      drawSug(); title.focus();
+    }
+    function sugChip(x) { return h('button', { type: 'button', class: 'chip sug', onclick: function () { pickSug(x); } }, x.emoji ? h('span', { class: 'sug-e' }, x.emoji) : null, x.title); }
     function drawSug() {
       U.clear(sug);
       if (!isNew) return;
-      suggestions(title.value).forEach(function (x) {
-        sug.appendChild(h('button', { type: 'button', class: 'chip sug', onclick: function () {
-          title.value = x.title; emoji = x.emoji || iconFor(x.title) || emoji; iconByHand = !!x.emoji; drawIcon();
-          if (x.due_time) time.set(x.due_time);
-          if (x.chore && x.chore.member_id && !who) { who = x.chore.member_id; var nw = whoPicker(who, function (v) { who = v; }); whoEl.replaceWith(nw); whoEl = nw; }
-          drawSug(); title.focus();
-        } }, x.emoji ? h('span', { class: 'sug-e' }, x.emoji) : null, x.title));
-      });
+      if (title.value.trim()) { suggestions(title.value).forEach(function (x) { sug.appendChild(sugChip(x)); }); return; }
+      var groups = FB.templates.catalog();
+      sug.appendChild(h('div', { class: 'cat-tabs', role: 'tablist', 'aria-label': t('chore.common') }, groups.map(function (g, i) {
+        return h('button', { type: 'button', role: 'tab', class: 'cat-tab' + (i === sugCat ? ' on' : ''), 'aria-selected': i === sugCat ? 'true' : 'false', onclick: function () { sugCat = i; drawSug(); } }, t(g.key));
+      })));
+      sug.appendChild(h('div', { class: 'cat-items' }, groups[sugCat].items.map(function (it) {
+        return sugChip({ title: FB.templates.name(it), emoji: it.emoji, due_time: it.time || null, rule: it.rule });
+      })));
     }
     /* what the typed line says (a name, days, a time) shows straight away in the chips below */
     function understand() {

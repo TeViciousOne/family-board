@@ -287,3 +287,12 @@ html.shifty #app { width: calc(100% - 6px); height: calc(100% - 6px); margin: 3p
 .dow:active { transform: scale(.92); }
 .time-pick .tpick { margin-left: var(--sp-1); }
 @media (max-width: 699px) and (orientation: portrait) { .dow { width: 40px; height: 40px; } .dow-l { width: 100%; margin: 0 0 2px; } }
+/* common chores by room: a scrolling row of rooms, then that room's chores */
+.cat-tabs { display: flex; gap: var(--sp-1); overflow-x: auto; scrollbar-width: none; margin: 0 0 var(--sp-2); padding-bottom: 2px; -webkit-overflow-scrolling: touch; }
+.cat-tabs::-webkit-scrollbar { display: none; }
+.cat-tab { flex: none; min-height: 36px; padding: 0 var(--sp-3); border: 0; border-radius: 18px; background: none; color: var(--label-2); font: 600 var(--t-subhead)/1 var(--font-body); white-space: nowrap; position: relative; }
+.cat-tab::after { content: ''; position: absolute; inset: -4px 0; }
+.cat-tab.on { background: var(--fill); color: var(--label); }
+.cat-items { display: flex; flex-wrap: wrap; gap: var(--sp-2); }
+.sug-row { display: block; }
+.sug-row > .chip.sug { margin: 0 var(--sp-2) var(--sp-2) 0; }
