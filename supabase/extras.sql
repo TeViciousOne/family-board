@@ -46,3 +46,4 @@ create policy photos_delete on storage.objects for delete to authenticated
 
 -- members that do not do chores (e.g. the home account) are left out of "who does it" / "who did it"
 alter table public.members add column if not exists does_chores boolean not null default true;
+grant update (does_chores) on public.members to authenticated;
