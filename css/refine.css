@@ -308,3 +308,9 @@ html.shifty #app { width: calc(100% - 6px); height: calc(100% - 6px); margin: 3p
 .more-body .emoji-grid { grid-template-columns: repeat(auto-fill, minmax(52px, 1fr)); gap: var(--sp-2); }
 .more-body .emoji-grid .emoji-b, .more-body .emoji-grid .emoji-custom { width: auto; height: 52px; min-width: 0; font-size: 24px; }
 @media (max-width: 699px) { .more-body .recur .seg .seg-b { padding: 0 2px !important; font-size: 12px !important; letter-spacing: -.01em; } }
+/* the repeat kinds: five equal, centred segments (the long-label "stack" style is not used here) */
+.more-body .recur .seg { align-items: stretch; gap: 2px; padding: 3px; border-radius: var(--r-pill); }
+.more-body .recur .seg .seg-b, .more-body .recur .seg.stack .seg-b { flex: 1 1 0; display: flex; align-items: center; justify-content: center; text-align: center; min-height: 40px; padding: 0 var(--sp-1); border-radius: var(--r-pill); }
+/* the icons: an even grid of equal squares, the "…" (own emoji) the same size as the rest */
+.more-body .emoji-grid { display: grid !important; grid-template-columns: repeat(auto-fill, minmax(48px, 1fr)); gap: var(--sp-2); }
+.more-body .emoji-grid .emoji-b, .more-body .emoji-grid .emoji-custom { width: 100% !important; min-width: 0 !important; max-width: none !important; height: 48px; min-height: 48px; padding: 0 !important; box-sizing: border-box; text-align: center; font-size: 22px; }
