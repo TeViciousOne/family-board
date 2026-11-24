@@ -360,7 +360,7 @@ input[type=text], input[type=email], input[type=password], input[type=number], i
 .shop-pop .shop-grid { max-height: 52vh; overflow: auto; }
 .shop-pop .list { max-height: none; }
 @media (orientation: landscape) and (min-width: 700px) { .lists { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } }
-@media (orientation: portrait), (max-width: 699px) { .lists { grid-template-columns: 1fr; height: auto; grid-template-rows: none; } .lists .shop-grid, .lists .note-grid { overflow: visible; } .lists .pane { overflow: visible; } }
+@media (orientation: portrait), (max-width: 699px) { .lists { grid-template-columns: 1fr; height: 100%; grid-template-rows: none; } .lists-phone > .pane { flex: none; } .lists .shop-grid, .lists .note-grid { overflow: visible; } .lists .pane { overflow: visible; } }
 
 /* ---------- AI ---------- */
 .ai-btn { color: #BF5AF2; }

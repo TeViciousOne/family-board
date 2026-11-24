@@ -51,7 +51,7 @@
         if (keepFocus) { var again = document.querySelector('[data-fid="shop-add"]'); if (again) again.focus(); }
       });
     }
-    function add() { var v = input.value.trim(); if (!v) return; input.value = ''; addTitle(v, true); }
+    function add() { var v = input.value.trim(); if (!v) { input.blur(); return; } input.value = ''; addTitle(v, true); }
     input.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); add(); } });
     var open = items.filter(function (x) { return !x.done; });
     var bought = items.filter(function (x) { return x.done; }).sort(function (a, b) { return (b.done_at || '').localeCompare(a.done_at || ''); });

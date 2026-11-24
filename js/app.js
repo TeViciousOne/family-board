@@ -723,6 +723,30 @@
       if (night.isNight(new Date()) && !night.el.classList.contains('on')) night.awakeUntil = Math.max(night.awakeUntil, Date.now() + 60000);
     }, true);
     root.addEventListener('hashchange', function () { app.render(); });
+    keyboardAway();
+  }
+
+  /* The on-screen keyboard goes away when you swipe the page, tap empty space, or hide it with the system button; it never comes back by itself after a refresh. */
+  function keyboardAway() {
+    function field(el) { return !!el && /^(INPUT|TEXTAREA)$/.test(el.tagName) && !/^(checkbox|radio|button|submit|range|file)$/.test(el.type || ''); }
+    function drop() { var a = document.activeElement; if (field(a)) a.blur(); }
+    document.addEventListener('touchmove', function (e) { if (field(document.activeElement) && !(e.target.closest && e.target.closest('input,textarea'))) drop(); }, { passive: true });
+    document.addEventListener('pointerdown', function (e) {
+      if (!field(document.activeElement)) return;
+      if (e.target.closest && e.target.closest('input,textarea,select,label,button,a,[role="button"],[tabindex],.chip,.seg-b')) return;
+      drop();
+    }, true);
+    var vv = root.visualViewport;
+    if (vv) {
+      var full = vv.height, w = vv.width, open = false;
+      vv.addEventListener('resize', function () {
+        if (vv.width !== w) { w = vv.width; full = vv.height; open = false; return; }
+        full = Math.max(full, vv.height);
+        var now = vv.height < full - 120;
+        if (open && !now) drop();
+        open = now;
+      });
+    }
   }
 
   app.refreshAll = function () {
