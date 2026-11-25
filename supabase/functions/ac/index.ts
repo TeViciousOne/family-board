@@ -19,6 +19,7 @@ async function hmac(key: string, msg: string) {
 }
 
 let tokenCache: { token: string; exp: number; endpoint: string } | null = null;
+let onlineCache: { online: boolean; exp: number } | null = null;
 
 async function call(cfg: any, endpoint: string, method: string, path: string, body: unknown, token: string | null) {
   const t = String(Date.now()), nonce = crypto.randomUUID();
@@ -105,8 +106,10 @@ Deno.serve(async (req) => {
       return json({ ok: true, data: { name: details.name, online: details.online, category: details.category, functions: specs.functions, status } });
     }
     if (b.action === "status") {
-      const [details, status] = await Promise.all([tuya(cfg, "GET", `/v1.0/devices/${dev}`), tuya(cfg, "GET", `/v1.0/devices/${dev}/status`)]);
-      return json({ ok: true, data: { online: details.online, status } });
+      /* the online flag changes rarely: ask for it once a minute, not on every status check (saves half the Tuya calls) */
+      if (!onlineCache || onlineCache.exp < Date.now()) onlineCache = { online: (await tuya(cfg, "GET", `/v1.0/devices/${dev}`)).online, exp: Date.now() + 60000 };
+      const status = await tuya(cfg, "GET", `/v1.0/devices/${dev}/status`);
+      return json({ ok: true, data: { online: onlineCache.online, status } });
     }
     if (b.action === "set") {
       const specs = await tuya(cfg, "GET", `/v1.0/devices/${dev}/specifications`);

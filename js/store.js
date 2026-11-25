@@ -404,7 +404,7 @@
         return sb.functions.invoke('ac', { body: body }).then(function (r) {
           if (r.error) {
             var ctx = r.error.context;
-            return (ctx && ctx.json ? ctx.json().catch(function () { return {}; }) : Promise.resolve({})).then(function (j) { throw new Error((j && j.error) || r.error.message || 'failed'); });
+            return (ctx && ctx.json ? ctx.json().catch(function () { return {}; }) : Promise.resolve({})).then(function (j) { var e = new Error((j && j.error) || r.error.message || 'failed'); e.detail = (j && j.detail) || ''; throw e; });
           }
           if (!r.data || !r.data.ok) throw new Error((r.data && r.data.error) || 'failed');
           return r.data.data;

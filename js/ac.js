@@ -5,7 +5,9 @@
   var U = FB.util, ui = FB.ui, h = U.h;
   var t = function (k, v) { return FB.i18n.t(k, v); };
   var AC = (FB.ac = {});
-  var st = { loaded: false, online: true, at: 0, s: {} }, busy = false, listeners = [];
+  var st = { loaded: false, online: true, at: 0, s: {}, quota: false, fails: 0 }, busy = false, listeners = [];
+  var MIN_AGE = 60000;            /* the home card checks at most once a minute */
+  var QUOTA_WAIT = 15 * 60000;    /* when Tuya says its free limit is used up, stop asking for 15 minutes */
 
   AC.enabled = function () { return !!(FB.store && FB.store.mode === 'cloud' && FB.store.ac); };
   AC.state = function () { return st; };
@@ -14,25 +16,33 @@
   function toMap(list) { var m = {}; (list || []).forEach(function (x) { m[x.code] = x.value; }); return m; }
   function changed() { listeners.forEach(function (f) { try { f(); } catch (e) { /* ignore */ } }); }
 
+  /* force: true = a routine check that still waits after a failure; 'now' = the person asked (opened the panel, changed something) */
   AC.refresh = function (force) {
-    if (!AC.enabled() || busy || (!force && Date.now() - st.at < 20000)) return Promise.resolve();
+    if (!AC.enabled() || busy) return Promise.resolve();
+    var wait = st.quota ? QUOTA_WAIT : st.fails ? Math.min(10 * 60000, 30000 * Math.pow(2, st.fails - 1)) : 0;
+    if (force !== 'now' && Date.now() - st.at < Math.max(wait, force ? 0 : MIN_AGE)) return Promise.resolve();
     busy = true;
     return FB.store.ac({ action: 'status' }).then(function (d) {
-      st.loaded = true; st.err = false; st.online = d.online !== false; st.s = toMap(d.status); st.at = Date.now(); busy = false; changed();
-    }, function () { busy = false; st.err = true; st.at = Date.now() - 10000; });
+      st.loaded = true; st.err = false; st.quota = false; st.fails = 0; st.online = d.online !== false; st.s = toMap(d.status); st.at = Date.now(); busy = false; changed();
+    }, function (e) {
+      busy = false; st.err = true; st.fails++; st.at = Date.now();
+      st.quota = /28841004|quota/i.test(String((e && (e.detail || e.message)) || ''));
+      changed();
+    });
   };
 
   var pending = {}, timer = null;
   /* optimistic: show the change at once, send it shortly after (so +/+/+ is one request) */
   AC.set = function (code, value) {
+    if (st.quota) { ui.toast(t('ac.paused')); return; }
     st.s[code] = value; pending[code] = value; changed();
     clearTimeout(timer);
     timer = setTimeout(function () {
       var cmds = Object.keys(pending).map(function (c) { return { code: c, value: pending[c] }; });
       pending = {};
       FB.store.ac({ action: 'set', commands: cmds }).then(function () {
-        setTimeout(function () { AC.refresh(true); }, 2500);
-      }, function () { ui.toast(t('ac.failed')); AC.refresh(true); });
+        setTimeout(function () { AC.refresh('now'); }, 2500);
+      }, function () { ui.toast(t('ac.failed')); AC.refresh('now'); });
     }, 450);
   };
 
@@ -53,8 +63,9 @@
       state);
     function paint() {
       var s = st.s, on = AC.on() && st.online;
-      btn.style.display = st.loaded ? '' : 'none';
-      btn.classList.toggle('on', on);
+      btn.style.display = st.loaded || st.quota ? '' : 'none';
+      btn.classList.toggle('on', on && !st.quota);
+      if (st.quota) { state.textContent = t('ac.paused'); room.textContent = '–'; set.textContent = '–'; return; }
       if (!st.loaded) return;
       if (!st.online) { state.textContent = t('ac.offline'); room.textContent = '–'; set.textContent = '–'; return; }
       state.textContent = on ? t('ac.on') + ' · ' + modeLabel(s.mode) : t('ac.off');
@@ -73,7 +84,8 @@
     var btn = h('button', { type: 'button', class: 'ptile pt-ac', onclick: function () { AC.open(); } }, h('span', { class: 'pt-ico' }, FB.ui.icon('snow', 20)), big, small);
     function paint() {
       var s = st.s, on = AC.on() && st.online;
-      btn.classList.toggle('on', on);
+      btn.classList.toggle('on', on && !st.quota);
+      if (st.quota) { big.textContent = '–'; small.textContent = t('ac.paused'); return; }
       if (!st.loaded) return;
       big.textContent = s.temp_current != null ? s.temp_current + '°' : '–';
       small.textContent = !st.online ? t('ac.offline') : on ? t('ac.on') + ' · ' + (s.temp_set != null ? s.temp_set + '°' : '') : t('ac.off');
@@ -160,7 +172,8 @@
         onclick: function () { AC.set('switch', !on); } }, ui.icon('power', 34));
       body.appendChild(h('div', { class: 'ac-top' }, power, h('div', { class: 'ac-state' },
         h('b', null, on ? t('ac.on') : t('ac.off')), h('span', null, s.temp_current != null ? t('ac.room', { n: s.temp_current }) : ''))));
-      if (!st.online) body.appendChild(h('p', { class: 'form-err', role: 'alert' }, t('ac.offline')));
+      if (st.quota) body.appendChild(h('p', { class: 'form-err', role: 'alert' }, t('ac.pausedLong')));
+      else if (!st.online) body.appendChild(h('p', { class: 'form-err', role: 'alert' }, t('ac.offline')));
       var temp = Number(s.temp_set || 24);
       function step(d) { var n = Math.max(16, Math.min(30, temp + d)); if (n !== temp) AC.set('temp_set', n); }
       body.appendChild(h('div', { class: 'ac-temp' },
@@ -180,7 +193,7 @@
     listeners.push(fn); draw();
     var wrap = h('div', { class: 'ac-wrap' }, body, schedules());
     modal = ui.modal({ title: t('ac.title'), body: wrap, focus: false, onClose: function () { clearInterval(poll); } });
-    AC.refresh(true);
-    poll = setInterval(function () { if (!document.body.contains(body)) { clearInterval(poll); return; } AC.refresh(true); }, 6000);
+    AC.refresh('now');
+    poll = setInterval(function () { if (!document.body.contains(body)) { clearInterval(poll); return; } AC.refresh(true); }, 30000);
   };
 })(typeof window !== 'undefined' ? window : globalThis);
