@@ -18,6 +18,9 @@ async function hmac(key: string, msg: string) {
   return hex(await crypto.subtle.sign("HMAC", k, new TextEncoder().encode(msg))).toUpperCase();
 }
 
+// SWITCHED OFF on 25 Nov 2026 until the owner asks for it back. While true, nothing is sent to Tuya (also not by the schedules),
+// and nothing is deleted: set it to false and redeploy this function to bring the air conditioner back.
+const AC_OFF = true;
 let tokenCache: { token: string; exp: number; endpoint: string } | null = null;
 let onlineCache: { online: boolean; exp: number } | null = null;
 
@@ -96,6 +99,7 @@ Deno.serve(async (req) => {
       const { data: list } = await sb.from("ac_schedules").select("id,at,days,action,mode,temp,enabled").eq("household_id", hid).order("at");
       return json({ ok: true, data: { schedules: list || [] } });
     }
+    if (AC_OFF && ["info", "status", "set"].includes(b.action)) return json({ error: "off" }, 503);
     if (!cfg) return json({ error: "config" }, 500);
     const dev = encodeURIComponent(cfg.device_id);
 

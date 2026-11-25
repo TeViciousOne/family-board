@@ -9,7 +9,9 @@
   var MIN_AGE = 60000;            /* the home card checks at most once a minute */
   var QUOTA_WAIT = 15 * 60000;    /* when Tuya says its free limit is used up, stop asking for 15 minutes */
 
-  AC.enabled = function () { return !!(FB.store && FB.store.mode === 'cloud' && FB.store.ac); };
+  /* SWITCHED OFF on 25 Nov 2026 until the owner asks for it back (the Tuya cloud limit was used up). Nothing is deleted: set this to false to bring the air conditioner back on every screen, and set AC_OFF to false in supabase/functions/ac too. */
+  var SWITCHED_OFF = true;
+  AC.enabled = function () { return (!SWITCHED_OFF || !!root.__acForce) && !!(FB.store && FB.store.mode === 'cloud' && FB.store.ac); };
   AC.state = function () { return st; };
   AC.on = function () { return !!st.s.switch; };
 

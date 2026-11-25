@@ -65,6 +65,7 @@ const stub = () => {
   await p.addInitScript(() => { try { const k = 'fb.device.v1'; const d = JSON.parse(localStorage.getItem(k) || '{}'); d.nightOn = false; d.homeIdle = false; localStorage.setItem(k, JSON.stringify(d)); } catch (e) {} });
   await p.route(/fonts\.g|open-meteo/, r => r.abort());
   await p.route('**/config.js', r => r.fulfill({ contentType: 'text/javascript', body: 'window.FB_CONFIG={SUPABASE_URL:"https://x.supabase.co",SUPABASE_ANON_KEY:"k"};' }));
+  await p.addInitScript(() => { window.__acForce = true; }); /* the AC is switched off in the app; this lets the test still cover its screens */
   await p.addInitScript(stub);
   await p.addInitScript(() => {
     window.__tidy = (items) => ({ items: items.map(i => ({ id: i.id, title: i.title.charAt(0).toUpperCase() + i.title.slice(1), category: /milk|qum/i.test(i.title) ? 'dairy' : 'other' })), merge: [[items[0].id, items[1].id]] });
