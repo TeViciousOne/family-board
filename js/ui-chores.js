@@ -435,7 +435,7 @@
       ui.field(t('chore.when'), plan.el),
       ui.field(t('chore.byTime'), time.el, t('chore.timeHint')),
       err, moreBtn, moreBody);
-    modal = ui.modal({ title: isNew ? t('chore.new') : t('chore.edit'), body: body, actions: actions, size: 'wide' });
+    modal = ui.modal({ title: isNew ? t('chore.new') : t('chore.edit'), body: body, actions: actions, size: 'wide', focus: isNew }); /* opening an existing chore must not pop the keyboard up */
   };
 
   /* "Do it again": a finished one-time chore, back for a new day in two taps */
